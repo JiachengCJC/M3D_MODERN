@@ -387,15 +387,30 @@ class SegVolPromptEncoder(nn.Module):
         """Return cached positional encoding with shape ``[1, C, D, H, W]``."""
 
         expected_shape = (1, self.embed_dim, *self.image_embedding_size)
-        matrix = self.pe_layer.positional_encoding_gaussian_matrix
+        target_device = self.device
+        target_dtype = self.dtype
         cache = self._dense_pe_cache
+
         if (
             tuple(cache.shape) != expected_shape
-            or cache.device != matrix.device
-            or cache.dtype != matrix.dtype
+            or cache.device != target_device
+            or cache.dtype != target_dtype
         ):
-            cache = self.pe_layer(self.image_embedding_size).unsqueeze(0)
+            # Positional encoding is a cached module-state tensor. Build it in the
+            # prompt encoder's native dtype instead of allowing the surrounding
+            # BF16 autocast context to change its dtype.
+            with torch.autocast(
+                device_type=target_device.type,
+                enabled=False,
+            ):
+                cache = self.pe_layer(self.image_embedding_size).unsqueeze(0)
+
+            cache = cache.to(
+                device=target_device,
+                dtype=target_dtype,
+            )
             self._dense_pe_cache = cache
+
         return self._dense_pe_cache
 
     def _validate_prompt_device(self, tensor: Tensor, *, name: str) -> None:
