@@ -1,0 +1,204 @@
+{
+  "expected_gpus": 2,
+  "host": "x1000c1s7b0n1",
+  "nvidia_smi": [
+    {
+      "driver_version": "570.124.06",
+      "index": "0",
+      "memory_mib": "40960",
+      "name": "NVIDIA A100-SXM4-40GB",
+      "pci_bus_id": "00000000:41:00.0",
+      "uuid": "GPU-05d11eaa-c602-3ae6-847d-58de1aa5ba04"
+    },
+    {
+      "driver_version": "570.124.06",
+      "index": "1",
+      "memory_mib": "40960",
+      "name": "NVIDIA A100-SXM4-40GB",
+      "pci_bus_id": "00000000:81:00.0",
+      "uuid": "GPU-8c921395-c819-e71c-d7cd-a860038ab3eb"
+    }
+  ],
+  "pbs_job_id": "14993674.pbs101",
+  "platform": "Linux-4.18.0-553.125.1.el8_10.x86_64-x86_64-with-glibc2.28",
+  "ranks": [
+    {
+      "gpu": {
+        "bf16_supported": true,
+        "compute_capability": "8.0",
+        "local_rank": 0,
+        "multiprocessor_count": 108,
+        "name": "NVIDIA A100-SXM4-40GB",
+        "total_memory": "39.49 GiB",
+        "total_memory_bytes": 42406903808,
+        "world_size": 2
+      },
+      "host": "x1000c1s7b0n1",
+      "pid": 1348234,
+      "rank": 0,
+      "tests": {
+        "language_flash_sdpa": {
+          "backend": "FLASH_ATTENTION",
+          "causal": true,
+          "dtype": "bfloat16",
+          "forward_backward_ms": 142.8838348388672,
+          "loss": 0.026485925540328026,
+          "peak_memory": "10.52 MiB",
+          "peak_memory_bytes": 11035648,
+          "shape": [
+            1,
+            12,
+            512,
+            64
+          ]
+        },
+        "nccl_all_reduce": {
+          "effective_payload_gib_per_second": 5.55368733924054,
+          "elapsed_ms": 2.8134461026638746,
+          "executed": true,
+          "expected_reduced_value": 3.0,
+          "payload": "16.00 MiB",
+          "payload_bytes": 16777216
+        },
+        "patch_embedding_3d": {
+          "dtype": "bfloat16",
+          "forward_backward_ms": 5811.2666015625,
+          "input_shape": [
+            1,
+            1,
+            32,
+            256,
+            256
+          ],
+          "loss": 0.3338997960090637,
+          "output_shape": [
+            1,
+            768,
+            8,
+            16,
+            16
+          ],
+          "peak_memory": "65.00 MiB",
+          "peak_memory_bytes": 68160000
+        },
+        "vision_flash_sdpa": {
+          "backend": "FLASH_ATTENTION",
+          "causal": false,
+          "dtype": "bfloat16",
+          "forward_backward_ms": 1460.9981689453125,
+          "loss": 0.0012846338795498013,
+          "peak_memory": "42.12 MiB",
+          "peak_memory_bytes": 44161536,
+          "shape": [
+            1,
+            12,
+            2049,
+            64
+          ]
+        }
+      }
+    },
+    {
+      "gpu": {
+        "bf16_supported": true,
+        "compute_capability": "8.0",
+        "local_rank": 1,
+        "multiprocessor_count": 108,
+        "name": "NVIDIA A100-SXM4-40GB",
+        "total_memory": "39.49 GiB",
+        "total_memory_bytes": 42406903808,
+        "world_size": 2
+      },
+      "host": "x1000c1s7b0n1",
+      "pid": 1348235,
+      "rank": 1,
+      "tests": {
+        "language_flash_sdpa": {
+          "backend": "FLASH_ATTENTION",
+          "causal": true,
+          "dtype": "bfloat16",
+          "forward_backward_ms": 142.94015502929688,
+          "loss": 0.026374131441116333,
+          "peak_memory": "10.52 MiB",
+          "peak_memory_bytes": 11035648,
+          "shape": [
+            1,
+            12,
+            512,
+            64
+          ]
+        },
+        "nccl_all_reduce": {
+          "effective_payload_gib_per_second": 5.5863346169523025,
+          "elapsed_ms": 2.797003951855004,
+          "executed": true,
+          "expected_reduced_value": 3.0,
+          "payload": "16.00 MiB",
+          "payload_bytes": 16777216
+        },
+        "patch_embedding_3d": {
+          "dtype": "bfloat16",
+          "forward_backward_ms": 5811.3056640625,
+          "input_shape": [
+            1,
+            1,
+            32,
+            256,
+            256
+          ],
+          "loss": 0.3338649272918701,
+          "output_shape": [
+            1,
+            768,
+            8,
+            16,
+            16
+          ],
+          "peak_memory": "65.00 MiB",
+          "peak_memory_bytes": 68160000
+        },
+        "vision_flash_sdpa": {
+          "backend": "FLASH_ATTENTION",
+          "causal": false,
+          "dtype": "bfloat16",
+          "forward_backward_ms": 1461.0103759765625,
+          "loss": 0.0013045778032392263,
+          "peak_memory": "42.12 MiB",
+          "peak_memory_bytes": 44161536,
+          "shape": [
+            1,
+            12,
+            2049,
+            64
+          ]
+        }
+      }
+    }
+  ],
+  "software": {
+    "cudnn": 90100,
+    "gcc": "gcc (GCC) 11.4.0",
+    "loaded_modules": [
+      "craype/2.7.15",
+      "cray-dsmml/0.2.2",
+      "libfabric/1.11.0.4.125",
+      "craype-network-ofi",
+      "cray-mpich/8.1.15",
+      "cray-pals/1.1.6",
+      "PrgEnv-gnu/8.3.3",
+      "gcc/11.4.0-nscc",
+      "python/3.10.9",
+      "cuda/11.8.0",
+      "cmake/3.31.3",
+      "ninja/1.11.1"
+    ],
+    "nccl": "2.21.5",
+    "nvcc": "Cuda compilation tools, release 11.8, V11.8.89",
+    "python": "3.10.9",
+    "pytorch": "2.6.0+cu118",
+    "pytorch_cuda": "11.8"
+  },
+  "status": "passed",
+  "timestamp_unix": 1784999067.2467217,
+  "world_size": 2
+}

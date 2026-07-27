@@ -1,0 +1,632 @@
+#!/usr/bin/env bash
+#PBS -P 58001002
+#PBS -q glong
+#PBS -N M3D_export
+#PBS -l select=1:ncpus=64:mem=440gb:ngpus=2
+#PBS -l walltime=24:00:00
+#PBS -j oe
+
+# M3D-Modernized — portable model export on ASPIRE 2A
+# ===================================================
+# Submit this file from the M3D-modernized project root.
+#
+# Export the latest completed checkpoint from the default training output:
+#   qsub scripts/08_export_aspire2a.pbs
+#
+# Export a specific training output or checkpoint-step directory:
+#   qsub -v M3D_CHECKPOINT=/absolute/path/to/training-output \
+#       scripts/08_export_aspire2a.pbs
+#
+# Write to a chosen portable-export directory:
+#   qsub -v M3D_CHECKPOINT=/absolute/path/to/training-output,\
+#M3D_OUTPUT_DIR=/absolute/path/to/m3d-export \
+#       scripts/08_export_aspire2a.pbs
+#
+# Export only the portable bundle and components:
+#   qsub -v M3D_EXPORT_FORMAT=bundle \
+#       scripts/08_export_aspire2a.pbs
+#
+# Export bundle + PEFT adapter + LoRA-merged Phi-3:
+#   qsub -v M3D_EXPORT_FORMAT=all \
+#       scripts/08_export_aspire2a.pbs
+#
+# Export from an FSDP2 training layout:
+#   qsub -v M3D_STRATEGY=fsdp2 \
+#       scripts/08_export_aspire2a.pbs
+#
+# Common optional variables:
+#   M3D_VENV_DIR=/scratch/.../envs/m3d-modern
+#   M3D_CONFIG=/scratch/.../configs/m3d_joint_finetune.yaml
+#   M3D_CHECKPOINT=/scratch/.../training-output-or-checkpoint-step
+#   M3D_OUTPUT_DIR=/scratch/.../m3d-portable-export
+#   M3D_STRATEGY=ddp|fsdp2
+#   M3D_EXPORT_FORMAT=bundle|adapter|merged|all
+#   M3D_MAX_SHARD_SIZE=4GB
+#   M3D_CACHE_ROOT=/scratch/.../.cache/m3d-modern
+#   M3D_LOCAL_FILES_ONLY=1
+#   M3D_OVERWRITE=1
+#   M3D_VERBOSE_ALL_RANKS=1
+#   M3D_EXPECTED_GPUS=2
+#   M3D_OMP_NUM_THREADS=16
+#
+# Export-format meanings:
+#   bundle  - complete adapter-form M3D safetensors, components and tokenizer;
+#   adapter - bundle plus a standalone PEFT adapter;
+#   merged  - bundle plus a LoRA-merged Hugging Face Phi-3;
+#   all     - bundle, PEFT adapter and merged Phi-3.
+#
+# Important execution contracts:
+#   - the source must be a COMPLETED distributed checkpoint, a latest.json
+#     pointer, or a training output directory containing completed checkpoints;
+#   - model/optimizer training state is never modified by export;
+#   - optimizer, scheduler, sampler and RNG state are not restored;
+#   - the two 3D image encoders remain separate in all exported artifacts;
+#   - the final export appears atomically only after COMPLETED.json is written;
+#   - M3D_OVERWRITE=1 replaces an existing export only after a new staging
+#     export has completed successfully;
+#   - format=all requires the most rank-0 CPU memory because it keeps the full
+#     CPU state while constructing a second CPU language-model instance.
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+umask 027
+
+readonly PROJECT_ROOT="${PBS_O_WORKDIR:?PBS_O_WORKDIR is unavailable}"
+readonly VENV_DIR="${M3D_VENV_DIR:-${PROJECT_ROOT}/.venv}"
+readonly CONFIG_PATH="${M3D_CONFIG:-${PROJECT_ROOT}/configs/m3d_joint_finetune.yaml}"
+readonly CHECKPOINT_INPUT="${M3D_CHECKPOINT:-${PROJECT_ROOT}/outputs/m3d-phi3-joint-modernized-a100}"
+readonly STRATEGY="${M3D_STRATEGY:-ddp}"
+readonly EXPORT_FORMAT="${M3D_EXPORT_FORMAT:-all}"
+readonly MAX_SHARD_SIZE="${M3D_MAX_SHARD_SIZE:-4GB}"
+readonly EXPECTED_GPUS="${M3D_EXPECTED_GPUS:-2}"
+readonly OMP_THREADS="${M3D_OMP_NUM_THREADS:-16}"
+readonly JOB_ID="${PBS_JOBID:-manual}"
+readonly JOB_ID_SAFE="${JOB_ID//[^A-Za-z0-9._-]/_}"
+readonly DEFAULT_OUTPUT_DIR="${PROJECT_ROOT}/outputs/m3d-phi3-export-${JOB_ID_SAFE}"
+readonly OUTPUT_DIR="${M3D_OUTPUT_DIR:-${DEFAULT_OUTPUT_DIR}}"
+readonly LOG_DIR="${PROJECT_ROOT}/logs/export/${JOB_ID_SAFE}"
+readonly LOG_FILE="${LOG_DIR}/export.log"
+readonly GPU_LOG_FILE="${LOG_DIR}/gpu.csv"
+readonly COMMAND_FILE="${LOG_DIR}/command.txt"
+readonly ENVIRONMENT_FILE="${LOG_DIR}/environment.txt"
+readonly MODULE_FILE="${LOG_DIR}/modules.txt"
+readonly PIP_FREEZE_FILE="${LOG_DIR}/pip-freeze.txt"
+readonly RESOLVED_CHECKPOINT_FILE="${LOG_DIR}/resolved_checkpoint.txt"
+
+GPU_MONITOR_PID=""
+TORCHRUN_PID=""
+RECEIVED_SIGNAL=""
+RESOLVED_CHECKPOINT=""
+
+log() {
+    printf '[M3D export job] %s\n' "$*"
+}
+
+warn() {
+    printf '[M3D export job] WARNING: %s\n' "$*" >&2
+}
+
+fail() {
+    printf '[M3D export job] ERROR: %s\n' "$*" >&2
+    exit 1
+}
+
+is_enabled() {
+    case "${1:-0}" in
+        1|true|TRUE|yes|YES|on|ON) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_positive_integer() {
+    [[ "${1:-}" =~ ^[1-9][0-9]*$ ]]
+}
+
+forward_signal() {
+    local signal_name="$1"
+    RECEIVED_SIGNAL="${signal_name}"
+    warn "Received ${signal_name}; forwarding it to torchrun."
+
+    if [[ -n "${TORCHRUN_PID}" ]] && kill -0 "${TORCHRUN_PID}" 2>/dev/null; then
+        kill -s "${signal_name}" "${TORCHRUN_PID}" 2>/dev/null || true
+        return
+    fi
+
+    case "${signal_name}" in
+        INT) exit 130 ;;
+        TERM) exit 143 ;;
+        HUP) exit 129 ;;
+        *) exit 1 ;;
+    esac
+}
+
+cleanup() {
+    local exit_code=$?
+    trap - EXIT
+
+    if [[ -n "${GPU_MONITOR_PID}" ]] && kill -0 "${GPU_MONITOR_PID}" 2>/dev/null; then
+        kill "${GPU_MONITOR_PID}" 2>/dev/null || true
+        wait "${GPU_MONITOR_PID}" 2>/dev/null || true
+    fi
+
+    if [[ -n "${TORCHRUN_PID}" ]] && kill -0 "${TORCHRUN_PID}" 2>/dev/null; then
+        kill -TERM "${TORCHRUN_PID}" 2>/dev/null || true
+        wait "${TORCHRUN_PID}" 2>/dev/null || true
+    fi
+
+    if (( exit_code == 0 )); then
+        log "Portable export completed successfully."
+        log "Export directory: ${OUTPUT_DIR}"
+        log "Export manifest: ${OUTPUT_DIR}/export_manifest.json"
+        log "Export log: ${LOG_FILE}"
+        log "GPU telemetry: ${GPU_LOG_FILE}"
+    else
+        warn "Portable export failed with exit code ${exit_code}."
+        if [[ -n "${RECEIVED_SIGNAL}" ]]; then
+            warn "Termination signal: ${RECEIVED_SIGNAL}."
+        fi
+        warn "Inspect ${LOG_FILE}. A valid portable export must contain COMPLETED.json."
+    fi
+
+    exit "${exit_code}"
+}
+
+trap cleanup EXIT
+trap 'forward_signal INT' INT
+trap 'forward_signal TERM' TERM
+trap 'forward_signal HUP' HUP
+
+mkdir -p "${LOG_DIR}"
+exec > >(stdbuf -oL -eL tee -a "${LOG_FILE}") 2>&1
+
+# -----------------------------------------------------------------------------
+# 1. Validate the request before loading modules or allocating model memory
+# -----------------------------------------------------------------------------
+[[ -f "${PROJECT_ROOT}/src/m3d/export.py" ]] || \
+    fail "Submit this PBS file from the M3D-modernized project root."
+[[ -f "${CONFIG_PATH}" ]] || fail "Configuration file not found: ${CONFIG_PATH}"
+[[ -e "${CHECKPOINT_INPUT}" ]] || \
+    fail "Checkpoint input does not exist: ${CHECKPOINT_INPUT}"
+[[ "${STRATEGY}" == "ddp" || "${STRATEGY}" == "fsdp2" ]] || \
+    fail "M3D_STRATEGY must be ddp or fsdp2; got ${STRATEGY}."
+case "${EXPORT_FORMAT}" in
+    bundle|adapter|merged|all) ;;
+    *) fail "M3D_EXPORT_FORMAT must be bundle, adapter, merged or all; got ${EXPORT_FORMAT}." ;;
+esac
+is_positive_integer "${EXPECTED_GPUS}" || \
+    fail "M3D_EXPECTED_GPUS must be a positive integer."
+is_positive_integer "${OMP_THREADS}" || \
+    fail "M3D_OMP_NUM_THREADS must be a positive integer."
+
+# Validate max-shard-size syntax without importing the project environment.
+python3 - "${MAX_SHARD_SIZE}" <<'PY'
+from __future__ import annotations
+
+import re
+import sys
+
+value = sys.argv[1].strip().upper().replace(" ", "")
+match = re.fullmatch(
+    r"([0-9]+(?:\.[0-9]+)?)(B|KB|MB|GB|TB|KIB|MIB|GIB|TIB)?",
+    value,
+)
+if match is None or float(match.group(1)) <= 0:
+    raise SystemExit(
+        "M3D_MAX_SHARD_SIZE must be a positive byte-size such as 4GB or 4096MiB."
+    )
+PY
+
+if [[ -e "${OUTPUT_DIR}" ]] && ! is_enabled "${M3D_OVERWRITE:-0}"; then
+    fail "Export output already exists: ${OUTPUT_DIR}. Set M3D_OVERWRITE=1 or choose a new M3D_OUTPUT_DIR."
+fi
+if [[ -e "${OUTPUT_DIR}" && -L "${OUTPUT_DIR}" ]]; then
+    fail "Refusing to replace a symbolic-link export directory: ${OUTPUT_DIR}"
+fi
+
+log "Job ID: ${JOB_ID}"
+log "Host: $(hostname -f 2>/dev/null || hostname)"
+log "Project root: ${PROJECT_ROOT}"
+log "Configuration: ${CONFIG_PATH}"
+log "Checkpoint request: ${CHECKPOINT_INPUT}"
+log "Distributed strategy: ${STRATEGY}"
+log "Export format: ${EXPORT_FORMAT}"
+log "Maximum safetensors shard size: ${MAX_SHARD_SIZE}"
+log "Output directory: ${OUTPUT_DIR}"
+log "Expected GPUs: ${EXPECTED_GPUS}"
+
+# -----------------------------------------------------------------------------
+# 2. Recreate the pinned ASPIRE 2A software environment
+# -----------------------------------------------------------------------------
+type module >/dev/null 2>&1 || \
+    fail "The ASPIRE 2A environment-modules command is unavailable."
+
+module reset >/dev/null 2>&1 || module purge
+module load PrgEnv-gnu/8.3.3
+module load gcc/11.4.0-nscc
+module load python/3.10.9
+module load cuda/11.8.0
+module load cmake/3.31.3
+module load ninja/1.11.1
+
+module -t list 2> "${MODULE_FILE}"
+log "Loaded modules:"
+sed 's/^/  /' "${MODULE_FILE}"
+
+[[ -x "${VENV_DIR}/bin/python" ]] || \
+    fail "Virtual environment not found at ${VENV_DIR}. Run scripts/00_setup_environment.sh first."
+[[ -x "${VENV_DIR}/bin/torchrun" ]] || \
+    fail "torchrun not found at ${VENV_DIR}/bin/torchrun."
+
+# shellcheck disable=SC1091
+source "${VENV_DIR}/bin/activate"
+cd -P "${PROJECT_ROOT}"
+
+export PYTHONPATH="${PROJECT_ROOT}/src:${PYTHONPATH:-}"
+export PYTHONNOUSERSITE=1
+export PYTHONUNBUFFERED=1
+export TOKENIZERS_PARALLELISM=false
+export CUDA_MODULE_LOADING="${CUDA_MODULE_LOADING:-LAZY}"
+export OMP_NUM_THREADS="${OMP_THREADS}"
+export MKL_NUM_THREADS="${M3D_MKL_NUM_THREADS:-${OMP_THREADS}}"
+export OPENBLAS_NUM_THREADS="${M3D_OPENBLAS_NUM_THREADS:-${OMP_THREADS}}"
+export NUMEXPR_NUM_THREADS="${M3D_NUMEXPR_NUM_THREADS:-${OMP_THREADS}}"
+
+# -----------------------------------------------------------------------------
+# 3. Configure persistent and job-local caches
+# -----------------------------------------------------------------------------
+readonly JOB_TMP_ROOT="${TMPDIR:-/tmp/m3d_export_${JOB_ID_SAFE}}"
+readonly CACHE_ROOT="${M3D_CACHE_ROOT:-${PROJECT_ROOT}/.cache}"
+
+mkdir -p \
+    "${JOB_TMP_ROOT}/triton" \
+    "${JOB_TMP_ROOT}/torch_extensions" \
+    "${JOB_TMP_ROOT}/torchinductor" \
+    "${CACHE_ROOT}/huggingface" \
+    "${CACHE_ROOT}/torch"
+
+export HF_HOME="${CACHE_ROOT}/huggingface"
+export HUGGINGFACE_HUB_CACHE="${HF_HOME}/hub"
+export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
+export HF_DATASETS_CACHE="${HF_HOME}/datasets"
+export TORCH_HOME="${CACHE_ROOT}/torch"
+export TRITON_CACHE_DIR="${JOB_TMP_ROOT}/triton"
+export TORCH_EXTENSIONS_DIR="${JOB_TMP_ROOT}/torch_extensions"
+export TORCHINDUCTOR_CACHE_DIR="${JOB_TMP_ROOT}/torchinductor"
+export HF_HUB_DISABLE_TELEMETRY=1
+
+if is_enabled "${M3D_LOCAL_FILES_ONLY:-0}"; then
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+    export HF_DATASETS_OFFLINE=1
+    log "Hugging Face offline mode is enabled."
+fi
+
+export NCCL_ASYNC_ERROR_HANDLING="${NCCL_ASYNC_ERROR_HANDLING:-1}"
+export TORCH_NCCL_ASYNC_ERROR_HANDLING="${TORCH_NCCL_ASYNC_ERROR_HANDLING:-1}"
+export NCCL_DEBUG="${NCCL_DEBUG:-WARN}"
+export NCCL_SOCKET_IFNAME="${NCCL_SOCKET_IFNAME:-^lo,docker0}"
+
+ulimit -n 65536 2>/dev/null || warn "Could not raise the open-file limit to 65536."
+
+# -----------------------------------------------------------------------------
+# 4. Validate package versions, CUDA visibility, BF16 and A100 placement
+# -----------------------------------------------------------------------------
+"${VENV_DIR}/bin/python" - "${EXPECTED_GPUS}" \
+    "${M3D_ALLOW_VERSION_MISMATCH:-0}" \
+    "${M3D_ALLOW_NON_A100:-0}" <<'PY'
+from __future__ import annotations
+
+import importlib.metadata
+import json
+import os
+import platform
+import sys
+
+import torch
+
+expected_gpus = int(sys.argv[1])
+allow_version_mismatch = sys.argv[2].lower() in {"1", "true", "yes", "on"}
+allow_non_a100 = sys.argv[3].lower() in {"1", "true", "yes", "on"}
+
+expected = {
+    "torch": "2.6.0",
+    "torchvision": "0.21.0",
+    "transformers": "4.52.4",
+    "peft": "0.15.2",
+    "monai": "1.4.0",
+    "numpy": "1.26.4",
+    "safetensors": "0.5.3",
+}
+observed: dict[str, str] = {}
+for distribution, wanted in expected.items():
+    try:
+        value = importlib.metadata.version(distribution)
+    except importlib.metadata.PackageNotFoundError:
+        value = "missing"
+    observed[distribution] = value
+    if value.split("+")[0] != wanted and not allow_version_mismatch:
+        raise SystemExit(
+            f"Version mismatch for {distribution}: expected {wanted}, observed {value}."
+        )
+
+if sys.version_info[:2] != (3, 10) and not allow_version_mismatch:
+    raise SystemExit(f"Expected Python 3.10.x, observed {platform.python_version()}.")
+if torch.version.cuda != "11.8" and not allow_version_mismatch:
+    raise SystemExit(f"Expected torch CUDA 11.8, observed {torch.version.cuda}.")
+if not torch.cuda.is_available():
+    raise SystemExit("CUDA is unavailable inside the PBS allocation.")
+if torch.cuda.device_count() != expected_gpus:
+    raise SystemExit(
+        f"Expected {expected_gpus} visible GPUs, observed {torch.cuda.device_count()}."
+    )
+if not torch.cuda.is_bf16_supported():
+    raise SystemExit("The visible CUDA device does not support BF16.")
+
+gpus = []
+for index in range(torch.cuda.device_count()):
+    properties = torch.cuda.get_device_properties(index)
+    record = {
+        "index": index,
+        "name": properties.name,
+        "memory_gib": properties.total_memory / (1024**3),
+        "capability": [properties.major, properties.minor],
+    }
+    gpus.append(record)
+    if not allow_non_a100:
+        if "A100" not in properties.name.upper():
+            raise SystemExit(f"GPU {index} is not an A100: {properties.name}.")
+        if (properties.major, properties.minor) != (8, 0):
+            raise SystemExit(
+                f"GPU {index} compute capability is "
+                f"{properties.major}.{properties.minor}, expected 8.0."
+            )
+
+print(json.dumps({
+    "python": platform.python_version(),
+    "torch": torch.__version__,
+    "torch_cuda": torch.version.cuda,
+    "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+    "packages": observed,
+    "gpus": gpus,
+}, indent=2, sort_keys=True))
+PY
+
+# Resolve latest.json/training-output to one exact completed checkpoint before
+# launching torchrun. The Python exporter validates it again on every rank.
+RESOLVED_CHECKPOINT="$("${VENV_DIR}/bin/python" - "${CHECKPOINT_INPUT}" <<'PY'
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+from m3d.checkpointing import resolve_checkpoint_path
+
+print(resolve_checkpoint_path(Path(sys.argv[1])))
+PY
+)"
+[[ -n "${RESOLVED_CHECKPOINT}" ]] || fail "Checkpoint resolution returned an empty path."
+[[ -d "${RESOLVED_CHECKPOINT}" ]] || \
+    fail "Resolved checkpoint is not a directory: ${RESOLVED_CHECKPOINT}"
+[[ -f "${RESOLVED_CHECKPOINT}/COMPLETED.json" ]] || \
+    fail "Resolved checkpoint is incomplete: ${RESOLVED_CHECKPOINT}/COMPLETED.json is missing."
+[[ -d "${RESOLVED_CHECKPOINT}/dcp" ]] || \
+    fail "Resolved checkpoint DCP directory is missing: ${RESOLVED_CHECKPOINT}/dcp"
+printf '%s\n' "${RESOLVED_CHECKPOINT}" > "${RESOLVED_CHECKPOINT_FILE}"
+log "Resolved completed checkpoint: ${RESOLVED_CHECKPOINT}"
+
+# Prevent path layouts that the Python exporter would reject, but fail before
+# the model is allocated so the error is cheap and direct.
+"${VENV_DIR}/bin/python" - "${RESOLVED_CHECKPOINT}" "${OUTPUT_DIR}" <<'PY'
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+checkpoint = Path(sys.argv[1]).expanduser().resolve()
+output = Path(sys.argv[2]).expanduser().resolve()
+if output == checkpoint:
+    raise SystemExit("Export output must differ from the source checkpoint.")
+if checkpoint.is_relative_to(output):
+    raise SystemExit("Export output cannot be an ancestor of the source checkpoint.")
+if output.is_relative_to(checkpoint):
+    raise SystemExit("Export output cannot be inside the source checkpoint.")
+PY
+
+"${VENV_DIR}/bin/pip" freeze > "${PIP_FREEZE_FILE}"
+
+{
+    printf 'job_id=%s\n' "${JOB_ID}"
+    printf 'host=%s\n' "$(hostname -f 2>/dev/null || hostname)"
+    printf 'project_root=%s\n' "${PROJECT_ROOT}"
+    printf 'config=%s\n' "${CONFIG_PATH}"
+    printf 'checkpoint_request=%s\n' "${CHECKPOINT_INPUT}"
+    printf 'checkpoint_resolved=%s\n' "${RESOLVED_CHECKPOINT}"
+    printf 'strategy=%s\n' "${STRATEGY}"
+    printf 'export_format=%s\n' "${EXPORT_FORMAT}"
+    printf 'max_shard_size=%s\n' "${MAX_SHARD_SIZE}"
+    printf 'output_dir=%s\n' "${OUTPUT_DIR}"
+    printf 'venv=%s\n' "${VENV_DIR}"
+    printf 'cache_root=%s\n' "${CACHE_ROOT}"
+    printf 'tmp_root=%s\n' "${JOB_TMP_ROOT}"
+    printf 'cuda_visible_devices=%s\n' "${CUDA_VISIBLE_DEVICES:-}"
+    printf 'python=%s\n' "$(command -v python)"
+    printf 'torchrun=%s\n' "$(command -v torchrun)"
+    printf 'date_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+} > "${ENVIRONMENT_FILE}"
+
+# -----------------------------------------------------------------------------
+# 5. Build the exact distributed export command
+# -----------------------------------------------------------------------------
+declare -a COMMAND=(
+    "${VENV_DIR}/bin/torchrun"
+    "--standalone"
+    "--nnodes=1"
+    "--nproc_per_node=${EXPECTED_GPUS}"
+    "--max_restarts=0"
+    "--monitor_interval=5"
+    "-m"
+    "m3d.export"
+    "--config"
+    "${CONFIG_PATH}"
+    "--checkpoint"
+    "${RESOLVED_CHECKPOINT}"
+    "--output-dir"
+    "${OUTPUT_DIR}"
+    "--strategy"
+    "${STRATEGY}"
+    "--format"
+    "${EXPORT_FORMAT}"
+    "--max-shard-size"
+    "${MAX_SHARD_SIZE}"
+    "--cache-dir"
+    "${HF_HOME}"
+)
+
+if is_enabled "${M3D_LOCAL_FILES_ONLY:-0}"; then
+    COMMAND+=("--local-files-only")
+fi
+if is_enabled "${M3D_OVERWRITE:-0}"; then
+    COMMAND+=("--overwrite")
+fi
+if is_enabled "${M3D_VERBOSE_ALL_RANKS:-0}"; then
+    COMMAND+=("--verbose-all-ranks")
+fi
+
+{
+    printf '%q ' "${COMMAND[@]}"
+    printf '\n'
+} > "${COMMAND_FILE}"
+
+log "Export command:"
+sed 's/^/  /' "${COMMAND_FILE}"
+
+# -----------------------------------------------------------------------------
+# 6. Start GPU telemetry and run torchrun
+# -----------------------------------------------------------------------------
+if command -v nvidia-smi >/dev/null 2>&1; then
+    nvidia-smi \
+        --query-gpu=timestamp,index,uuid,name,utilization.gpu,utilization.memory,memory.used,memory.free,temperature.gpu,power.draw \
+        --format=csv \
+        -l "${M3D_GPU_LOG_INTERVAL_SECONDS:-10}" \
+        > "${GPU_LOG_FILE}" 2>&1 &
+    GPU_MONITOR_PID=$!
+    log "GPU telemetry PID: ${GPU_MONITOR_PID}"
+else
+    warn "nvidia-smi is unavailable; GPU telemetry will not be recorded."
+fi
+
+SECONDS=0
+set +e
+"${COMMAND[@]}" &
+TORCHRUN_PID=$!
+wait "${TORCHRUN_PID}"
+TORCHRUN_STATUS=$?
+TORCHRUN_PID=""
+set -e
+ELAPSED_SECONDS=${SECONDS}
+
+if (( TORCHRUN_STATUS != 0 )); then
+    fail "torchrun export failed with status ${TORCHRUN_STATUS}."
+fi
+
+# -----------------------------------------------------------------------------
+# 7. Validate the atomically committed export and print a compact summary
+# -----------------------------------------------------------------------------
+[[ -d "${OUTPUT_DIR}" ]] || fail "Export directory was not created: ${OUTPUT_DIR}"
+[[ -f "${OUTPUT_DIR}/COMPLETED.json" ]] || \
+    fail "Export completed without ${OUTPUT_DIR}/COMPLETED.json."
+[[ -f "${OUTPUT_DIR}/export_manifest.json" ]] || \
+    fail "Export manifest is missing: ${OUTPUT_DIR}/export_manifest.json"
+[[ -f "${OUTPUT_DIR}/resolved_config.json" ]] || \
+    fail "Resolved export config is missing: ${OUTPUT_DIR}/resolved_config.json"
+[[ -d "${OUTPUT_DIR}/tokenizer" ]] || \
+    fail "Export tokenizer directory is missing: ${OUTPUT_DIR}/tokenizer"
+[[ -d "${OUTPUT_DIR}/m3d_model" ]] || \
+    fail "Complete M3D bundle is missing: ${OUTPUT_DIR}/m3d_model"
+[[ -d "${OUTPUT_DIR}/components/main_vision" ]] || \
+    fail "Main 3D ViT component is missing."
+[[ -d "${OUTPUT_DIR}/components/segvol" ]] || \
+    fail "Independent SegVol component is missing."
+
+case "${EXPORT_FORMAT}" in
+    adapter)
+        [[ -d "${OUTPUT_DIR}/language_adapter" ]] || \
+            fail "Requested PEFT adapter was not exported."
+        ;;
+    merged)
+        [[ -d "${OUTPUT_DIR}/language_merged" ]] || \
+            fail "Requested merged Phi-3 was not exported."
+        ;;
+    all)
+        [[ -d "${OUTPUT_DIR}/language_adapter" ]] || \
+            fail "Requested PEFT adapter was not exported."
+        [[ -d "${OUTPUT_DIR}/language_merged" ]] || \
+            fail "Requested merged Phi-3 was not exported."
+        ;;
+esac
+
+"${VENV_DIR}/bin/python" - \
+    "${OUTPUT_DIR}/COMPLETED.json" \
+    "${OUTPUT_DIR}/export_manifest.json" \
+    "${EXPORT_FORMAT}" \
+    "${ELAPSED_SECONDS}" <<'PY'
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+completed_path = Path(sys.argv[1])
+manifest_path = Path(sys.argv[2])
+requested_format = sys.argv[3]
+pbs_elapsed = int(sys.argv[4])
+
+completed = json.loads(completed_path.read_text(encoding="utf-8"))
+manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+observed_hash = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+expected_hash = completed.get("export_manifest_sha256")
+if observed_hash != expected_hash:
+    raise SystemExit(
+        "Export manifest hash does not match COMPLETED.json: "
+        f"expected={expected_hash}, observed={observed_hash}."
+    )
+if completed.get("status") != "complete":
+    raise SystemExit(f"Unexpected completion status: {completed.get('status')!r}")
+if manifest.get("status") != "complete":
+    raise SystemExit(f"Unexpected manifest status: {manifest.get('status')!r}")
+if manifest.get("export_format") != requested_format:
+    raise SystemExit(
+        f"Requested format {requested_format!r}, manifest reports "
+        f"{manifest.get('export_format')!r}."
+    )
+
+bundle = manifest.get("full_bundle") or {}
+components = manifest.get("components") or {}
+summary = {
+    "status": manifest.get("status"),
+    "checkpoint_path": manifest.get("checkpoint_path"),
+    "checkpoint_optimizer_step": manifest.get("checkpoint_optimizer_step"),
+    "checkpoint_epoch": manifest.get("checkpoint_epoch"),
+    "strategy": manifest.get("strategy"),
+    "world_size": manifest.get("world_size"),
+    "export_format": manifest.get("export_format"),
+    "output_dir": manifest.get("output_dir"),
+    "bundle_tensor_count": bundle.get("tensor_count"),
+    "bundle_tensor_bytes": bundle.get("tensor_bytes"),
+    "bundle_shard_count": len(bundle.get("shards") or []),
+    "component_names": sorted(components),
+    "adapter_exported": manifest.get("adapter") is not None,
+    "merged_language_exported": manifest.get("merged_language") is not None,
+    "export_elapsed_seconds": manifest.get("elapsed_seconds"),
+    "pbs_elapsed_seconds": pbs_elapsed,
+    "verified_file_count": len(completed.get("files") or []),
+}
+print("Portable export summary:")
+print(json.dumps(summary, indent=2, sort_keys=True))
+PY
+
+if command -v du >/dev/null 2>&1; then
+    log "Export disk usage: $(du -sh "${OUTPUT_DIR}" | awk '{print $1}')"
+fi
+log "Portable export validation passed."

@@ -1,0 +1,14 @@
+{
+  "train": [
+    {
+      "image": "0001/imagesTr/seg_train.npy",
+      "label": "0001/labelsTr/seg_train_1.npy"
+    }
+  ],
+  "test": [
+    {
+      "image": "0001/imagesTs/seg_test.npy",
+      "label": "0001/labelsTs/seg_test_1.npy"
+    }
+  ]
+}

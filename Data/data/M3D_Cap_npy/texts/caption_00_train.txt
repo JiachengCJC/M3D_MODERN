@@ -1,0 +1,1 @@
+A small synthetic CT volume for the manifest training smoke test.

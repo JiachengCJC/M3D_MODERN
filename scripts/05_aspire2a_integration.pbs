@@ -1,0 +1,372 @@
+#!/usr/bin/env bash
+#PBS -P personal-e1129906
+#PBS -q normal
+#PBS -N M3D_integration
+#PBS -l select=1:ncpus=32:mem=256gb:ngpus=2
+#PBS -l walltime=04:00:00
+#PBS -j oe
+
+# M3D-Modernized — ASPIRE 2A distributed integration job
+# =======================================================
+# Submit from the M3D-modernized project root.
+#
+# 默认执行两张 GPU 的 DDP forward/backward 集成测试：
+#   qsub scripts/05_aspire2a_integration.pbs
+#
+# FSDP2 forward/backward integration:
+#   qsub -v M3D_INTEGRATION_STRATEGY=fsdp2 \
+#       scripts/05_aspire2a_integration.pbs
+#
+# Exact asynchronous checkpoint save/load/replay:
+#   qsub -v M3D_INTEGRATION_SUITE=checkpoint \
+#       scripts/05_aspire2a_integration.pbs
+#
+# Exact synchronous FSDP2 checkpoint test:
+#   qsub -v M3D_INTEGRATION_SUITE=checkpoint,\
+#M3D_INTEGRATION_STRATEGY=fsdp2,M3D_CHECKPOINT_MODE=sync \
+#       scripts/05_aspire2a_integration.pbs
+#
+# Useful optional variables:
+#   M3D_VENV_DIR=/scratch/.../envs/m3d-modern
+#   M3D_CONFIG=/scratch/.../configs/m3d_joint_finetune.yaml
+#   M3D_CACHE_ROOT=/scratch/.../.cache
+#   M3D_LOCAL_FILES_ONLY=1
+#   M3D_NUM_WORKERS=0
+#   M3D_KEEP_CHECKPOINT=1
+#   M3D_ALLOW_VERSION_MISMATCH=1       # diagnostic use only
+#   M3D_ALLOW_NON_A100=1               # diagnostic use only
+#
+# 它不是正式训练脚本。它的核心目的，是在开始长时间训练之前，先用 2 张 GPU 做一个小规模测试
+# 
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+umask 027
+
+readonly PROJECT_ROOT="${PBS_O_WORKDIR:?PBS_O_WORKDIR is unavailable}"
+readonly VENV_DIR="${M3D_VENV_DIR:-${PROJECT_ROOT}/.venv}"
+readonly CONFIG_PATH="${M3D_CONFIG:-${PROJECT_ROOT}/configs/m3d_joint_finetune.yaml}"
+readonly SUITE="${M3D_INTEGRATION_SUITE:-runtime}"
+readonly STRATEGY="${M3D_INTEGRATION_STRATEGY:-ddp}"
+readonly CHECKPOINT_MODE="${M3D_CHECKPOINT_MODE:-async}"
+readonly EXPECTED_GPUS="${M3D_EXPECTED_GPUS:-2}"
+readonly NUM_WORKERS="${M3D_NUM_WORKERS:-0}"
+readonly JOB_ID="${PBS_JOBID:-manual}"
+readonly JOB_ID_SAFE="${JOB_ID//[^A-Za-z0-9._-]/_}"
+readonly LOG_DIR="${PROJECT_ROOT}/logs/integration/${JOB_ID_SAFE}"
+readonly LOG_FILE="${LOG_DIR}/integration.log"
+readonly GPU_LOG_FILE="${LOG_DIR}/gpu.csv"
+readonly RUNTIME_SCRIPT="${PROJECT_ROOT}/scripts/03_aspire2a_integration.py"
+readonly CHECKPOINT_SCRIPT="${PROJECT_ROOT}/scripts/04_aspire2a_checkpoint_integration.py"
+
+GPU_MONITOR_PID=""
+
+log() {
+    printf '[M3D integration job] %s\n' "$*"
+}
+
+fail() {
+    printf '[M3D integration job] ERROR: %s\n' "$*" >&2
+    exit 1
+}
+
+is_enabled() {
+    case "${1:-0}" in
+        1|true|TRUE|yes|YES|on|ON) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+cleanup() {
+    local exit_code=$?
+
+    if [[ -n "${GPU_MONITOR_PID}" ]] && kill -0 "${GPU_MONITOR_PID}" 2>/dev/null; then
+        kill "${GPU_MONITOR_PID}" 2>/dev/null || true
+        wait "${GPU_MONITOR_PID}" 2>/dev/null || true
+    fi
+
+    if (( exit_code == 0 )); then
+        log "Integration job completed successfully."
+        log "Log: ${LOG_FILE}"
+        log "GPU telemetry: ${GPU_LOG_FILE}"
+    else
+        log "Integration job failed with exit code ${exit_code}."
+        log "Inspect: ${LOG_FILE}"
+    fi
+
+    exit "${exit_code}"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+mkdir -p "${LOG_DIR}"
+exec > >(stdbuf -oL -eL tee -a "${LOG_FILE}") 2>&1
+
+[[ "${SUITE}" == "runtime" || "${SUITE}" == "checkpoint" ]] || \
+    fail "M3D_INTEGRATION_SUITE must be runtime or checkpoint; got ${SUITE}."
+[[ "${STRATEGY}" == "ddp" || "${STRATEGY}" == "fsdp2" ]] || \
+    fail "M3D_INTEGRATION_STRATEGY must be ddp or fsdp2; got ${STRATEGY}."
+[[ "${CHECKPOINT_MODE}" == "async" || "${CHECKPOINT_MODE}" == "sync" ]] || \
+    fail "M3D_CHECKPOINT_MODE must be async or sync; got ${CHECKPOINT_MODE}."
+[[ "${EXPECTED_GPUS}" =~ ^[1-9][0-9]*$ ]] || \
+    fail "M3D_EXPECTED_GPUS must be a positive integer."
+[[ "${NUM_WORKERS}" =~ ^[0-9]+$ ]] || \
+    fail "M3D_NUM_WORKERS must be a non-negative integer."
+[[ -f "${CONFIG_PATH}" ]] || fail "Configuration file not found: ${CONFIG_PATH}"
+[[ -f "${RUNTIME_SCRIPT}" ]] || fail "Integration script not found: ${RUNTIME_SCRIPT}"
+[[ -f "${CHECKPOINT_SCRIPT}" ]] || fail "Checkpoint script not found: ${CHECKPOINT_SCRIPT}"
+[[ -x "${VENV_DIR}/bin/python" ]] || \
+    fail "Virtual environment not found at ${VENV_DIR}. Run scripts/00_setup_environment.sh first."
+[[ -x "${VENV_DIR}/bin/torchrun" ]] || \
+    fail "torchrun not found at ${VENV_DIR}/bin/torchrun."
+
+log "Job ID: ${JOB_ID}"
+log "Host: $(hostname -f 2>/dev/null || hostname)"
+log "Project root: ${PROJECT_ROOT}"
+log "Virtual environment: ${VENV_DIR}"
+log "Configuration: ${CONFIG_PATH}"
+log "Suite: ${SUITE}"
+log "Strategy: ${STRATEGY}"
+log "Checkpoint mode: ${CHECKPOINT_MODE}"
+log "Expected GPUs: ${EXPECTED_GPUS}"
+log "DataLoader workers per rank: ${NUM_WORKERS}"
+
+# -----------------------------------------------------------------------------
+# 1. Recreate the pinned ASPIRE 2A software stack
+# -----------------------------------------------------------------------------
+type module >/dev/null 2>&1 || fail "The ASPIRE 2A module command is unavailable."
+
+module purge
+module load PrgEnv-gnu/8.3.3
+module load python/3.10.9
+module load cuda/11.8.0
+module load cmake/3.31.3
+module load ninja/1.11.1
+
+# Resolve GCC only after every other module has been loaded.
+LOADED_GCC="$(
+    module -t list 2>&1 |
+        sed -n '/^gcc\//{p;q;}'
+)"
+
+if [[ -z "${LOADED_GCC}" ]]; then
+    log "No GCC module detected; loading gcc/11.4.0-nscc"
+    module load gcc/11.4.0-nscc
+
+elif [[ "${LOADED_GCC}" != "gcc/11.4.0-nscc" ]]; then
+    log "Swapping ${LOADED_GCC} for gcc/11.4.0-nscc"
+    module swap "${LOADED_GCC}" gcc/11.4.0-nscc
+
+else
+    log "Required GCC module already loaded: gcc/11.4.0-nscc"
+fi
+
+# Clear any command paths cached before the module swap.
+hash -r
+
+log "Loaded modules:"
+module -t list 2>&1 | sed 's/^/  /'
+
+# shellcheck disable=SC1091
+source "${VENV_DIR}/bin/activate"
+
+cd -P "${PROJECT_ROOT}"
+export PYTHONPATH="${PROJECT_ROOT}/src:${PYTHONPATH:-}"
+export PYTHONNOUSERSITE=1
+export PYTHONUNBUFFERED=1
+export TOKENIZERS_PARALLELISM=false
+
+# -----------------------------------------------------------------------------
+# 2. Runtime/cache settings
+# -----------------------------------------------------------------------------
+readonly JOB_TMP_ROOT="${TMPDIR:-/tmp/m3d_${JOB_ID_SAFE}}"
+readonly CACHE_ROOT="${M3D_CACHE_ROOT:-${PROJECT_ROOT}/.cache}"
+mkdir -p \
+    "${JOB_TMP_ROOT}/triton" \
+    "${JOB_TMP_ROOT}/torch_extensions" \
+    "${CACHE_ROOT}/huggingface" \
+    "${CACHE_ROOT}/torch"
+
+export HF_HOME="${CACHE_ROOT}/huggingface"
+export HUGGINGFACE_HUB_CACHE="${HF_HOME}/hub"
+export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
+export TORCH_HOME="${CACHE_ROOT}/torch"
+export TRITON_CACHE_DIR="${JOB_TMP_ROOT}/triton"
+export TORCH_EXTENSIONS_DIR="${JOB_TMP_ROOT}/torch_extensions"
+
+# 32 CPU cores / 2 ranks leaves 16 logical cores per rank. Keep OpenMP lower
+# because checkpoint staging and DataLoader workers also consume CPU resources.
+export OMP_NUM_THREADS="${M3D_OMP_NUM_THREADS:-8}"
+export MKL_NUM_THREADS="${M3D_MKL_NUM_THREADS:-8}"
+
+export NCCL_DEBUG="${NCCL_DEBUG:-WARN}"
+export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
+export TORCH_NCCL_BLOCKING_WAIT=1
+export TORCH_SHOW_CPP_STACKTRACES=1
+export CUDA_DEVICE_MAX_CONNECTIONS="${CUDA_DEVICE_MAX_CONNECTIONS:-1}"
+
+readonly NVCC_PATH="$(command -v nvcc)"
+[[ -n "${NVCC_PATH}" ]] || fail "nvcc is unavailable after loading cuda/11.8.0."
+export CUDA_HOME="$(cd -- "$(dirname -- "${NVCC_PATH}")/.." && pwd -P)"
+export CUDACXX="${CUDA_HOME}/bin/nvcc"
+
+log "Python: $(python --version 2>&1)"
+log "Python executable: $(command -v python)"
+log "PyTorch: $(python -c 'import torch; print(torch.__version__)')"
+log "CUDA runtime reported by PyTorch: $(python -c 'import torch; print(torch.version.cuda)')"
+log "CUDA_HOME: ${CUDA_HOME}"
+log "OMP_NUM_THREADS: ${OMP_NUM_THREADS}"
+log "HF_HOME: ${HF_HOME}"
+log "TMPDIR: ${JOB_TMP_ROOT}"
+
+# -----------------------------------------------------------------------------
+# 3. Confirm PBS exposed the requested GPUs and start telemetry
+# -----------------------------------------------------------------------------
+VISIBLE_GPUS="$(python - <<'PY'
+import torch
+print(torch.cuda.device_count())
+PY
+)"
+[[ "${VISIBLE_GPUS}" == "${EXPECTED_GPUS}" ]] || \
+    fail "Expected ${EXPECTED_GPUS} visible GPUs, but PyTorch sees ${VISIBLE_GPUS}."
+
+log "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-<not explicitly set>}"
+nvidia-smi -L
+
+nvidia-smi \
+    --query-gpu=timestamp,index,uuid,name,utilization.gpu,utilization.memory,memory.used,memory.free,temperature.gpu,power.draw \
+    --format=csv \
+    --loop=5 \
+    > "${GPU_LOG_FILE}" 2>&1 &
+GPU_MONITOR_PID=$!
+
+# -----------------------------------------------------------------------------
+# 4. Build common torchrun arguments
+# -----------------------------------------------------------------------------
+COMMON_ARGS=(
+    --standalone
+    --nnodes=1
+    --nproc_per_node="${EXPECTED_GPUS}"
+)
+
+OPTIONAL_SCRIPT_ARGS=()
+if is_enabled "${M3D_LOCAL_FILES_ONLY:-0}"; then
+    OPTIONAL_SCRIPT_ARGS+=(--local-files-only)
+fi
+if is_enabled "${M3D_ALLOW_VERSION_MISMATCH:-0}"; then
+    OPTIONAL_SCRIPT_ARGS+=(--allow-version-mismatch)
+fi
+if is_enabled "${M3D_ALLOW_NON_A100:-0}"; then
+    OPTIONAL_SCRIPT_ARGS+=(--allow-non-a100)
+fi
+if is_enabled "${M3D_SKIP_PATH_VERIFICATION:-0}"; then
+    OPTIONAL_SCRIPT_ARGS+=(--skip-path-verification)
+fi
+if is_enabled "${M3D_VERBOSE_ALL_RANKS:-0}"; then
+    OPTIONAL_SCRIPT_ARGS+=(--verbose-all-ranks)
+fi
+
+# -----------------------------------------------------------------------------
+# 5. Run the selected integration suite
+# -----------------------------------------------------------------------------
+if [[ "${SUITE}" == "runtime" ]]; then
+    readonly OUTPUT_DIR="${PROJECT_ROOT}/outputs/aspire2a-integration-${STRATEGY}-${JOB_ID_SAFE}"
+
+    log "Preparing training manifest for integration test."
+
+    "${VENV_DIR}/bin/python" -m m3d.data.manifest \
+        --config "${CONFIG_PATH}" \
+        --splits train \
+        --output-dir "${OUTPUT_DIR}/manifests"
+
+    [[ -s "${OUTPUT_DIR}/manifests/train.jsonl" ]] || \
+        fail "Integration train manifest was not created."
+
+    log "Running real two-task forward/backward integration test."
+    log "Report directory: ${OUTPUT_DIR}"
+
+    "${VENV_DIR}/bin/torchrun" \
+        "${COMMON_ARGS[@]}" \
+        "${RUNTIME_SCRIPT}" \
+        --config "${CONFIG_PATH}" \
+        --strategy "${STRATEGY}" \
+        --output-dir "${OUTPUT_DIR}" \
+        --cache-dir "${HF_HOME}" \
+        --expected-world-size "${EXPECTED_GPUS}" \
+        --num-workers "${NUM_WORKERS}" \
+        "${OPTIONAL_SCRIPT_ARGS[@]}"
+
+    readonly REPORT_FILE="${OUTPUT_DIR}/integration_report.json"
+else
+    readonly OUTPUT_DIR="${PROJECT_ROOT}/outputs/aspire2a-checkpoint-integration-${STRATEGY}-${CHECKPOINT_MODE}-${JOB_ID_SAFE}"
+
+    CHECKPOINT_ARGS=(
+        --config "${CONFIG_PATH}"
+        --strategy "${STRATEGY}"
+        --checkpoint-mode "${CHECKPOINT_MODE}"
+        --output-dir "${OUTPUT_DIR}"
+        --cache-dir "${HF_HOME}"
+        --expected-world-size "${EXPECTED_GPUS}"
+        --num-workers "${NUM_WORKERS}"
+        --overwrite-output
+    )
+
+    if is_enabled "${M3D_KEEP_CHECKPOINT:-0}"; then
+        CHECKPOINT_ARGS+=(--keep-checkpoint)
+    fi
+    if is_enabled "${M3D_ALLOW_ASYNC_FALLBACK:-0}"; then
+        CHECKPOINT_ARGS+=(--allow-async-fallback)
+    fi
+
+    log "Running exact distributed-checkpoint save/load/replay test."
+    log "Report directory: ${OUTPUT_DIR}"
+
+    "${VENV_DIR}/bin/torchrun" \
+        "${COMMON_ARGS[@]}" \
+        "${CHECKPOINT_SCRIPT}" \
+        "${CHECKPOINT_ARGS[@]}" \
+        "${OPTIONAL_SCRIPT_ARGS[@]}"
+
+    readonly REPORT_FILE="${OUTPUT_DIR}/checkpoint_integration_report.json"
+fi
+
+[[ -s "${REPORT_FILE}" ]] || \
+    fail "Integration script returned successfully but did not create ${REPORT_FILE}."
+
+# -----------------------------------------------------------------------------
+# 6. Print a compact report summary into the PBS log
+# -----------------------------------------------------------------------------
+log "Integration report summary:"
+python - "${REPORT_FILE}" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+report = json.loads(path.read_text(encoding="utf-8"))
+
+print(f"  status: {report.get('status', 'unknown')}")
+print(f"  strategy: {report.get('strategy', 'unknown')}")
+
+if "checkpoint_mode_used" in report:
+    print(f"  checkpoint_mode_used: {report.get('checkpoint_mode_used')}")
+
+schedule = report.get("task_schedule")
+if schedule is not None:
+    print(f"  task_schedule: {schedule}")
+
+for key in (
+    "completed_optimizer_steps",
+    "committed_microbatches",
+    "model_restore_exact_by_rank",
+    "optimizer_restore_exact_by_rank",
+    "rng_exact_by_rank",
+):
+    if key in report:
+        print(f"  {key}: {report[key]}")
+
+print(f"  report: {path}")
+PY

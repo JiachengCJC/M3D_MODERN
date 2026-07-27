@@ -1,0 +1,4 @@
+Image Path,Question,Answer,Choice A,Choice B,Choice C,Choice D,Answer Choice,Question Type
+M3D-VQA/images/vqa_00_train.npy,Is the synthetic finding present?,Yes,Yes,No,Unknown,Not applicable,A,presence
+M3D-VQA/images/vqa_01_train.npy,Is the synthetic finding present?,Yes,Yes,No,Unknown,Not applicable,A,presence
+

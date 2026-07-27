@@ -1,0 +1,65 @@
+#!/bin/bash
+#PBS -P 58001002
+#PBS -q glong
+#PBS -N M3D_CLIP
+#PBS -l select=1:ncpus=32:mem=256gb:ngpus=2
+#PBS -l walltime=120:00:00
+#PBS -j oe
+
+set -Eeuo pipefail
+
+PROJECT_ROOT="${M3D_PROJECT_ROOT:-${PBS_O_WORKDIR}}"
+CONFIG="${M3D_CONFIG:-${PROJECT_ROOT}/configs/m3d_clip_pretrain.yaml}"
+VENV="${M3D_VENV_DIR:-${PROJECT_ROOT}/.venv}"
+CACHE_ROOT="${M3D_CACHE_ROOT:-${PROJECT_ROOT}/.cache}"
+LOG_DIR="${PROJECT_ROOT}/logs/clip/${PBS_JOBID:-manual}"
+mkdir -p "${LOG_DIR}" "${CACHE_ROOT}/huggingface" "${CACHE_ROOT}/torch"
+exec > >(stdbuf -oL tee -a "${LOG_DIR}/train.log") 2>&1
+
+module reset
+module load PrgEnv-gnu/8.3.3
+module load gcc/11.4.0-nscc
+module load python/3.10.9
+module load cuda/11.8.0
+module load cmake/3.31.3
+module load ninja/1.11.1
+source "${VENV}/bin/activate"
+cd "${PROJECT_ROOT}"
+
+export PYTHONNOUSERSITE=1
+export PYTHONPATH="${PROJECT_ROOT}/src:${PYTHONPATH:-}"
+export HF_HOME="${CACHE_ROOT}/huggingface"
+export HUGGINGFACE_HUB_CACHE="${HF_HOME}/hub"
+export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
+export TORCH_HOME="${CACHE_ROOT}/torch"
+export TRITON_CACHE_DIR="${TMPDIR:-/tmp}/triton-${PBS_JOBID:-manual}"
+export TORCH_EXTENSIONS_DIR="${TMPDIR:-/tmp}/torch-extensions-${PBS_JOBID:-manual}"
+export TOKENIZERS_PARALLELISM=false
+export NCCL_ASYNC_ERROR_HANDLING=1
+export NCCL_DEBUG="${NCCL_DEBUG:-WARN}"
+mkdir -p "${TRITON_CACHE_DIR}" "${TORCH_EXTENSIONS_DIR}"
+
+[[ -f "${CONFIG}" ]] || { echo "Missing config: ${CONFIG}"; exit 2; }
+[[ -x "${VENV}/bin/torchrun" ]] || { echo "Missing torchrun in ${VENV}"; exit 2; }
+
+nvidia-smi --query-gpu=timestamp,index,name,utilization.gpu,memory.used,memory.free,temperature.gpu,power.draw --format=csv -l 10 > "${LOG_DIR}/gpu.csv" &
+GPU_MONITOR_PID=$!
+cleanup() { kill "${GPU_MONITOR_PID}" 2>/dev/null || true; }
+trap cleanup EXIT INT TERM
+
+ARGS=(
+  --config "${CONFIG}"
+)
+[[ "${M3D_LOCAL_FILES_ONLY:-0}" == "1" ]] && ARGS+=(--local-files-only)
+[[ "${M3D_STARTUP_ONLY:-0}" == "1" ]] && ARGS+=(--startup-only)
+[[ -n "${M3D_RESUME_FROM:-}" ]] && ARGS+=(--resume-from "${M3D_RESUME_FROM}")
+[[ -n "${M3D_CACHE_DIR:-}" ]] && ARGS+=(--cache-dir "${M3D_CACHE_DIR}")
+[[ -n "${M3D_EPOCHS:-}" ]] && ARGS+=(--override "training.epochs=${M3D_EPOCHS}")
+[[ -n "${M3D_BATCH_SIZE:-}" ]] && ARGS+=(--override "data.per_device_batch_size=${M3D_BATCH_SIZE}")
+[[ -n "${M3D_GRAD_ACCUM:-}" ]] && ARGS+=(--override "training.gradient_accumulation_steps=${M3D_GRAD_ACCUM}")
+[[ -n "${M3D_NUM_WORKERS:-}" ]] && ARGS+=(--override "data.num_workers=${M3D_NUM_WORKERS}")
+[[ -n "${M3D_OUTPUT_DIR:-}" ]] && ARGS+=(--override "training.output_dir=${M3D_OUTPUT_DIR}")
+
+printf '%q ' "${VENV}/bin/torchrun" --standalone --nproc_per_node=2 -m m3d.train_clip "${ARGS[@]}" | tee "${LOG_DIR}/command.txt"
+echo
+"${VENV}/bin/torchrun" --standalone --nnodes=1 --nproc_per_node=2 --max_restarts=0 -m m3d.train_clip "${ARGS[@]}"

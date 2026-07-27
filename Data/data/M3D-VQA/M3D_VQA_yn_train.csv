@@ -1,0 +1,4 @@
+Image Path,Question,Answer,Answer Choice,Question Type
+M3D-VQA/images/vqa_yes_no_00_train.npy,Does the center contain a positive voxel?,Yes,A,presence
+M3D-VQA/images/vqa_yes_no_01_train.npy,Does the center contain a positive voxel?,Yes,A,presence
+

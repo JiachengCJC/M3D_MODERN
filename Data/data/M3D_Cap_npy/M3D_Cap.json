@@ -1,0 +1,24 @@
+{
+  "train": [
+    {
+      "image": "M3D_Cap_npy/images/caption_00_train.npy",
+      "text": "M3D_Cap_npy/texts/caption_00_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/caption_01_train.npy",
+      "text": "M3D_Cap_npy/texts/caption_01_train.txt"
+    }
+  ],
+  "validation": [
+    {
+      "image": "M3D_Cap_npy/images/caption_validation.npy",
+      "text": "M3D_Cap_npy/texts/caption_validation.txt"
+    }
+  ],
+  "test": [
+    {
+      "image": "M3D_Cap_npy/images/caption_test.npy",
+      "text": "M3D_Cap_npy/texts/caption_test.txt"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+[M3D preflight job] Job ID: 14993674.pbs101
+[M3D preflight job] Host: x1000c1s7b0n1.hostmgmt2000.cm.asp2a.nscc.sg
+[M3D preflight job] Submission directory: /scratch/users/nus/e1129906/M3D-modernized
+[M3D preflight job] Virtual environment: /scratch/users/nus/e1129906/M3D-modernized/.venv
+[M3D preflight job] Expected GPUs: 2
+[M3D preflight job] Purging loaded modules
+[M3D preflight job] Loading PrgEnv-gnu/8.3.3
+[M3D preflight job] Loading python/3.10.9
+[M3D preflight job] Loading cuda/11.8.0
+[M3D preflight job] Loading cmake/3.31.3
+[M3D preflight job] Loading ninja/1.11.1
+[M3D preflight job] Swapping gcc/12.1.0-nscc for gcc/11.4.0-nscc
+[M3D preflight job] Loaded modules:
+  Currently Loaded Modulefiles:
+  craype/2.7.15
+  cray-dsmml/0.2.2
+  libfabric/1.11.0.4.125
+  craype-network-ofi
+  cray-mpich/8.1.15
+  cray-pals/1.1.6
+  PrgEnv-gnu/8.3.3
+  gcc/11.4.0-nscc
+  python/3.10.9
+  cuda/11.8.0
+  cmake/3.31.3
+  ninja/1.11.1
+[M3D preflight job] GCC executable: /app/apps/gcc/11.4.0-nscc/bin/gcc
+[M3D preflight job] GCC version: gcc (GCC) 11.4.0
+[M3D preflight job] Python: Python 3.10.9
+[M3D preflight job] Python executable: /scratch/users/nus/e1129906/M3D-modernized/.venv/bin/python
+[M3D preflight job] CUDA_HOME: /scratch/GPFS/app/apps/cuda/11.8.0
+[M3D preflight job] NVCC: Cuda compilation tools, release 11.8, V11.8.89
+[M3D preflight job] OMP_NUM_THREADS: 8
+[M3D preflight job] CUDA_VISIBLE_DEVICES: GPU-8c921395-c819-e71c-d7cd-a860038ab3eb,GPU-05d11eaa-c602-3ae6-847d-58de1aa5ba04
+GPU 0: NVIDIA A100-SXM4-40GB (UUID: GPU-05d11eaa-c602-3ae6-847d-58de1aa5ba04)
+GPU 1: NVIDIA A100-SXM4-40GB (UUID: GPU-8c921395-c819-e71c-d7cd-a860038ab3eb)
+[M3D preflight job] Launching 2-GPU preflight with torchrun
+[W726 01:04:17.489621021 Utils.hpp:136] Warning: Environment variable NCCL_ASYNC_ERROR_HANDLING is deprecated; use TORCH_NCCL_ASYNC_ERROR_HANDLING instead (function operator())
+[W726 01:04:17.489674896 Utils.hpp:136] Warning: Environment variable NCCL_ASYNC_ERROR_HANDLING is deprecated; use TORCH_NCCL_ASYNC_ERROR_HANDLING instead (function operator())
+[M3D preflight][rank 0] Using NVIDIA A100-SXM4-40GB on cuda:0[M3D preflight][rank 1] Using NVIDIA A100-SXM4-40GB on cuda:1
+
+[M3D preflight][rank 1] Vision Flash-SDPA forward/backward passed
+[M3D preflight][rank 0] Vision Flash-SDPA forward/backward passed
+[M3D preflight][rank 0] Causal language Flash-SDPA forward/backward passed
+[M3D preflight][rank 1] Causal language Flash-SDPA forward/backward passed
+[M3D preflight][rank 0] 3D patch-embedding forward/backward passed
+[M3D preflight][rank 1] 3D patch-embedding forward/backward passed
+[rank0]:[W726 01:04:26.495085937 ProcessGroupNCCL.cpp:4561] [PG ID 0 PG GUID 0 Rank 0]  using GPU 0 to perform barrier as devices used by this process are currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. Specify device_ids in barrier() to force use of a particular device, or call init_process_group() with a device_id.
+[rank1]:[W726 01:04:26.495093181 ProcessGroupNCCL.cpp:4561] [PG ID 0 PG GUID 0 Rank 1]  using GPU 1 to perform barrier as devices used by this process are currently unknown. This can potentially cause a hang if this rank to GPU mapping is incorrect. Specify device_ids in barrier() to force use of a particular device, or call init_process_group() with a device_id.
+NCCL version 2.21.5+cuda11.0
+[M3D preflight][rank 0] NCCL all-reduce passed
+[M3D preflight][rank 1] NCCL all-reduce passed
+
+[M3D preflight] ALL CHECKS PASSED
+[M3D preflight] Report: /scratch/users/nus/e1129906/M3D-modernized/logs/preflight/14993674.pbs101/preflight_report.json
+[M3D preflight job] Preflight report summary:
+  status: passed
+  world_size: 2
+  rank 0: NVIDIA A100-SXM4-40GB | 39.49 GiB
+  rank 1: NVIDIA A100-SXM4-40GB | 39.49 GiB
+[M3D preflight job] Job completed successfully.
+[M3D preflight job] Report: /scratch/users/nus/e1129906/M3D-modernized/logs/preflight/14993674.pbs101/preflight_report.json
+[M3D preflight job] Log: /scratch/users/nus/e1129906/M3D-modernized/logs/preflight/14993674.pbs101/preflight.log
+[M3D preflight job] GPU telemetry: /scratch/users/nus/e1129906/M3D-modernized/logs/preflight/14993674.pbs101/gpu.csv

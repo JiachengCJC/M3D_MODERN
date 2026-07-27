@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "m3d-modernized"
+version = "0.1.0"
+description = "Modernised reproduction of M3D with dual independent 3D image encoders, native SDPA, DDP/FSDP2 and M3D-CLIP."
+readme = "README.md"
+requires-python = ">=3.10,<3.11"
+license = {file = "LICENSE"}
+authors = [
+  {name = "M3D original authors and M3D-Modernized contributors"}
+]
+dynamic = ["dependencies"]
+
+[project.urls]
+Repository = "https://github.com/BAAI-DCAI/M3D"
+
+[project.scripts]
+m3d-train = "m3d.train:main"
+m3d-evaluate = "m3d.evaluate:main"
+m3d-export = "m3d.export:main"
+m3d-inference = "m3d.inference:main"
+m3d-clip-train = "m3d.train_clip:main"
+m3d-clip-evaluate = "m3d.evaluate_clip:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["m3d*"]
+namespaces = true
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.pyright]
+pythonVersion = "3.10"
+typeCheckingMode = "basic"
+include = ["src", "scripts"]

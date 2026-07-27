@@ -1,0 +1,2 @@
+Image,Mask,Mask_ID,Question,Answer
+M3D_RefSeg_npy/images/refseg_train.npy,M3D_RefSeg_npy/masks/refseg_train_1.npy,1,Segment the synthetic foreground.,The foreground region is segmented. [SEG]

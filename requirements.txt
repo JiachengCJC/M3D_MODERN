@@ -1,0 +1,77 @@
+# M3D-Modernized — Python dependencies for NSCC ASPIRE 2A
+# ========================================================
+# Platform contract established by scripts/00_setup_environment.sh:
+#   Python      3.10.9
+#   PyTorch     2.6.0 + CUDA 11.8
+#   TorchVision 0.21.0 + CUDA 11.8
+#
+# IMPORTANT:
+#   - Do not add torch or torchvision here. They are installed first from the
+#     official PyTorch cu118 index by scripts/00_setup_environment.sh.
+#   - Do not add flash-attn. The rewritten model uses PyTorch native SDPA and
+#     explicitly selects the Flash Attention backend when the operation is
+#     supported by the A100.
+#   - Do not add DeepSpeed. The modernized training path will use native
+#     torchrun/DDP and PyTorch FSDP2 instead of maintaining a second sharding
+#     implementation.
+#   - NumPy stays on 1.26.4 to retain compatibility with the original M3D data
+#     and visualization utilities while the model code is being rewritten.
+
+# -----------------------------------------------------------------------------
+# Hugging Face model, tokenizer, LoRA, and distributed-training integration
+# -----------------------------------------------------------------------------
+accelerate==1.7.0
+transformers==4.52.4
+peft==0.15.2
+safetensors==0.5.3
+tokenizers==0.21.1
+sentencepiece==0.2.0
+
+# -----------------------------------------------------------------------------
+# Medical imaging and numerical computing
+# -----------------------------------------------------------------------------
+monai==1.4.0
+numpy==1.26.4
+scipy==1.15.2
+pandas==2.2.3
+nibabel==5.3.2
+SimpleITK==2.4.1
+Pillow==11.2.1
+einops==0.8.1
+
+# Headless OpenCV avoids libGL/X11 failures on ASPIRE 2A compute nodes while
+# still exposing the normal `cv2` Python module.
+opencv-python-headless==4.11.0.86
+
+# -----------------------------------------------------------------------------
+# Dataset preparation and evaluation
+# -----------------------------------------------------------------------------
+evaluate==0.4.3
+datasets==3.6.0
+scikit-learn==1.6.1
+pycocotools==2.0.8
+Unidecode==1.3.8
+
+# Metrics used by the original M3D benchmark scripts.
+rouge==1.0.1
+rouge-score==0.1.2
+bert-score==0.3.13
+sacrebleu==2.5.1
+nltk==3.9.1
+
+# -----------------------------------------------------------------------------
+# Plotting, progress reporting, and the optional local demo
+# -----------------------------------------------------------------------------
+matplotlib==3.10.1
+tqdm==4.67.1
+requests==2.32.3
+gradio==5.29.0
+bleach==6.2.0
+simple-slice-viewer==0.97
+
+# -----------------------------------------------------------------------------
+# Reproducible configuration, logging, and GPU telemetry
+# -----------------------------------------------------------------------------
+PyYAML==6.0.2
+tensorboard==2.19.0
+nvidia-ml-py==12.575.51

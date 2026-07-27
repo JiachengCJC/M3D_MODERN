@@ -1,0 +1,50 @@
+#!/bin/bash
+#PBS -P 58001002
+#PBS -q normal
+#PBS -N M3D_CLIP_EVAL
+#PBS -l select=1:ncpus=24:mem=192gb:ngpus=2
+#PBS -l walltime=08:00:00
+#PBS -j oe
+
+set -Eeuo pipefail
+PROJECT_ROOT="${M3D_PROJECT_ROOT:-${PBS_O_WORKDIR}}"
+CONFIG="${M3D_CONFIG:-${PROJECT_ROOT}/configs/m3d_clip_pretrain.yaml}"
+CHECKPOINT="${M3D_CHECKPOINT:?Set M3D_CHECKPOINT to a CLIP training output/checkpoint}"
+OUTPUT_DIR="${M3D_OUTPUT_DIR:-${PROJECT_ROOT}/outputs/m3d-clip-eval-${PBS_JOBID:-manual}}"
+VENV="${M3D_VENV_DIR:-${PROJECT_ROOT}/.venv}"
+CACHE_ROOT="${M3D_CACHE_ROOT:-${PROJECT_ROOT}/.cache}"
+LOG_DIR="${PROJECT_ROOT}/logs/clip-eval/${PBS_JOBID:-manual}"
+mkdir -p "${LOG_DIR}" "${OUTPUT_DIR}" "${CACHE_ROOT}/huggingface"
+exec > >(stdbuf -oL tee -a "${LOG_DIR}/evaluation.log") 2>&1
+
+module reset
+module load PrgEnv-gnu/8.3.3
+module load gcc/11.4.0-nscc
+module load python/3.10.9
+module load cuda/11.8.0
+source "${VENV}/bin/activate"
+cd "${PROJECT_ROOT}"
+export PYTHONNOUSERSITE=1
+export PYTHONPATH="${PROJECT_ROOT}/src:${PYTHONPATH:-}"
+export HF_HOME="${CACHE_ROOT}/huggingface"
+export TOKENIZERS_PARALLELISM=false
+
+nvidia-smi --query-gpu=timestamp,index,name,utilization.gpu,memory.used,memory.free --format=csv -l 10 > "${LOG_DIR}/gpu.csv" &
+MON=$!
+trap 'kill ${MON} 2>/dev/null || true' EXIT INT TERM
+
+ARGS=(
+  --config "${CONFIG}"
+  --checkpoint "${CHECKPOINT}"
+  --split "${M3D_SPLIT:-test}"
+  --output-dir "${OUTPUT_DIR}"
+  --csv-top-k "${M3D_CSV_TOP_K:-1000}"
+  --chunk-size "${M3D_CHUNK_SIZE:-1024}"
+)
+[[ -n "${M3D_TOKENIZER:-}" ]] && ARGS+=(--tokenizer "${M3D_TOKENIZER}")
+[[ "${M3D_LOCAL_FILES_ONLY:-0}" == "1" ]] && ARGS+=(--local-files-only)
+[[ -n "${M3D_CACHE_DIR:-}" ]] && ARGS+=(--cache-dir "${M3D_CACHE_DIR}")
+
+"${VENV}/bin/torchrun" --standalone --nnodes=1 --nproc_per_node=2 --max_restarts=0 -m m3d.evaluate_clip "${ARGS[@]}"
+[[ -f "${OUTPUT_DIR}/COMPLETED.json" ]] || { echo "Evaluation did not complete"; exit 1; }
+cat "${OUTPUT_DIR}/retrieval_metrics.json"

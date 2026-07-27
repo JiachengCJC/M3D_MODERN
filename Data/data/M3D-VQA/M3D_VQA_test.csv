@@ -1,0 +1,2 @@
+Image Path,Question,Answer,Choice A,Choice B,Choice C,Choice D,Answer Choice,Question Type
+M3D-VQA/images/vqa_test.npy,Is this the test dummy volume?,Yes,Yes,No,Unknown,Not applicable,A,identity

@@ -1,0 +1,681 @@
+#!/usr/bin/env bash
+#PBS -P 58001002
+#PBS -q glong
+#PBS -N M3D_eval
+#PBS -l select=1:ncpus=64:mem=440gb:ngpus=2
+#PBS -l walltime=120:00:00
+#PBS -j oe
+
+# M3D-Modernized — distributed evaluation on ASPIRE 2A
+# =====================================================
+# Submit from the M3D-modernized project root.
+#
+# Evaluate a portable export (default):
+#   qsub -v M3D_EXPORT_DIR=/absolute/path/m3d-export \
+#       scripts/07_evaluate_aspire2a.pbs
+#
+# Evaluate a DDP training checkpoint directly:
+#   qsub -v M3D_EVAL_SOURCE=checkpoint,\
+#M3D_CHECKPOINT=/absolute/path/training-output,\
+#M3D_STRATEGY=ddp \
+#       scripts/07_evaluate_aspire2a.pbs
+#
+# Evaluate an FSDP2 checkpoint without first exporting it:
+#   qsub -v M3D_EVAL_SOURCE=checkpoint,\
+#M3D_CHECKPOINT=/absolute/path/training-output,\
+#M3D_STRATEGY=fsdp2 \
+#       scripts/07_evaluate_aspire2a.pbs
+#
+# Evaluate only segmentation on at most 100 global samples:
+#   qsub -v M3D_TASKS=segmentation,M3D_MAX_SAMPLES_PER_TASK=100 \
+#       scripts/07_evaluate_aspire2a.pbs
+#
+# For multiple tasks, prefer a task file because qsub -v uses commas as
+# separators. Put one canonical task per line and submit with:
+#   qsub -v M3D_TASKS_FILE=/absolute/path/eval_tasks.txt \
+#       scripts/07_evaluate_aspire2a.pbs
+#
+# Supported task names:
+#   caption
+#   vqa_closed
+#   vqa_open
+#   vqa_yes_no
+#   positioning
+#   segmentation
+#
+# Common optional variables:
+#   M3D_VENV_DIR=/scratch/.../envs/m3d-modern
+#   M3D_CONFIG=/scratch/.../configs/m3d_joint_finetune.yaml
+#   M3D_CACHE_ROOT=/scratch/.../.cache/m3d-modern
+#   M3D_EVAL_SOURCE=export|checkpoint
+#   M3D_EXPORT_DIR=/scratch/.../m3d-export
+#   M3D_CHECKPOINT=/scratch/.../training-output-or-checkpoint-step
+#   M3D_STRATEGY=ddp|fsdp2
+#   M3D_SPLIT=validation|test
+#   M3D_OUTPUT_DIR=/scratch/.../evaluation-output
+#   M3D_TASKS=all|caption|segmentation
+#   M3D_TASKS_FILE=/absolute/path/tasks.txt
+#   M3D_BATCH_SIZE=1
+#   M3D_NUM_WORKERS=8
+#   M3D_MAX_SAMPLES_PER_TASK=100
+#   M3D_MAX_NEW_TOKENS=128
+#   M3D_MASK_THRESHOLD=0.5
+#   M3D_BERTSCORE=1
+#   M3D_BERTSCORE_MODEL=microsoft/deberta-xlarge-mnli
+#   M3D_RETRIEVAL_IMAGE_FEATURES=/absolute/path/image_features.npy
+#   M3D_RETRIEVAL_TEXT_FEATURES=/absolute/path/text_features.npy
+#   M3D_LOCAL_FILES_ONLY=1
+#   M3D_OVERWRITE=1
+#   M3D_OVERRIDES_FILE=/absolute/path/overrides.txt
+#
+# M3D_OVERRIDES_FILE accepts one dotted.path=YAML_VALUE expression per line.
+# Empty lines and lines whose first non-space character is # are ignored.
+#
+# Important execution contracts:
+#   - portable-export evaluation uses one complete model replica per GPU and
+#     therefore only accepts M3D_STRATEGY=ddp;
+#   - FSDP2 evaluation is available only for a distributed training checkpoint;
+#   - evaluation sampling never duplicates examples;
+#   - FSDP2 ranks execute padding forwards when local batch counts differ;
+#   - an existing output directory is never removed unless M3D_OVERWRITE=1;
+#   - retrieval features must be supplied as a matching image/text pair.
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+umask 027
+
+readonly PROJECT_ROOT="${PBS_O_WORKDIR:?PBS_O_WORKDIR is unavailable}"
+readonly VENV_DIR="${M3D_VENV_DIR:-${PROJECT_ROOT}/.venv}"
+readonly CONFIG_PATH="${M3D_CONFIG:-${PROJECT_ROOT}/configs/m3d_joint_finetune.yaml}"
+readonly SOURCE="${M3D_EVAL_SOURCE:-export}"
+readonly STRATEGY="${M3D_STRATEGY:-ddp}"
+readonly SPLIT="${M3D_SPLIT:-test}"
+readonly EXPECTED_GPUS="${M3D_EXPECTED_GPUS:-2}"
+readonly BATCH_SIZE="${M3D_BATCH_SIZE:-1}"
+readonly MAX_NEW_TOKENS="${M3D_MAX_NEW_TOKENS:-128}"
+readonly MASK_THRESHOLD="${M3D_MASK_THRESHOLD:-0.5}"
+readonly TEMPERATURE="${M3D_TEMPERATURE:-1.0}"
+readonly TOP_P="${M3D_TOP_P:-1.0}"
+readonly NUM_BEAMS="${M3D_NUM_BEAMS:-1}"
+readonly REPETITION_PENALTY="${M3D_REPETITION_PENALTY:-1.0}"
+readonly TASKS_RAW="${M3D_TASKS:-all}"
+readonly TASKS_FILE="${M3D_TASKS_FILE:-}"
+readonly OVERRIDES_FILE="${M3D_OVERRIDES_FILE:-}"
+readonly EXPORT_DIR="${M3D_EXPORT_DIR:-${PROJECT_ROOT}/outputs/m3d-phi3-export}"
+readonly CHECKPOINT_PATH="${M3D_CHECKPOINT:-${PROJECT_ROOT}/outputs/m3d-phi3-joint-modernized-a100}"
+readonly JOB_ID="${PBS_JOBID:-manual}"
+readonly JOB_ID_SAFE="${JOB_ID//[^A-Za-z0-9._-]/_}"
+readonly LOG_DIR="${PROJECT_ROOT}/logs/evaluation/${JOB_ID_SAFE}"
+readonly LOG_FILE="${LOG_DIR}/evaluation.log"
+readonly GPU_LOG_FILE="${LOG_DIR}/gpu.csv"
+readonly COMMAND_FILE="${LOG_DIR}/command.txt"
+readonly ENVIRONMENT_FILE="${LOG_DIR}/environment.txt"
+readonly MODULE_FILE="${LOG_DIR}/modules.txt"
+readonly PIP_FREEZE_FILE="${LOG_DIR}/pip-freeze.txt"
+readonly DEFAULT_OUTPUT_DIR="${PROJECT_ROOT}/outputs/evaluation-${SOURCE}-${SPLIT}-${STRATEGY}-${JOB_ID_SAFE}"
+readonly OUTPUT_DIR="${M3D_OUTPUT_DIR:-${DEFAULT_OUTPUT_DIR}}"
+
+GPU_MONITOR_PID=""
+TORCHRUN_PID=""
+RECEIVED_SIGNAL=""
+
+log() {
+    printf '[M3D evaluation job] %s\n' "$*"
+}
+
+warn() {
+    printf '[M3D evaluation job] WARNING: %s\n' "$*" >&2
+}
+
+fail() {
+    printf '[M3D evaluation job] ERROR: %s\n' "$*" >&2
+    exit 1
+}
+
+is_enabled() {
+    case "${1:-0}" in
+        1|true|TRUE|yes|YES|on|ON) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_positive_integer() {
+    [[ "${1:-}" =~ ^[1-9][0-9]*$ ]]
+}
+
+is_nonnegative_integer() {
+    [[ "${1:-}" =~ ^[0-9]+$ ]]
+}
+
+forward_signal() {
+    local signal_name="$1"
+    RECEIVED_SIGNAL="${signal_name}"
+    warn "Received ${signal_name}; forwarding it to torchrun."
+
+    if [[ -n "${TORCHRUN_PID}" ]] && kill -0 "${TORCHRUN_PID}" 2>/dev/null; then
+        kill -s "${signal_name}" "${TORCHRUN_PID}" 2>/dev/null || true
+        return
+    fi
+
+    case "${signal_name}" in
+        INT) exit 130 ;;
+        TERM) exit 143 ;;
+        HUP) exit 129 ;;
+        *) exit 1 ;;
+    esac
+}
+
+cleanup() {
+    local exit_code=$?
+    trap - EXIT
+
+    if [[ -n "${GPU_MONITOR_PID}" ]] && kill -0 "${GPU_MONITOR_PID}" 2>/dev/null; then
+        kill "${GPU_MONITOR_PID}" 2>/dev/null || true
+        wait "${GPU_MONITOR_PID}" 2>/dev/null || true
+    fi
+
+    if [[ -n "${TORCHRUN_PID}" ]] && kill -0 "${TORCHRUN_PID}" 2>/dev/null; then
+        kill -TERM "${TORCHRUN_PID}" 2>/dev/null || true
+        wait "${TORCHRUN_PID}" 2>/dev/null || true
+    fi
+
+    if (( exit_code == 0 )); then
+        log "Evaluation job completed successfully."
+        log "Evaluation report: ${OUTPUT_DIR}/evaluation_report.json"
+        log "Evaluation log: ${LOG_FILE}"
+        log "GPU telemetry: ${GPU_LOG_FILE}"
+    else
+        warn "Evaluation job failed with exit code ${exit_code}."
+        if [[ -n "${RECEIVED_SIGNAL}" ]]; then
+            warn "Termination signal: ${RECEIVED_SIGNAL}."
+        fi
+        warn "Inspect ${LOG_FILE}. An incomplete output directory has no COMPLETED.json."
+    fi
+
+    exit "${exit_code}"
+}
+
+trap cleanup EXIT
+trap 'forward_signal INT' INT
+trap 'forward_signal TERM' TERM
+trap 'forward_signal HUP' HUP
+
+mkdir -p "${LOG_DIR}"
+exec > >(stdbuf -oL -eL tee -a "${LOG_FILE}") 2>&1
+
+# -----------------------------------------------------------------------------
+# 1. Validate submission context and user controls before loading modules
+# -----------------------------------------------------------------------------
+[[ -f "${PROJECT_ROOT}/src/m3d/evaluate.py" ]] || \
+    fail "Submit this PBS file from the M3D-modernized project root."
+[[ -f "${CONFIG_PATH}" ]] || fail "Configuration file not found: ${CONFIG_PATH}"
+[[ "${SOURCE}" == "export" || "${SOURCE}" == "checkpoint" ]] || \
+    fail "M3D_EVAL_SOURCE must be export or checkpoint; got ${SOURCE}."
+[[ "${STRATEGY}" == "ddp" || "${STRATEGY}" == "fsdp2" ]] || \
+    fail "M3D_STRATEGY must be ddp or fsdp2; got ${STRATEGY}."
+[[ "${SPLIT}" == "validation" || "${SPLIT}" == "test" ]] || \
+    fail "M3D_SPLIT must be validation or test; got ${SPLIT}."
+is_positive_integer "${EXPECTED_GPUS}" || \
+    fail "M3D_EXPECTED_GPUS must be a positive integer."
+is_positive_integer "${BATCH_SIZE}" || \
+    fail "M3D_BATCH_SIZE must be a positive integer."
+is_positive_integer "${MAX_NEW_TOKENS}" || \
+    fail "M3D_MAX_NEW_TOKENS must be a positive integer."
+is_positive_integer "${NUM_BEAMS}" || \
+    fail "M3D_NUM_BEAMS must be a positive integer."
+
+if [[ -n "${M3D_NUM_WORKERS:-}" ]]; then
+    is_nonnegative_integer "${M3D_NUM_WORKERS}" || \
+        fail "M3D_NUM_WORKERS must be a non-negative integer."
+fi
+if [[ -n "${M3D_MAX_SAMPLES_PER_TASK:-}" ]]; then
+    is_positive_integer "${M3D_MAX_SAMPLES_PER_TASK}" || \
+        fail "M3D_MAX_SAMPLES_PER_TASK must be a positive integer."
+fi
+if [[ -n "${TASKS_FILE}" ]]; then
+    [[ -f "${TASKS_FILE}" ]] || fail "M3D_TASKS_FILE does not exist: ${TASKS_FILE}"
+fi
+if [[ -n "${OVERRIDES_FILE}" ]]; then
+    [[ -f "${OVERRIDES_FILE}" ]] || \
+        fail "M3D_OVERRIDES_FILE does not exist: ${OVERRIDES_FILE}"
+fi
+
+if [[ "${SOURCE}" == "export" ]]; then
+    [[ "${STRATEGY}" == "ddp" ]] || \
+        fail "Portable export evaluation requires M3D_STRATEGY=ddp."
+    [[ -d "${EXPORT_DIR}" ]] || fail "Portable export directory not found: ${EXPORT_DIR}"
+    [[ -f "${EXPORT_DIR}/COMPLETED.json" ]] || \
+        fail "Portable export is incomplete: ${EXPORT_DIR}/COMPLETED.json is missing."
+    [[ -f "${EXPORT_DIR}/export_manifest.json" ]] || \
+        fail "Portable export manifest is missing: ${EXPORT_DIR}/export_manifest.json"
+else
+    [[ -e "${CHECKPOINT_PATH}" ]] || \
+        fail "Checkpoint path does not exist: ${CHECKPOINT_PATH}"
+fi
+
+if [[ -n "${M3D_RETRIEVAL_IMAGE_FEATURES:-}" || -n "${M3D_RETRIEVAL_TEXT_FEATURES:-}" ]]; then
+    [[ -n "${M3D_RETRIEVAL_IMAGE_FEATURES:-}" && -n "${M3D_RETRIEVAL_TEXT_FEATURES:-}" ]] || \
+        fail "Retrieval evaluation requires both image and text feature paths."
+    [[ -f "${M3D_RETRIEVAL_IMAGE_FEATURES}" ]] || \
+        fail "Retrieval image feature file not found: ${M3D_RETRIEVAL_IMAGE_FEATURES}"
+    [[ -f "${M3D_RETRIEVAL_TEXT_FEATURES}" ]] || \
+        fail "Retrieval text feature file not found: ${M3D_RETRIEVAL_TEXT_FEATURES}"
+fi
+
+if [[ -e "${OUTPUT_DIR}" ]] && ! is_enabled "${M3D_OVERWRITE:-0}"; then
+    fail "Evaluation output already exists: ${OUTPUT_DIR}. Set M3D_OVERWRITE=1 or choose a new M3D_OUTPUT_DIR."
+fi
+
+python - "${MASK_THRESHOLD}" "${TEMPERATURE}" "${TOP_P}" "${REPETITION_PENALTY}" <<'PY'
+from __future__ import annotations
+
+import math
+import sys
+
+mask, temperature, top_p, repetition = map(float, sys.argv[1:])
+if not 0.0 <= mask <= 1.0:
+    raise SystemExit("M3D_MASK_THRESHOLD must be in [0,1].")
+if not math.isfinite(temperature) or temperature <= 0.0:
+    raise SystemExit("M3D_TEMPERATURE must be finite and positive.")
+if not math.isfinite(top_p) or not 0.0 < top_p <= 1.0:
+    raise SystemExit("M3D_TOP_P must be finite and in (0,1].")
+if not math.isfinite(repetition) or repetition <= 0.0:
+    raise SystemExit("M3D_REPETITION_PENALTY must be finite and positive.")
+PY
+
+if is_enabled "${M3D_DO_SAMPLE:-0}" && (( NUM_BEAMS > 1 )); then
+    fail "This evaluation entrypoint does not combine sampling with beam search."
+fi
+
+log "Job ID: ${JOB_ID}"
+log "Host: $(hostname -f 2>/dev/null || hostname)"
+log "Project root: ${PROJECT_ROOT}"
+log "Configuration: ${CONFIG_PATH}"
+log "Evaluation source: ${SOURCE}"
+log "Distributed strategy: ${STRATEGY}"
+log "Split: ${SPLIT}"
+log "Output directory: ${OUTPUT_DIR}"
+log "Expected GPUs: ${EXPECTED_GPUS}"
+
+# -----------------------------------------------------------------------------
+# 2. Recreate the pinned ASPIRE 2A software environment
+# -----------------------------------------------------------------------------
+type module >/dev/null 2>&1 || \
+    fail "The ASPIRE 2A environment-modules command is unavailable."
+
+module reset >/dev/null 2>&1 || module purge
+module load PrgEnv-gnu/8.3.3
+module load gcc/11.4.0-nscc
+module load python/3.10.9
+module load cuda/11.8.0
+module load cmake/3.31.3
+module load ninja/1.11.1
+
+module -t list 2> "${MODULE_FILE}"
+log "Loaded modules:"
+sed 's/^/  /' "${MODULE_FILE}"
+
+[[ -x "${VENV_DIR}/bin/python" ]] || \
+    fail "Virtual environment not found at ${VENV_DIR}. Run scripts/00_setup_environment.sh first."
+[[ -x "${VENV_DIR}/bin/torchrun" ]] || \
+    fail "torchrun not found at ${VENV_DIR}/bin/torchrun."
+
+# shellcheck disable=SC1091
+source "${VENV_DIR}/bin/activate"
+cd -P "${PROJECT_ROOT}"
+
+export PYTHONPATH="${PROJECT_ROOT}/src:${PYTHONPATH:-}"
+export PYTHONNOUSERSITE=1
+export PYTHONUNBUFFERED=1
+export TOKENIZERS_PARALLELISM=false
+export CUDA_MODULE_LOADING="${CUDA_MODULE_LOADING:-LAZY}"
+
+# -----------------------------------------------------------------------------
+# 3. Configure persistent and job-local caches
+# -----------------------------------------------------------------------------
+readonly JOB_TMP_ROOT="${TMPDIR:-/tmp/m3d_eval_${JOB_ID_SAFE}}"
+readonly CACHE_ROOT="${M3D_CACHE_ROOT:-${PROJECT_ROOT}/.cache}"
+
+mkdir -p \
+    "${JOB_TMP_ROOT}/triton" \
+    "${JOB_TMP_ROOT}/torch_extensions" \
+    "${JOB_TMP_ROOT}/torchinductor" \
+    "${CACHE_ROOT}/huggingface" \
+    "${CACHE_ROOT}/torch"
+
+export HF_HOME="${CACHE_ROOT}/huggingface"
+export HUGGINGFACE_HUB_CACHE="${HF_HOME}/hub"
+export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
+export HF_DATASETS_CACHE="${HF_HOME}/datasets"
+export TORCH_HOME="${CACHE_ROOT}/torch"
+export TRITON_CACHE_DIR="${JOB_TMP_ROOT}/triton"
+export TORCH_EXTENSIONS_DIR="${JOB_TMP_ROOT}/torch_extensions"
+export TORCHINDUCTOR_CACHE_DIR="${JOB_TMP_ROOT}/torchinductor"
+
+if is_enabled "${M3D_LOCAL_FILES_ONLY:-0}"; then
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+    export HF_DATASETS_OFFLINE=1
+    log "Hugging Face offline mode is enabled."
+fi
+
+# Keep NCCL diagnostics useful without forcing expensive debug logging.
+export NCCL_ASYNC_ERROR_HANDLING="${NCCL_ASYNC_ERROR_HANDLING:-1}"
+export TORCH_NCCL_ASYNC_ERROR_HANDLING="${TORCH_NCCL_ASYNC_ERROR_HANDLING:-1}"
+export NCCL_DEBUG="${NCCL_DEBUG:-WARN}"
+export NCCL_SOCKET_IFNAME="${NCCL_SOCKET_IFNAME:-^lo,docker0}"
+
+# Avoid low file-descriptor limits with many DataLoader workers and shards.
+ulimit -n 65536 2>/dev/null || warn "Could not raise the open-file limit to 65536."
+
+# -----------------------------------------------------------------------------
+# 4. Verify package versions, CUDA visibility, BF16 and A100 placement
+# -----------------------------------------------------------------------------
+"${VENV_DIR}/bin/python" - "${EXPECTED_GPUS}" \
+    "${M3D_ALLOW_VERSION_MISMATCH:-0}" \
+    "${M3D_ALLOW_NON_A100:-0}" <<'PY'
+from __future__ import annotations
+
+import importlib.metadata
+import json
+import os
+import platform
+import sys
+
+import torch
+
+expected_gpus = int(sys.argv[1])
+allow_version_mismatch = sys.argv[2].lower() in {"1", "true", "yes", "on"}
+allow_non_a100 = sys.argv[3].lower() in {"1", "true", "yes", "on"}
+
+expected = {
+    "torch": "2.6.0",
+    "torchvision": "0.21.0",
+    "transformers": "4.52.4",
+    "peft": "0.15.2",
+    "monai": "1.4.0",
+    "numpy": "1.26.4",
+}
+observed = {}
+for distribution, wanted in expected.items():
+    try:
+        value = importlib.metadata.version(distribution)
+    except importlib.metadata.PackageNotFoundError:
+        value = "missing"
+    observed[distribution] = value
+    if value.split("+")[0] != wanted and not allow_version_mismatch:
+        raise SystemExit(
+            f"Version mismatch for {distribution}: expected {wanted}, observed {value}."
+        )
+
+if sys.version_info[:2] != (3, 10) and not allow_version_mismatch:
+    raise SystemExit(f"Expected Python 3.10.x, observed {platform.python_version()}.")
+if torch.version.cuda != "11.8" and not allow_version_mismatch:
+    raise SystemExit(f"Expected torch CUDA 11.8, observed {torch.version.cuda}.")
+if not torch.cuda.is_available():
+    raise SystemExit("CUDA is unavailable inside the PBS allocation.")
+if torch.cuda.device_count() != expected_gpus:
+    raise SystemExit(
+        f"Expected {expected_gpus} visible GPUs, observed {torch.cuda.device_count()}."
+    )
+if not torch.cuda.is_bf16_supported():
+    raise SystemExit("The visible CUDA device does not support BF16.")
+
+gpus = []
+for index in range(torch.cuda.device_count()):
+    properties = torch.cuda.get_device_properties(index)
+    record = {
+        "index": index,
+        "name": properties.name,
+        "memory_gib": properties.total_memory / (1024**3),
+        "capability": [properties.major, properties.minor],
+    }
+    gpus.append(record)
+    if not allow_non_a100:
+        if "A100" not in properties.name.upper():
+            raise SystemExit(f"GPU {index} is not an A100: {properties.name}.")
+        if (properties.major, properties.minor) != (8, 0):
+            raise SystemExit(
+                f"GPU {index} compute capability is "
+                f"{properties.major}.{properties.minor}, expected 8.0."
+            )
+
+print(json.dumps({
+    "python": platform.python_version(),
+    "torch": torch.__version__,
+    "torch_cuda": torch.version.cuda,
+    "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+    "packages": observed,
+    "gpus": gpus,
+}, indent=2, sort_keys=True))
+PY
+
+"${VENV_DIR}/bin/pip" freeze > "${PIP_FREEZE_FILE}"
+
+{
+    printf 'job_id=%s\n' "${JOB_ID}"
+    printf 'host=%s\n' "$(hostname -f 2>/dev/null || hostname)"
+    printf 'project_root=%s\n' "${PROJECT_ROOT}"
+    printf 'config=%s\n' "${CONFIG_PATH}"
+    printf 'source=%s\n' "${SOURCE}"
+    printf 'strategy=%s\n' "${STRATEGY}"
+    printf 'split=%s\n' "${SPLIT}"
+    printf 'output_dir=%s\n' "${OUTPUT_DIR}"
+    printf 'venv=%s\n' "${VENV_DIR}"
+    printf 'cache_root=%s\n' "${CACHE_ROOT}"
+    printf 'tmp_root=%s\n' "${JOB_TMP_ROOT}"
+    printf 'cuda_visible_devices=%s\n' "${CUDA_VISIBLE_DEVICES:-}"
+    printf 'python=%s\n' "$(command -v python)"
+    printf 'torchrun=%s\n' "$(command -v torchrun)"
+    printf 'date_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+} > "${ENVIRONMENT_FILE}"
+
+# -----------------------------------------------------------------------------
+# 5. Build the exact torchrun command
+# -----------------------------------------------------------------------------
+declare -a COMMAND=(
+    "${VENV_DIR}/bin/torchrun"
+    "--standalone"
+    "--nnodes=1"
+    "--nproc_per_node=${EXPECTED_GPUS}"
+    "--max_restarts=0"
+    "--monitor_interval=5"
+    "-m"
+    "m3d.evaluate"
+    "--config"
+    "${CONFIG_PATH}"
+    "--source"
+    "${SOURCE}"
+    "--strategy"
+    "${STRATEGY}"
+    "--split"
+    "${SPLIT}"
+    "--output-dir"
+    "${OUTPUT_DIR}"
+    "--batch-size"
+    "${BATCH_SIZE}"
+    "--max-new-tokens"
+    "${MAX_NEW_TOKENS}"
+    "--temperature"
+    "${TEMPERATURE}"
+    "--top-p"
+    "${TOP_P}"
+    "--num-beams"
+    "${NUM_BEAMS}"
+    "--repetition-penalty"
+    "${REPETITION_PENALTY}"
+    "--mask-threshold"
+    "${MASK_THRESHOLD}"
+    "--cache-dir"
+    "${HF_HOME}"
+)
+
+if [[ "${SOURCE}" == "export" ]]; then
+    COMMAND+=("--export-dir" "${EXPORT_DIR}")
+else
+    COMMAND+=("--checkpoint" "${CHECKPOINT_PATH}")
+fi
+
+if [[ -n "${M3D_MAX_SAMPLES_PER_TASK:-}" ]]; then
+    COMMAND+=("--max-samples-per-task" "${M3D_MAX_SAMPLES_PER_TASK}")
+fi
+if is_enabled "${M3D_DO_SAMPLE:-0}"; then
+    COMMAND+=("--do-sample")
+fi
+if is_enabled "${M3D_BERTSCORE:-0}" || [[ -n "${M3D_BERTSCORE_MODEL:-}" ]]; then
+    COMMAND+=("--bertscore")
+fi
+if [[ -n "${M3D_BERTSCORE_MODEL:-}" ]]; then
+    COMMAND+=("--bertscore-model" "${M3D_BERTSCORE_MODEL}")
+fi
+if is_enabled "${M3D_LOCAL_FILES_ONLY:-0}"; then
+    COMMAND+=("--local-files-only")
+fi
+if is_enabled "${M3D_SKIP_SHARD_HASH_VERIFICATION:-0}"; then
+    warn "Safetensors shard hash verification is disabled."
+    COMMAND+=("--skip-shard-hash-verification")
+fi
+if is_enabled "${M3D_SKIP_PATH_VERIFICATION:-0}"; then
+    warn "Configuration path verification is disabled."
+    COMMAND+=("--skip-path-verification")
+fi
+if is_enabled "${M3D_VERBOSE_ALL_RANKS:-0}"; then
+    COMMAND+=("--verbose-all-ranks")
+fi
+if is_enabled "${M3D_OVERWRITE:-0}"; then
+    COMMAND+=("--overwrite")
+fi
+if is_enabled "${M3D_NO_RETRIEVAL_NORMALISE:-0}"; then
+    COMMAND+=("--no-retrieval-normalise")
+fi
+if [[ -n "${M3D_RETRIEVAL_IMAGE_FEATURES:-}" ]]; then
+    COMMAND+=(
+        "--retrieval-image-features" "${M3D_RETRIEVAL_IMAGE_FEATURES}"
+        "--retrieval-text-features" "${M3D_RETRIEVAL_TEXT_FEATURES}"
+    )
+fi
+
+# The evaluation DataLoader reads its worker count from the normal config.
+if [[ -n "${M3D_NUM_WORKERS:-}" ]]; then
+    COMMAND+=("--override" "data.num_workers=${M3D_NUM_WORKERS}")
+fi
+
+# Task selection. A task file is safer than a comma-containing qsub -v value.
+declare -a REQUESTED_TASKS=()
+if [[ -n "${TASKS_FILE}" ]]; then
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+        line="${line%%#*}"
+        line="$(printf '%s' "${line}" | xargs)"
+        [[ -z "${line}" ]] && continue
+        REQUESTED_TASKS+=("${line}")
+    done < "${TASKS_FILE}"
+elif [[ "${TASKS_RAW}" != "all" ]]; then
+    while IFS= read -r task; do
+        task="$(printf '%s' "${task}" | xargs)"
+        [[ -z "${task}" ]] && continue
+        REQUESTED_TASKS+=("${task}")
+    done < <(
+        printf '%s\n' "${TASKS_RAW}" \
+            | tr ',;+|' '\n\n\n\n' \
+            | tr ' ' '\n'
+    )
+fi
+
+if (( ${#REQUESTED_TASKS[@]} > 0 )); then
+    for task in "${REQUESTED_TASKS[@]}"; do
+        case "${task}" in
+            caption|vqa_closed|vqa_open|vqa_yes_no|positioning|segmentation) ;;
+            *) fail "Unsupported evaluation task: ${task}" ;;
+        esac
+        COMMAND+=("--task" "${task}")
+    done
+fi
+
+if [[ -n "${OVERRIDES_FILE}" ]]; then
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+        line="${line%%#*}"
+        line="$(printf '%s' "${line}" | xargs)"
+        [[ -z "${line}" ]] && continue
+        [[ "${line}" == *=* ]] || \
+            fail "Invalid override without '=' in ${OVERRIDES_FILE}: ${line}"
+        COMMAND+=("--override" "${line}")
+    done < "${OVERRIDES_FILE}"
+fi
+
+{
+    printf '%q ' "${COMMAND[@]}"
+    printf '\n'
+} > "${COMMAND_FILE}"
+
+log "Evaluation command:"
+sed 's/^/  /' "${COMMAND_FILE}"
+
+# -----------------------------------------------------------------------------
+# 6. Start lightweight GPU telemetry and execute torchrun
+# -----------------------------------------------------------------------------
+if command -v nvidia-smi >/dev/null 2>&1; then
+    nvidia-smi \
+        --query-gpu=timestamp,index,uuid,name,utilization.gpu,utilization.memory,memory.used,memory.free,temperature.gpu,power.draw \
+        --format=csv \
+        -l "${M3D_GPU_LOG_INTERVAL_SECONDS:-10}" \
+        > "${GPU_LOG_FILE}" 2>&1 &
+    GPU_MONITOR_PID=$!
+    log "GPU telemetry PID: ${GPU_MONITOR_PID}"
+else
+    warn "nvidia-smi is unavailable; GPU telemetry will not be recorded."
+fi
+
+set +e
+"${COMMAND[@]}" &
+TORCHRUN_PID=$!
+wait "${TORCHRUN_PID}"
+TORCHRUN_EXIT=$?
+TORCHRUN_PID=""
+set -e
+
+if (( TORCHRUN_EXIT != 0 )); then
+    fail "torchrun evaluation exited with status ${TORCHRUN_EXIT}."
+fi
+
+# -----------------------------------------------------------------------------
+# 7. Verify committed outputs and print a concise summary
+# -----------------------------------------------------------------------------
+[[ -f "${OUTPUT_DIR}/COMPLETED.json" ]] || \
+    fail "Evaluation returned success but COMPLETED.json is missing from ${OUTPUT_DIR}."
+[[ -f "${OUTPUT_DIR}/evaluation_report.json" ]] || \
+    fail "Evaluation returned success but evaluation_report.json is missing."
+
+"${VENV_DIR}/bin/python" - "${OUTPUT_DIR}/evaluation_report.json" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+report = json.loads(path.read_text(encoding="utf-8"))
+print("[M3D evaluation summary]")
+print(f"  source: {report.get('source')}")
+print(f"  source_path: {report.get('source_path')}")
+print(f"  split: {report.get('split')}")
+print(f"  strategy: {report.get('strategy')}")
+print(f"  world_size: {report.get('world_size')}")
+print(f"  elapsed_seconds: {report.get('elapsed_seconds')}")
+for task in report.get("tasks", []):
+    print(
+        f"  task={task.get('task')} "
+        f"samples={task.get('global_sample_count')} "
+        f"elapsed={task.get('elapsed_seconds')}"
+    )
+    metrics = task.get("metrics") or {}
+    for key in sorted(metrics):
+        value = metrics[key]
+        if isinstance(value, (int, float, str, bool)) or value is None:
+            print(f"    {key}: {value}")
+if report.get("retrieval") is not None:
+    print("  retrieval:")
+    print(json.dumps(report["retrieval"], indent=4, sort_keys=True))
+PY
+
+log "Predictions directory: ${OUTPUT_DIR}/predictions"
+log "Metrics directory: ${OUTPUT_DIR}/metrics"

@@ -1,0 +1,278 @@
+#!/usr/bin/env bash
+#PBS -P personal-e1129906
+#PBS -q normal
+#PBS -N M3D_preflight
+#PBS -l select=1:ncpus=16:mem=64gb:ngpus=2
+#PBS -l walltime=00:20:00
+#PBS -j oe 
+
+# M3D-Modernized — ASPIRE 2A GPU preflight job
+# =================================================
+# Submit this file from the M3D-Modernized project root:
+#
+#   qsub scripts/02_preflight.pbs
+#
+# When the virtual environment is outside the project directory:
+#
+#   qsub -v M3D_VENV_DIR=/scratch/users/industry/theiahealth/theiahth/envs/m3d-modern \
+#       scripts/02_preflight.pbs
+#
+# This job does not train M3D. It verifies the exact two-GPU hardware and
+# software path that the later training jobs will use.
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+umask 027
+
+readonly EXPECTED_GPUS="${M3D_EXPECTED_GPUS:-2}"
+readonly PROJECT_ROOT="${PBS_O_WORKDIR:?PBS_O_WORKDIR is unavailable}"
+readonly VENV_DIR="${M3D_VENV_DIR:-${PROJECT_ROOT}/.venv}"
+readonly JOB_ID="${PBS_JOBID:-manual}"
+readonly JOB_ID_SAFE="${JOB_ID//[^A-Za-z0-9._-]/_}"
+readonly LOG_DIR="${PROJECT_ROOT}/logs/preflight/${JOB_ID_SAFE}"
+readonly LOG_FILE="${LOG_DIR}/preflight.log"
+readonly GPU_LOG_FILE="${LOG_DIR}/gpu.csv"
+readonly REPORT_FILE="${LOG_DIR}/preflight_report.json"
+readonly PREFLIGHT_SCRIPT="${PROJECT_ROOT}/scripts/01_preflight.py"
+
+GPU_MONITOR_PID=""
+
+log() {
+    printf '[M3D preflight job] %s\n' "$*"
+}
+
+fail() {
+    printf '[M3D preflight job] ERROR: %s\n' "$*" >&2
+    exit 1
+}
+
+cleanup() {
+    local exit_code=$?
+
+    if [[ -n "${GPU_MONITOR_PID}" ]] && kill -0 "${GPU_MONITOR_PID}" 2>/dev/null; then
+        kill "${GPU_MONITOR_PID}" 2>/dev/null || true
+        wait "${GPU_MONITOR_PID}" 2>/dev/null || true
+    fi
+
+    if (( exit_code == 0 )); then
+        log "Job completed successfully."
+        log "Report: ${REPORT_FILE}"
+        log "Log: ${LOG_FILE}"
+        log "GPU telemetry: ${GPU_LOG_FILE}"
+    else
+        log "Job failed with exit code ${exit_code}."
+        log "Inspect: ${LOG_FILE}"
+    fi
+
+    exit "${exit_code}"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+mkdir -p "${LOG_DIR}"
+
+# Line-buffer stdout and stderr so the log can be followed while the job runs.
+exec > >(stdbuf -oL -eL tee -a "${LOG_FILE}") 2>&1
+
+log "Job ID: ${JOB_ID}"
+log "Host: $(hostname -f 2>/dev/null || hostname)"
+log "Submission directory: ${PROJECT_ROOT}"
+log "Virtual environment: ${VENV_DIR}"
+log "Expected GPUs: ${EXPECTED_GPUS}"
+
+[[ "${EXPECTED_GPUS}" =~ ^[1-9][0-9]*$ ]] || \
+    fail "M3D_EXPECTED_GPUS must be a positive integer."
+
+[[ -f "${PREFLIGHT_SCRIPT}" ]] || \
+    fail "Cannot find ${PREFLIGHT_SCRIPT}. Submit this PBS file from the project root."
+
+[[ -x "${VENV_DIR}/bin/python" ]] || \
+    fail "Virtual environment not found at ${VENV_DIR}. Run scripts/00_setup_environment.sh first."
+
+# -----------------------------------------------------------------------------
+# 1. Recreate the exact ASPIRE 2A module stack used during installation
+# -----------------------------------------------------------------------------
+type module >/dev/null 2>&1 || \
+    fail "The ASPIRE 2A module command is unavailable."
+
+log "Purging loaded modules"
+module purge
+
+log "Loading PrgEnv-gnu/8.3.3"
+module load PrgEnv-gnu/8.3.3
+
+# Load all other modules before resolving GCC. Some modules, especially
+# Python, may replace the GCC module through dependency resolution.
+log "Loading python/3.10.9"
+module load python/3.10.9
+
+log "Loading cuda/11.8.0"
+module load cuda/11.8.0
+
+log "Loading cmake/3.31.3"
+module load cmake/3.31.3
+
+log "Loading ninja/1.11.1"
+module load ninja/1.11.1
+
+# Resolve GCC only after every other module has been loaded.
+LOADED_GCC="$(
+    module -t list 2>&1 |
+        sed -n '/^gcc\//{p;q;}'
+)"
+
+if [[ -z "${LOADED_GCC}" ]]; then
+    log "No GCC module detected; loading gcc/11.4.0-nscc"
+    module load gcc/11.4.0-nscc
+
+elif [[ "${LOADED_GCC}" != "gcc/11.4.0-nscc" ]]; then
+    log "Swapping ${LOADED_GCC} for gcc/11.4.0-nscc"
+    module swap "${LOADED_GCC}" gcc/11.4.0-nscc
+
+else
+    log "Required GCC module already loaded: gcc/11.4.0-nscc"
+fi
+
+# Clear any command paths cached before the module swap.
+hash -r
+
+# Verify that the final resolved module is exactly the expected GCC module.
+FINAL_GCC_MODULE="$(
+    module -t list 2>&1 |
+        sed -n '/^gcc\//{p;q;}'
+)"
+
+[[ "${FINAL_GCC_MODULE}" == "gcc/11.4.0-nscc" ]] || \
+    fail "Expected final GCC module gcc/11.4.0-nscc, but resolved ${FINAL_GCC_MODULE:-none}."
+
+# Verify the actual compiler executable, not only the module name.
+FINAL_GCC_VERSION="$(gcc -dumpfullversion -dumpversion)"
+
+[[ "${FINAL_GCC_VERSION}" == 11.4.0* ]] || \
+    fail "Expected GCC 11.4.0, but gcc reports ${FINAL_GCC_VERSION}."
+
+# Confirm that swapping GCC did not remove the other required modules.
+LOADED_MODULES="$(module -t list 2>&1)"
+
+for required_module in \
+    "PrgEnv-gnu/8.3.3" \
+    "gcc/11.4.0-nscc" \
+    "python/3.10.9" \
+    "cuda/11.8.0" \
+    "cmake/3.31.3" \
+    "ninja/1.11.1"
+do
+    grep -Fq "${required_module}" <<< "${LOADED_MODULES}" || \
+        fail "Required module is missing after dependency resolution: ${required_module}"
+done
+
+log "Loaded modules:"
+printf '%s\n' "${LOADED_MODULES}" | sed 's/^/  /'
+
+log "GCC executable: $(command -v gcc)"
+log "GCC version: $(gcc --version | head -n 1)"
+
+# shellcheck disable=SC1091
+source "${VENV_DIR}/bin/activate"
+
+# -----------------------------------------------------------------------------
+# 2. Runtime directories and deterministic process settings
+# -----------------------------------------------------------------------------
+readonly JOB_TMP_ROOT="${TMPDIR:-/tmp/m3d_${JOB_ID_SAFE}}"
+mkdir -p "${JOB_TMP_ROOT}"
+
+export PYTHONNOUSERSITE=1
+export PYTHONUNBUFFERED=1
+export TOKENIZERS_PARALLELISM=false
+
+export HF_HOME="${M3D_CACHE_ROOT:-${PROJECT_ROOT}/.cache}/huggingface"
+export TORCH_HOME="${M3D_CACHE_ROOT:-${PROJECT_ROOT}/.cache}/torch"
+export TRITON_CACHE_DIR="${JOB_TMP_ROOT}/triton"
+export TORCH_EXTENSIONS_DIR="${JOB_TMP_ROOT}/torch_extensions"
+
+# 16 requested CPU cores / 2 GPU ranks = 8 CPU threads per rank.
+export OMP_NUM_THREADS="${M3D_OMP_NUM_THREADS:-8}"
+export MKL_NUM_THREADS="${M3D_MKL_NUM_THREADS:-8}"
+
+# Fail distributed collectives instead of hanging indefinitely.
+export NCCL_DEBUG="${NCCL_DEBUG:-WARN}"
+export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
+
+# Helpful diagnostics in case torch.compile or a CUDA kernel fails later.
+export TORCH_SHOW_CPP_STACKTRACES=1
+
+# Derive the toolkit root from the explicitly loaded CUDA module.
+readonly NVCC_PATH="$(command -v nvcc)"
+[[ -n "${NVCC_PATH}" ]] || fail "nvcc is unavailable after loading cuda/11.8.0."
+export CUDA_HOME="$(cd -- "$(dirname -- "${NVCC_PATH}")/.." && pwd -P)"
+export CUDACXX="${CUDA_HOME}/bin/nvcc"
+
+log "Python: $(python --version 2>&1)"
+log "Python executable: $(command -v python)"
+log "CUDA_HOME: ${CUDA_HOME}"
+log "NVCC: $(nvcc --version | grep 'release' | tail -n 1 | sed 's/^ *//')"
+log "OMP_NUM_THREADS: ${OMP_NUM_THREADS}"
+
+# -----------------------------------------------------------------------------
+# 3. Confirm PBS exposed exactly the requested GPUs
+# -----------------------------------------------------------------------------
+VISIBLE_GPUS="$(python - <<'PY'
+import torch
+print(torch.cuda.device_count())
+PY
+)"
+
+[[ "${VISIBLE_GPUS}" == "${EXPECTED_GPUS}" ]] || \
+    fail "Expected ${EXPECTED_GPUS} visible GPUs, but PyTorch sees ${VISIBLE_GPUS}."
+
+log "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-<not explicitly set>}"
+nvidia-smi -L
+
+# Record lightweight telemetry while the tests execute.
+nvidia-smi \
+    --query-gpu=timestamp,index,uuid,name,utilization.gpu,memory.used,memory.free,temperature.gpu,power.draw \
+    --format=csv \
+    --loop=5 \
+    > "${GPU_LOG_FILE}" 2>&1 &
+GPU_MONITOR_PID=$!
+
+# -----------------------------------------------------------------------------
+# 4. Launch one process per GPU and run the strict preflight
+# -----------------------------------------------------------------------------
+log "Launching ${EXPECTED_GPUS}-GPU preflight with torchrun"
+
+"${VENV_DIR}/bin/torchrun" \
+    --standalone \
+    --nnodes=1 \
+    --nproc_per_node="${EXPECTED_GPUS}" \
+    "${PREFLIGHT_SCRIPT}" \
+    --expected-gpus "${EXPECTED_GPUS}" \
+    --report "${REPORT_FILE}"
+
+[[ -s "${REPORT_FILE}" ]] || \
+    fail "Preflight returned successfully but did not create ${REPORT_FILE}."
+
+log "Preflight report summary:"
+python - "${REPORT_FILE}" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+report_path = Path(sys.argv[1])
+report = json.loads(report_path.read_text(encoding="utf-8"))
+
+print(f"  status: {report.get('status', 'unknown')}")
+print(f"  world_size: {report.get('world_size', 'unknown')}")
+
+for rank_report in report.get("ranks", []):
+    rank = rank_report.get("rank", "?")
+    gpu = rank_report.get("gpu", {})
+    print(
+        f"  rank {rank}: "
+        f"{gpu.get('name', 'unknown GPU')} | "
+        f"{gpu.get('total_memory', 'unknown memory')}"
+    )
+PY

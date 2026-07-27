@@ -1,0 +1,820 @@
+#!/usr/bin/env bash
+#PBS -P personal-e1129906
+#PBS -q glong
+#PBS -N M3D_train
+#PBS -l select=1:ncpus=64:mem=440gb:ngpus=2
+#PBS -l walltime=120:00:00
+#PBS -j oe
+
+# M3D-Modernized — production ASPIRE 2A training job
+# ==================================================
+# Submit this file from the M3D-modernized project root, after both integration
+# suites have passed on the same software environment.
+#
+# Fresh DDP training:
+#   qsub scripts/06_train_aspire2a.pbs
+#
+# FSDP2 memory-fallback training:
+#   qsub -v M3D_STRATEGY=fsdp2 scripts/06_train_aspire2a.pbs
+#
+# Resume an exact completed checkpoint:
+#   qsub -v M3D_RESUME_FROM=/absolute/path/checkpoint-step-00001000 \
+#       scripts/06_train_aspire2a.pbs
+#
+# Resume the checkpoint referenced by <output_dir>/latest.json:
+#   qsub -v M3D_RESUME_FROM=latest scripts/06_train_aspire2a.pbs
+#
+# Full startup validation without consuming a batch:
+#   qsub -v M3D_STARTUP_ONLY=1 scripts/06_train_aspire2a.pbs
+#
+# Common optional variables:
+#   M3D_VENV_DIR=/scratch/.../envs/m3d-modern
+#   M3D_CONFIG=/scratch/.../configs/m3d_joint_finetune.yaml
+#   M3D_CACHE_ROOT=/scratch/.../.cache/m3d-modern
+#   M3D_OUTPUT_DIR=/scratch/.../outputs/my-run
+#   M3D_TENSORBOARD_DIR=/scratch/.../logs/tensorboard/my-run
+#   M3D_NUM_WORKERS=16
+#   M3D_EPOCHS=5
+#   M3D_GRAD_ACCUM=4
+#   M3D_SAVE_EVERY_STEPS=1000
+#   M3D_KEEP_LAST_N=2
+#   M3D_LOG_EVERY_STEPS=10
+#   M3D_CHECKPOINT_ASYNC=1
+#   M3D_NODE_LOCAL_CACHE=1
+#   M3D_LOCAL_FILES_ONLY=1
+#   M3D_OVERRIDES_FILE=/absolute/path/overrides.txt
+#
+# M3D_OVERRIDES_FILE accepts one dotted.path=YAML_VALUE expression per line.
+# Empty lines and lines whose first non-space character is # are ignored.
+#
+# Safety defaults:
+#   - exact resume requires the same world size and compatible model/data plan;
+#   - a fresh run refuses an output directory that already contains checkpoints;
+#   - periodic checkpoints are atomically committed by CheckpointManager;
+#   - SIGTERM/SIGINT are forwarded to torchrun, while the latest previously
+#     completed checkpoint remains valid.
+#
+# 进入模型训练：
+# scripts/06_train_aspire2a.pbs
+#     ↓
+# src/m3d/train.py
+#     ↓
+# 加载 YAML 配置
+#     ↓
+# Tokenizer
+#     ↓
+# DataLoader
+#     ↓
+# M3D 模型
+#     ↓
+# DDP 或 FSDP2
+#     ↓
+# Optimizer
+#     ↓
+# Scheduler
+#     ↓
+# CheckpointManager
+#     ↓
+# M3DTrainer
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+umask 027
+
+readonly PROJECT_ROOT="${PBS_O_WORKDIR:?PBS_O_WORKDIR is unavailable}"
+readonly VENV_DIR="${M3D_VENV_DIR:-${PROJECT_ROOT}/.venv}"
+readonly CONFIG_PATH="${M3D_CONFIG:-${PROJECT_ROOT}/configs/m3d_joint_finetune.yaml}"
+readonly STRATEGY="${M3D_STRATEGY:-ddp}" # 未来映射到distributed.strategy，再由分布式模型包装代码选择 DDP 或 FSDP2。
+readonly EXPECTED_GPUS="${M3D_EXPECTED_GPUS:-2}"
+readonly JOB_ID="${PBS_JOBID:-manual}"
+readonly JOB_ID_SAFE="${JOB_ID//[^A-Za-z0-9._-]/_}"
+readonly LOG_DIR="${PROJECT_ROOT}/logs/training/${JOB_ID_SAFE}"
+readonly LOG_FILE="${LOG_DIR}/train.log"
+readonly GPU_LOG_FILE="${LOG_DIR}/gpu.csv"
+readonly COMMAND_FILE="${LOG_DIR}/command.txt"
+readonly ENVIRONMENT_FILE="${LOG_DIR}/environment.txt"
+readonly MODULE_FILE="${LOG_DIR}/modules.txt"
+readonly PIP_FREEZE_FILE="${LOG_DIR}/pip-freeze.txt"
+readonly OVERRIDES_FILE="${M3D_OVERRIDES_FILE:-}"
+readonly RESUME_REQUEST="${M3D_RESUME_FROM:-}"
+
+# 后台进程状态
+GPU_MONITOR_PID="" # 保存后台 nvidia-smi 进程号。
+TORCHRUN_PID="" # 保存训练主进程的 PID。未来用于等待训练结束；转发信号异常退出时终止训练。
+RECEIVED_SIGNAL="" # 记录是否收到：INT；TERM；HUP。未来在失败日志中说明作业为什么终止。
+
+log() {
+    printf '[M3D production job] %s\n' "$*"
+}
+
+warn() {
+    printf '[M3D production job] WARNING: %s\n' "$*" >&2
+}
+
+fail() {
+    printf '[M3D production job] ERROR: %s\n' "$*" >&2
+    exit 1
+}
+
+is_enabled() {
+    case "${1:-0}" in
+        1|true|TRUE|yes|YES|on|ON) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# 定义函数，把普通字符串转换成合法 JSON/YAML 字符串
+json_quote() {
+    python - "$1" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+
+print(json.dumps(sys.argv[1]))
+PY
+}
+
+# 定义收到系统信号时的处理函数
+forward_signal() {
+    local signal_name="$1"
+    RECEIVED_SIGNAL="${signal_name}"
+    warn "Received ${signal_name}; forwarding it to torchrun."
+    warn "Only checkpoints with COMPLETED.json are safe to resume."
+
+    if [[ -n "${TORCHRUN_PID}" ]] && kill -0 "${TORCHRUN_PID}" 2>/dev/null; then
+        kill -s "${signal_name}" "${TORCHRUN_PID}" 2>/dev/null || true
+        return
+    fi
+
+    case "${signal_name}" in
+        INT) exit 130 ;;
+        TERM) exit 143 ;;
+        HUP) exit 129 ;;
+        *) exit 1 ;;
+    esac
+}
+
+cleanup() {
+    local exit_code=$?
+    trap - EXIT
+
+    if [[ -n "${GPU_MONITOR_PID}" ]] && kill -0 "${GPU_MONITOR_PID}" 2>/dev/null; then
+        kill "${GPU_MONITOR_PID}" 2>/dev/null || true
+        wait "${GPU_MONITOR_PID}" 2>/dev/null || true
+    fi
+
+    if [[ -n "${TORCHRUN_PID}" ]] && kill -0 "${TORCHRUN_PID}" 2>/dev/null; then
+        kill -TERM "${TORCHRUN_PID}" 2>/dev/null || true
+        wait "${TORCHRUN_PID}" 2>/dev/null || true
+    fi
+
+    if (( exit_code == 0 )); then
+        log "Production job completed successfully."
+        log "Training log: ${LOG_FILE}"
+        log "GPU telemetry: ${GPU_LOG_FILE}"
+    else
+        warn "Production job failed with exit code ${exit_code}."
+        if [[ -n "${RECEIVED_SIGNAL}" ]]; then
+            warn "Termination signal: ${RECEIVED_SIGNAL}."
+        fi
+        warn "Inspect ${LOG_FILE} and resume only from a completed checkpoint."
+    fi
+
+    exit "${exit_code}"
+}
+
+trap cleanup EXIT
+trap 'forward_signal INT' INT
+trap 'forward_signal TERM' TERM
+trap 'forward_signal HUP' HUP
+
+mkdir -p "${LOG_DIR}"
+exec > >(stdbuf -oL -eL tee -a "${LOG_FILE}") 2>&1
+
+# -----------------------------------------------------------------------------
+# 1. Validate submission context and user-provided controls
+# -----------------------------------------------------------------------------
+[[ -f "${PROJECT_ROOT}/src/m3d/train.py" ]] || \
+    fail "Submit this PBS file from the M3D-modernized project root."
+[[ -f "${CONFIG_PATH}" ]] || fail "Configuration file not found: ${CONFIG_PATH}"
+[[ "${STRATEGY}" == "ddp" || "${STRATEGY}" == "fsdp2" ]] || \
+    fail "M3D_STRATEGY must be ddp or fsdp2; got ${STRATEGY}."
+[[ "${EXPECTED_GPUS}" =~ ^[1-9][0-9]*$ ]] || \
+    fail "M3D_EXPECTED_GPUS must be a positive integer."
+
+if [[ -n "${M3D_NUM_WORKERS:-}" ]]; then
+    [[ "${M3D_NUM_WORKERS}" =~ ^[0-9]+$ ]] || \
+        fail "M3D_NUM_WORKERS must be a non-negative integer."
+fi
+if [[ -n "${OVERRIDES_FILE}" ]]; then
+    [[ -f "${OVERRIDES_FILE}" ]] || \
+        fail "M3D_OVERRIDES_FILE does not exist: ${OVERRIDES_FILE}"
+fi
+
+log "Job ID: ${JOB_ID}"
+log "Host: $(hostname -f 2>/dev/null || hostname)"
+log "Project root: ${PROJECT_ROOT}"
+log "Configuration: ${CONFIG_PATH}"
+log "Requested strategy: ${STRATEGY}"
+log "Expected GPUs: ${EXPECTED_GPUS}"
+
+# -----------------------------------------------------------------------------
+# 2. Recreate the pinned ASPIRE 2A software environment
+# -----------------------------------------------------------------------------
+type module >/dev/null 2>&1 || \
+    fail "The ASPIRE 2A environment-modules command is unavailable."
+
+module purge
+module load PrgEnv-gnu/8.3.3
+module load python/3.10.9
+module load cuda/11.8.0
+module load cmake/3.31.3
+module load ninja/1.11.1
+
+# Resolve GCC only after every other module has been loaded.
+LOADED_GCC="$(
+    module -t list 2>&1 |
+        sed -n '/^gcc\//{p;q;}'
+)"
+
+if [[ -z "${LOADED_GCC}" ]]; then
+    log "No GCC module detected; loading gcc/11.4.0-nscc"
+    module load gcc/11.4.0-nscc
+
+elif [[ "${LOADED_GCC}" != "gcc/11.4.0-nscc" ]]; then
+    log "Swapping ${LOADED_GCC} for gcc/11.4.0-nscc"
+    module swap "${LOADED_GCC}" gcc/11.4.0-nscc
+
+else
+    log "Required GCC module already loaded: gcc/11.4.0-nscc"
+fi
+
+# Clear any command paths cached before the module swap.
+hash -r
+
+module -t list 2> "${MODULE_FILE}"
+log "Loaded modules:"
+sed 's/^/  /' "${MODULE_FILE}"
+
+[[ -x "${VENV_DIR}/bin/python" ]] || \
+    fail "Virtual environment not found at ${VENV_DIR}. Run scripts/00_setup_environment.sh first."
+[[ -x "${VENV_DIR}/bin/torchrun" ]] || \
+    fail "torchrun not found at ${VENV_DIR}/bin/torchrun."
+
+# shellcheck disable=SC1091
+source "${VENV_DIR}/bin/activate"
+cd -P "${PROJECT_ROOT}"
+
+export PYTHONPATH="${PROJECT_ROOT}/src:${PYTHONPATH:-}"
+export PYTHONNOUSERSITE=1 # 避免虚拟环境被用户个人安装的其他版本污染。
+export PYTHONUNBUFFERED=1 # 让 Python 输出立即写入日志，不长时间缓冲。
+export TOKENIZERS_PARALLELISM=false # 关闭 Hugging Face tokenizer 内部线程并行。
+export CUDA_MODULE_LOADING="${CUDA_MODULE_LOADING:-LAZY}"
+
+# -----------------------------------------------------------------------------
+# 3. Persistent and node-local cache configuration
+# -----------------------------------------------------------------------------
+readonly JOB_TMP_ROOT="${TMPDIR:-/tmp/m3d_${JOB_ID_SAFE}}"
+readonly CACHE_ROOT="${M3D_CACHE_ROOT:-${PROJECT_ROOT}/.cache}"
+readonly LOCAL_DATA_CACHE="${M3D_LOCAL_CACHE_DIR:-${JOB_TMP_ROOT}/data_cache}"
+
+mkdir -p \
+    "${JOB_TMP_ROOT}/triton" \
+    "${JOB_TMP_ROOT}/torch_extensions" \
+    "${JOB_TMP_ROOT}/torchinductor" \
+    "${CACHE_ROOT}/huggingface" \
+    "${CACHE_ROOT}/torch"
+
+export TMPDIR="${JOB_TMP_ROOT}"
+export HF_HOME="${CACHE_ROOT}/huggingface"
+export HUGGINGFACE_HUB_CACHE="${HF_HOME}/hub"
+export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
+export TORCH_HOME="${CACHE_ROOT}/torch"
+export TRITON_CACHE_DIR="${JOB_TMP_ROOT}/triton"
+export TORCH_EXTENSIONS_DIR="${JOB_TMP_ROOT}/torch_extensions"
+export TORCHINDUCTOR_CACHE_DIR="${JOB_TMP_ROOT}/torchinductor"
+export XDG_CACHE_HOME="${CACHE_ROOT}"
+
+# DataLoader workers and checkpoint staging also consume CPU resources. Keep
+# intra-op threading conservative to avoid oversubscribing the 64 requested CPUs.
+# 限制 CPU 数学线程。如果不限制，两个训练 rank 加几十个 DataLoader worker，每个都可能尝试使用几十个线程，造成严重 oversubscription
+export OMP_NUM_THREADS="${M3D_OMP_NUM_THREADS:-4}"
+export MKL_NUM_THREADS="${M3D_MKL_NUM_THREADS:-4}"
+export OPENBLAS_NUM_THREADS="${M3D_OPENBLAS_NUM_THREADS:-4}"
+export NUMEXPR_NUM_THREADS="${M3D_NUMEXPR_NUM_THREADS:-4}"
+
+# Distributed failure diagnostics. Training collectives remain on NCCL; the
+# CheckpointManager creates a separate Gloo group for asynchronous CPU staging.
+export NCCL_DEBUG="${NCCL_DEBUG:-WARN}"
+export TORCH_DISTRIBUTED_DEBUG="${M3D_TORCH_DISTRIBUTED_DEBUG:-OFF}"
+export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
+export TORCH_NCCL_BLOCKING_WAIT=1
+export TORCH_NCCL_DUMP_ON_TIMEOUT=1
+export TORCH_NCCL_TRACE_BUFFER_SIZE="${TORCH_NCCL_TRACE_BUFFER_SIZE:-1048576}"
+export TORCH_SHOW_CPP_STACKTRACES=1
+export CUDA_DEVICE_MAX_CONNECTIONS="${CUDA_DEVICE_MAX_CONNECTIONS:-1}"
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
+
+# 禁止生成 core dump，深度学习进程崩溃时，core dump 可能非常大，迅速占满 scratch
+ulimit -c 0 || true
+ulimit -n 65536 2>/dev/null || warn "Could not raise open-file limit to 65536."
+
+readonly NVCC_PATH="$(command -v nvcc)"
+[[ -n "${NVCC_PATH}" ]] || fail "nvcc is unavailable after loading cuda/11.8.0."
+export CUDA_HOME="$(cd -- "$(dirname -- "${NVCC_PATH}")/.." && pwd -P)"
+export CUDACXX="${CUDA_HOME}/bin/nvcc"
+
+log "Python: $(python --version 2>&1)"
+log "Python executable: $(command -v python)"
+log "PyTorch: $(python -c 'import torch; print(torch.__version__)')"
+log "PyTorch CUDA runtime: $(python -c 'import torch; print(torch.version.cuda)')"
+log "CUDA_HOME: ${CUDA_HOME}"
+log "Virtual environment: ${VENV_DIR}"
+log "Persistent cache root: ${CACHE_ROOT}"
+log "Job-local temporary root: ${JOB_TMP_ROOT}"
+log "OMP_NUM_THREADS: ${OMP_NUM_THREADS}"
+
+# 把完整 Python 包环境写入 pip-freeze.txt
+python -m pip freeze > "${PIP_FREEZE_FILE}"
+
+# -----------------------------------------------------------------------------
+# 4. Build strongly quoted training overrides
+# -----------------------------------------------------------------------------
+OVERRIDE_VALUES=()
+OVERRIDE_VALUES+=("distributed.strategy=${STRATEGY}")
+
+if [[ -n "${M3D_NUM_WORKERS:-}" ]]; then
+    OVERRIDE_VALUES+=("data.num_workers=${M3D_NUM_WORKERS}")
+fi
+if [[ -n "${M3D_EPOCHS:-}" ]]; then
+    OVERRIDE_VALUES+=("optimization.epochs=${M3D_EPOCHS}")
+fi
+if [[ -n "${M3D_GRAD_ACCUM:-}" ]]; then
+    OVERRIDE_VALUES+=("optimization.gradient_accumulation_steps=${M3D_GRAD_ACCUM}")
+fi
+if [[ -n "${M3D_STEPS_PER_EPOCH:-}" ]]; then
+    OVERRIDE_VALUES+=("data.task_sampling.steps_per_epoch=${M3D_STEPS_PER_EPOCH}")
+fi
+if [[ -n "${M3D_SAVE_EVERY_STEPS:-}" ]]; then
+    OVERRIDE_VALUES+=("checkpoint.save_every_steps=${M3D_SAVE_EVERY_STEPS}")
+fi
+if [[ -n "${M3D_KEEP_LAST_N:-}" ]]; then
+    OVERRIDE_VALUES+=("checkpoint.keep_last_n=${M3D_KEEP_LAST_N}")
+fi
+if [[ -n "${M3D_LOG_EVERY_STEPS:-}" ]]; then
+    OVERRIDE_VALUES+=("logging.log_every_steps=${M3D_LOG_EVERY_STEPS}")
+fi
+if [[ -n "${M3D_PROFILE_STEPS:-}" ]]; then
+    OVERRIDE_VALUES+=("logging.profile_steps=${M3D_PROFILE_STEPS}")
+fi
+if [[ -n "${M3D_OUTPUT_DIR:-}" ]]; then
+    OVERRIDE_VALUES+=("checkpoint.output_dir=$(json_quote "${M3D_OUTPUT_DIR}")")
+fi
+if [[ -n "${M3D_TENSORBOARD_DIR:-}" ]]; then
+    OVERRIDE_VALUES+=("logging.tensorboard_dir=$(json_quote "${M3D_TENSORBOARD_DIR}")")
+elif [[ -n "${M3D_OUTPUT_DIR:-}" ]]; then
+    OVERRIDE_VALUES+=("logging.tensorboard_dir=$(json_quote "${M3D_OUTPUT_DIR}/tensorboard")")
+fi
+
+if [[ -n "${M3D_CHECKPOINT_ASYNC:-}" ]]; then
+    if is_enabled "${M3D_CHECKPOINT_ASYNC}"; then
+        OVERRIDE_VALUES+=("checkpoint.asynchronous=true")
+    else
+        OVERRIDE_VALUES+=("checkpoint.asynchronous=false")
+    fi
+fi
+if [[ -n "${M3D_COMPILE_MODEL:-}" ]]; then
+    if is_enabled "${M3D_COMPILE_MODEL}"; then
+        OVERRIDE_VALUES+=("optimization.compile_model=true")
+    else
+        OVERRIDE_VALUES+=("optimization.compile_model=false")
+    fi
+fi
+if [[ -n "${M3D_VERIFY_FILES_AT_STARTUP:-}" ]]; then
+    if is_enabled "${M3D_VERIFY_FILES_AT_STARTUP}"; then
+        OVERRIDE_VALUES+=("data.verify_files_at_startup=true")
+    else
+        OVERRIDE_VALUES+=("data.verify_files_at_startup=false")
+    fi
+fi
+
+if is_enabled "${M3D_NODE_LOCAL_CACHE:-0}"; then
+    mkdir -p "${LOCAL_DATA_CACHE}"
+    OVERRIDE_VALUES+=("data.local_cache_root=$(json_quote "${LOCAL_DATA_CACHE}")")
+    log "On-demand node-local dataset cache enabled: ${LOCAL_DATA_CACHE}"
+else
+    # Make the PBS control authoritative even when another YAML enables cache.
+    OVERRIDE_VALUES+=("data.local_cache_root=null")
+    log "Node-local dataset cache disabled; volumes will be read from data_root."
+fi
+
+case "${RESUME_REQUEST}" in
+    none|NONE|null|NULL)
+        OVERRIDE_VALUES+=("checkpoint.resume_from=null")
+        ;;
+esac
+
+if [[ -n "${OVERRIDES_FILE}" ]]; then
+    log "Reading additional overrides from ${OVERRIDES_FILE}"
+    while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
+        # Trim leading and trailing whitespace without evaluating the content.
+        line="${raw_line#"${raw_line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [[ -z "${line}" ]] && continue
+        [[ "${line}" == \#* ]] && continue
+        [[ "${line}" == *=* ]] || \
+            fail "Invalid override line (expected dotted.path=value): ${line}"
+        OVERRIDE_VALUES+=("${line}")
+    done < "${OVERRIDES_FILE}"
+fi
+
+TRAIN_ARGS=(
+    --config "${CONFIG_PATH}"
+    --cache-dir "${HF_HOME}"
+)
+for override in "${OVERRIDE_VALUES[@]}"; do
+    TRAIN_ARGS+=(--override "${override}")
+done
+
+if is_enabled "${M3D_LOCAL_FILES_ONLY:-0}"; then
+    TRAIN_ARGS+=(--local-files-only)
+fi
+if is_enabled "${M3D_SKIP_PATH_VERIFICATION:-0}"; then
+    TRAIN_ARGS+=(--skip-path-verification)
+fi
+if is_enabled "${M3D_VERBOSE_ALL_RANKS:-0}"; then
+    TRAIN_ARGS+=(--verbose-all-ranks)
+fi
+if is_enabled "${M3D_STARTUP_ONLY:-0}"; then
+    TRAIN_ARGS+=(--startup-only)
+fi
+if is_enabled "${M3D_NO_SAVE_TOKENIZER:-0}"; then
+    TRAIN_ARGS+=(--no-save-tokenizer)
+fi
+if is_enabled "${M3D_ALLOW_UNFUSED_DDP_FALLBACK:-0}"; then
+    TRAIN_ARGS+=(--allow-unfused-ddp-fallback)
+fi
+
+# Resolve the effective configuration without performing expensive source-file
+# verification. The real training process repeats full validation on every rank.
+IFS=$'\t' read -r \
+    EFFECTIVE_OUTPUT_DIR \
+    EFFECTIVE_TENSORBOARD_DIR \
+    EFFECTIVE_STRATEGY \
+    EFFECTIVE_NUM_WORKERS \
+    EFFECTIVE_ASYNC \
+    EFFECTIVE_LOCAL_CACHE \
+    CONFIG_RESUME_PATH < <(
+    python - "${CONFIG_PATH}" "${OVERRIDE_VALUES[@]}" <<'PY'
+from __future__ import annotations
+
+import sys
+
+from m3d.config import load_config
+
+config = load_config(
+    sys.argv[1],
+    sys.argv[2:],
+    resolve_paths=True,
+    verify_paths=False,
+)
+print(
+    "\t".join(
+        [
+            config.checkpoint.output_dir,
+            config.logging.tensorboard_dir,
+            config.distributed.strategy,
+            str(config.data.num_workers),
+            str(bool(config.checkpoint.asynchronous)).lower(),
+            config.data.local_cache_root or "",
+            config.checkpoint.resume_from or "",
+        ]
+    )
+)
+PY
+)
+
+# 确保最终解析后的策略和 PBS 请求一致, 这项检查会发现冲突，避免“以为在跑 DDP，实际跑 FSDP2”
+[[ "${EFFECTIVE_STRATEGY}" == "${STRATEGY}" ]] || \
+    fail "Resolved strategy ${EFFECTIVE_STRATEGY} differs from requested ${STRATEGY}."
+
+# -----------------------------------------------------------------------------
+# 5. Resolve explicit/latest checkpoint resume and protect fresh output
+# -----------------------------------------------------------------------------
+RESUME_PATH=""
+case "${RESUME_REQUEST}" in
+    "")
+        RESUME_PATH="${CONFIG_RESUME_PATH}"
+        ;;
+    latest|LATEST)
+        readonly LATEST_POINTER="${EFFECTIVE_OUTPUT_DIR}/latest.json"
+        [[ -s "${LATEST_POINTER}" ]] || \
+            fail "M3D_RESUME_FROM=latest but ${LATEST_POINTER} does not exist."
+        RESUME_PATH="$(python - "${LATEST_POINTER}" "${EFFECTIVE_OUTPUT_DIR}" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+pointer = Path(sys.argv[1])
+root = Path(sys.argv[2])
+payload = json.loads(pointer.read_text(encoding="utf-8"))
+value = payload.get("checkpoint")
+if not isinstance(value, str) or not value:
+    raise SystemExit(f"Invalid latest checkpoint pointer: {pointer}")
+path = Path(value)
+if not path.is_absolute():
+    path = root / path
+print(path.expanduser().resolve())
+PY
+)"
+        ;;
+    none|NONE|null|NULL)
+        RESUME_PATH=""
+        ;;
+    *)
+        RESUME_PATH="$(python - "${RESUME_REQUEST}" "${PROJECT_ROOT}" <<'PY'
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+value = Path(sys.argv[1]).expanduser()
+if not value.is_absolute():
+    value = Path(sys.argv[2]) / value
+print(value.resolve())
+PY
+)"
+        ;;
+esac
+
+if [[ -n "${RESUME_PATH}" ]]; then
+    [[ -d "${RESUME_PATH}" ]] || fail "Resume checkpoint directory not found: ${RESUME_PATH}"
+    [[ -s "${RESUME_PATH}/COMPLETED.json" ]] || \
+        fail "Resume checkpoint is incomplete (missing COMPLETED.json): ${RESUME_PATH}"
+    TRAIN_ARGS+=(--resume-from "${RESUME_PATH}")
+    log "Exact resume checkpoint: ${RESUME_PATH}"
+else
+    log "Starting a fresh training state."
+fi
+
+mkdir -p "${EFFECTIVE_OUTPUT_DIR}" "${EFFECTIVE_TENSORBOARD_DIR}"
+
+if [[ -z "${RESUME_PATH}" ]] && ! is_enabled "${M3D_STARTUP_ONLY:-0}"; then
+    existing_checkpoint=""
+    existing_checkpoint="$(find "${EFFECTIVE_OUTPUT_DIR}" -maxdepth 1 -type d \
+        -name 'checkpoint-step-*' -print -quit 2>/dev/null || true)"
+    if [[ -n "${existing_checkpoint}" || \
+          -f "${EFFECTIVE_OUTPUT_DIR}/latest.json" || \
+          -f "${EFFECTIVE_OUTPUT_DIR}/training_result.json" ]]; then
+        if ! is_enabled "${M3D_ALLOW_EXISTING_OUTPUT:-0}"; then
+            fail "Fresh training would reuse an output directory containing prior training state: ${EFFECTIVE_OUTPUT_DIR}. Set M3D_RESUME_FROM=latest, choose M3D_OUTPUT_DIR, or explicitly set M3D_ALLOW_EXISTING_OUTPUT=1."
+        fi
+        warn "M3D_ALLOW_EXISTING_OUTPUT=1 permits a fresh run in ${EFFECTIVE_OUTPUT_DIR}."
+    fi
+fi
+
+incomplete_checkpoint="$(find "${EFFECTIVE_OUTPUT_DIR}" -maxdepth 1 -type d \
+    -name '.checkpoint-step-*.incomplete-*' -print -quit 2>/dev/null || true)"
+if [[ -n "${incomplete_checkpoint}" ]]; then
+    warn "Incomplete checkpoint directories exist and will be ignored: ${incomplete_checkpoint}"
+fi
+
+log "Effective output directory: ${EFFECTIVE_OUTPUT_DIR}"
+log "Effective TensorBoard directory: ${EFFECTIVE_TENSORBOARD_DIR}"
+log "Effective DataLoader workers per rank: ${EFFECTIVE_NUM_WORKERS}"
+log "Asynchronous checkpointing: ${EFFECTIVE_ASYNC}"
+log "Effective node-local cache: ${EFFECTIVE_LOCAL_CACHE:-disabled}"
+
+# -----------------------------------------------------------------------------
+# 6. Strict GPU and package preflight on the allocated compute node
+# -----------------------------------------------------------------------------
+VISIBLE_GPUS="$(python - <<'PY'
+import torch
+print(torch.cuda.device_count())
+PY
+)"
+[[ "${VISIBLE_GPUS}" == "${EXPECTED_GPUS}" ]] || \
+    fail "Expected ${EXPECTED_GPUS} visible GPUs, but PyTorch sees ${VISIBLE_GPUS}."
+
+export M3D_EXPECTED_GPUS="${EXPECTED_GPUS}"
+export M3D_ALLOW_VERSION_MISMATCH="${M3D_ALLOW_VERSION_MISMATCH:-0}"
+export M3D_ALLOW_NON_A100="${M3D_ALLOW_NON_A100:-0}"
+
+python - <<'PY'
+from __future__ import annotations
+
+import importlib.metadata
+import os
+import platform
+import re
+import sys
+
+import numpy as np
+import torch
+
+
+def enabled(name: str) -> bool:
+    return os.environ.get(name, "0").lower() in {
+        "1", "true", "yes", "on"
+    }
+
+
+def base_version(value: str) -> str:
+    match = re.match(r"^(\d+\.\d+\.\d+)", value)
+    return match.group(1) if match else value
+
+
+expected = {
+    "torch": "2.6.0",
+    "torchvision": "0.21.0",
+    "transformers": "4.52.4",
+    "peft": "0.15.2",
+    "monai": "1.4.0",
+    "numpy": "1.26.4",
+}
+actual = {
+    "torch": base_version(torch.__version__),
+    "torchvision": base_version(importlib.metadata.version("torchvision")),
+    "transformers": base_version(importlib.metadata.version("transformers")),
+    "peft": base_version(importlib.metadata.version("peft")),
+    "monai": base_version(importlib.metadata.version("monai")),
+    "numpy": base_version(np.__version__),
+}
+
+errors: list[str] = []
+if sys.version_info[:2] != (3, 10):
+    errors.append(f"Python must be 3.10, detected {platform.python_version()}.")
+if not enabled("M3D_ALLOW_VERSION_MISMATCH"):
+    for package, expected_version in expected.items():
+        if actual[package] != expected_version:
+            errors.append(
+                f"{package} must be {expected_version}, detected {actual[package]}."
+            )
+    if torch.version.cuda != "11.8":
+        errors.append(
+            f"PyTorch must report CUDA 11.8, detected {torch.version.cuda}."
+        )
+
+expected_gpus = int(os.environ["M3D_EXPECTED_GPUS"])
+if not torch.cuda.is_available():
+    errors.append("CUDA is unavailable.")
+if torch.cuda.device_count() != expected_gpus:
+    errors.append(
+        f"Expected {expected_gpus} GPUs, detected {torch.cuda.device_count()}."
+    )
+
+gpus = []
+for index in range(torch.cuda.device_count()):
+    props = torch.cuda.get_device_properties(index)
+    name = props.name
+    capability = (props.major, props.minor)
+    with torch.cuda.device(index):
+        bf16 = bool(torch.cuda.is_bf16_supported())
+    gpus.append(
+        {
+            "index": index,
+            "name": name,
+            "capability": capability,
+            "total_memory_gib": props.total_memory / (1024 ** 3),
+            "bf16": bf16,
+        }
+    )
+    if not enabled("M3D_ALLOW_NON_A100"):
+        if "A100" not in name or capability != (8, 0):
+            errors.append(
+                f"GPU {index} must be an A100 (sm80), detected {name} {capability}."
+            )
+    if not bf16:
+        errors.append(f"GPU {index} does not report BF16 support.")
+
+print("[M3D production job] Package versions:")
+for package in sorted(actual):
+    print(f"  {package}: {actual[package]}")
+print(f"  pytorch_cuda: {torch.version.cuda}")
+print("[M3D production job] GPUs:")
+for gpu in gpus:
+    print(
+        "  index={index} name={name} capability={capability} "
+        "memory={total_memory_gib:.2f} GiB bf16={bf16}".format(**gpu)
+    )
+
+if errors:
+    raise SystemExit("Production preflight failed:\n  - " + "\n  - ".join(errors))
+PY
+
+log "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-<not explicitly set>}"
+nvidia-smi -L
+
+nvidia-smi \
+    --query-gpu=timestamp,index,uuid,name,utilization.gpu,utilization.memory,memory.used,memory.free,temperature.gpu,power.draw \
+    --format=csv \
+    --loop=10 \
+    > "${GPU_LOG_FILE}" 2>&1 &
+GPU_MONITOR_PID=$!
+
+# Record a compact immutable startup snapshot outside the model output folder.
+{
+    printf 'job_id=%s\n' "${JOB_ID}"
+    printf 'host=%s\n' "$(hostname -f 2>/dev/null || hostname)"
+    printf 'project_root=%s\n' "${PROJECT_ROOT}"
+    printf 'config=%s\n' "${CONFIG_PATH}"
+    printf 'strategy=%s\n' "${EFFECTIVE_STRATEGY}"
+    printf 'output_dir=%s\n' "${EFFECTIVE_OUTPUT_DIR}"
+    printf 'resume_from=%s\n' "${RESUME_PATH:-<fresh>}"
+    printf 'visible_devices=%s\n' "${CUDA_VISIBLE_DEVICES:-<not explicitly set>}"
+    printf 'tmpdir=%s\n' "${JOB_TMP_ROOT}"
+    printf 'cache_root=%s\n' "${CACHE_ROOT}"
+    printf 'git_revision=%s\n' "$(git rev-parse HEAD 2>/dev/null || printf unknown)"
+    env | grep -E '^(PBS_|M3D_|CUDA_|NCCL_|TORCH_|HF_|TRANSFORMERS_)' | sort
+} > "${ENVIRONMENT_FILE}"
+
+log "Filesystem capacity before training:"
+df -h "${PROJECT_ROOT}" "${EFFECTIVE_OUTPUT_DIR}" "${CACHE_ROOT}" "${JOB_TMP_ROOT}" \
+    2>/dev/null | awk '!seen[$0]++ {print "  " $0}'
+
+# -----------------------------------------------------------------------------
+# 7. Launch the production trainer
+# -----------------------------------------------------------------------------
+TORCHRUN_ARGS=(
+    --standalone
+    --nnodes=1
+    --nproc_per_node="${EXPECTED_GPUS}"
+    --max_restarts=0
+    --monitor_interval=5
+)
+
+FULL_COMMAND=(
+    "${VENV_DIR}/bin/torchrun"
+    "${TORCHRUN_ARGS[@]}"
+    -m m3d.train
+    "${TRAIN_ARGS[@]}"
+)
+
+{
+    printf '%q ' "${FULL_COMMAND[@]}"
+    printf '\n'
+} > "${COMMAND_FILE}"
+
+log "Launching production training command:"
+sed 's/^/  /' "${COMMAND_FILE}"
+
+"${FULL_COMMAND[@]}" &
+TORCHRUN_PID=$!
+
+set +e
+wait "${TORCHRUN_PID}"
+TRAIN_EXIT_CODE=$?
+set -e
+TORCHRUN_PID=""
+
+if (( TRAIN_EXIT_CODE != 0 )); then
+    fail "torchrun exited with code ${TRAIN_EXIT_CODE}."
+fi
+
+# -----------------------------------------------------------------------------
+# 8. Validate and summarize the durable result
+# -----------------------------------------------------------------------------
+# 验证训练结果
+readonly STARTUP_REPORT="${EFFECTIVE_OUTPUT_DIR}/startup_report.json"
+[[ -s "${STARTUP_REPORT}" ]] || \
+    fail "Training returned successfully but startup_report.json is missing."
+
+if is_enabled "${M3D_STARTUP_ONLY:-0}"; then
+    log "Startup-only validation passed."
+    log "Startup report: ${STARTUP_REPORT}"
+else
+    readonly TRAINING_RESULT="${EFFECTIVE_OUTPUT_DIR}/training_result.json"
+    [[ -s "${TRAINING_RESULT}" ]] || \
+        fail "Training returned successfully but training_result.json is missing."
+
+    log "Training result summary:"
+    python - "${TRAINING_RESULT}" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+result = json.loads(path.read_text(encoding="utf-8"))
+
+for key in (
+    "completed_optimizer_steps",
+    "total_optimizer_steps",
+    "final_epoch",
+    "final_committed_microbatches",
+    "elapsed_seconds",
+    "final_checkpoint",
+    "resumed_from",
+):
+    print(f"  {key}: {result.get(key)}")
+print(f"  result_file: {path}")
+PY
+fi
+
+log "Filesystem capacity after training:"
+df -h "${EFFECTIVE_OUTPUT_DIR}" "${CACHE_ROOT}" "${JOB_TMP_ROOT}" \
+    2>/dev/null | awk '!seen[$0]++ {print "  " $0}'

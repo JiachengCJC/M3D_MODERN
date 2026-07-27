@@ -1,0 +1,721 @@
+#!/usr/bin/env bash
+#PBS -P 58001002
+#PBS -q normal
+#PBS -N M3D_infer
+#PBS -l select=1:ncpus=16:mem=128gb:ngpus=1
+#PBS -l walltime=04:00:00
+#PBS -j oe
+
+# M3D-Modernized — single-case portable inference on ASPIRE 2A
+# ============================================================================
+# Submit this file from the M3D-modernized project root.
+#
+# Recommended usage (question in a file avoids qsub -v quoting problems):
+#   qsub -v M3D_EXPORT_DIR=/absolute/path/to/m3d-export,\
+#M3D_IMAGE=/absolute/path/to/ct.nii.gz,\
+#M3D_QUESTION_FILE=/absolute/path/to/question.txt \
+#       scripts/09_inference_aspire2a.pbs
+#
+# Force segmentation and require the generated answer to contain [SEG]:
+#   qsub -v M3D_EXPORT_DIR=/absolute/path/to/m3d-export,\
+#M3D_IMAGE=/absolute/path/to/ct.nii.gz,\
+#M3D_QUESTION_FILE=/absolute/path/to/question.txt,\
+#M3D_MODE=segmentation \
+#       scripts/09_inference_aspire2a.pbs
+#
+# Text-only inference:
+#   qsub -v M3D_EXPORT_DIR=/absolute/path/to/m3d-export,\
+#M3D_IMAGE=/absolute/path/to/ct.npy,\
+#M3D_QUESTION='Describe this scan.',\
+#M3D_MODE=text \
+#       scripts/09_inference_aspire2a.pbs
+#
+# Common optional variables:
+#   M3D_VENV_DIR=/scratch/.../envs/m3d-modern
+#   M3D_EXPORT_DIR=/scratch/.../m3d-portable-export
+#   M3D_IMAGE=/scratch/.../case/ct.nii.gz
+#   M3D_QUESTION='Please identify and segment the stenosis.'
+#   M3D_QUESTION_FILE=/scratch/.../question.txt
+#   M3D_MODE=auto|text|segmentation
+#   M3D_OUTPUT_DIR=/scratch/.../inference-case-001
+#   M3D_MAX_NEW_TOKENS=128
+#   M3D_DO_SAMPLE=0|1
+#   M3D_TEMPERATURE=1.0
+#   M3D_TOP_P=1.0
+#   M3D_NUM_BEAMS=1
+#   M3D_REPETITION_PENALTY=1.0
+#   M3D_SEED=42
+#   M3D_MASK_THRESHOLD=0.5
+#   M3D_SAVE_MASK=1
+#   M3D_SAVE_PROBABILITY=1
+#   M3D_LOCAL_FILES_ONLY=1
+#   M3D_SKIP_SHARD_HASH_VERIFICATION=0
+#   M3D_OVERWRITE=1
+#   M3D_CACHE_ROOT=/scratch/.../.cache/m3d-modern
+#   M3D_OMP_NUM_THREADS=16
+#
+# Important contracts:
+#   - M3D_IMAGE must already match the trained [C,D,H,W] shape and [0,1]
+#     intensity range. This job never silently resizes or normalises a volume.
+#   - .npy, .nii and .nii.gz inputs are supported.
+#   - auto mode saves a mask/probability only when generation contains [SEG].
+#   - segmentation mode fails when generation does not contain [SEG].
+#   - text mode never invokes the independent SegVol 3D image encoder.
+#   - NIfTI outputs preserve the canonicalised source affine; NumPy inputs are
+#     saved as .npy because they have no affine metadata.
+#   - the final output directory is committed atomically only after inference,
+#     optional mask writing and report validation all succeed.
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+umask 027
+
+readonly PROJECT_ROOT="${PBS_O_WORKDIR:?PBS_O_WORKDIR is unavailable}"
+readonly VENV_DIR="${M3D_VENV_DIR:-${PROJECT_ROOT}/.venv}"
+readonly EXPORT_DIR="${M3D_EXPORT_DIR:-${PROJECT_ROOT}/outputs/m3d-phi3-export}"
+readonly IMAGE_PATH="${M3D_IMAGE:-}"
+readonly MODE="${M3D_MODE:-auto}"
+readonly MAX_NEW_TOKENS="${M3D_MAX_NEW_TOKENS:-128}"
+readonly TEMPERATURE="${M3D_TEMPERATURE:-1.0}"
+readonly TOP_P="${M3D_TOP_P:-1.0}"
+readonly NUM_BEAMS="${M3D_NUM_BEAMS:-1}"
+readonly REPETITION_PENALTY="${M3D_REPETITION_PENALTY:-1.0}"
+readonly SEED="${M3D_SEED:-42}"
+readonly MASK_THRESHOLD="${M3D_MASK_THRESHOLD:-0.5}"
+readonly OMP_THREADS="${M3D_OMP_NUM_THREADS:-16}"
+readonly JOB_ID="${PBS_JOBID:-manual}"
+readonly JOB_ID_SAFE="${JOB_ID//[^A-Za-z0-9._-]/_}"
+readonly DEFAULT_OUTPUT_DIR="${PROJECT_ROOT}/outputs/inference-${JOB_ID_SAFE}"
+readonly FINAL_OUTPUT_DIR="${M3D_OUTPUT_DIR:-${DEFAULT_OUTPUT_DIR}}"
+readonly OUTPUT_PARENT="$(dirname "${FINAL_OUTPUT_DIR}")"
+readonly OUTPUT_NAME="$(basename "${FINAL_OUTPUT_DIR}")"
+readonly STAGING_OUTPUT_DIR="${OUTPUT_PARENT}/.${OUTPUT_NAME}.incomplete-${JOB_ID_SAFE}-$$"
+readonly LOG_DIR="${PROJECT_ROOT}/logs/inference/${JOB_ID_SAFE}"
+readonly LOG_FILE="${LOG_DIR}/inference.log"
+readonly GPU_LOG_FILE="${LOG_DIR}/gpu.csv"
+readonly COMMAND_FILE="${LOG_DIR}/command.txt"
+readonly ENVIRONMENT_FILE="${LOG_DIR}/environment.txt"
+readonly MODULE_FILE="${LOG_DIR}/modules.txt"
+readonly PIP_FREEZE_FILE="${LOG_DIR}/pip-freeze.txt"
+readonly DRIVER_FILE="${TMPDIR:-/tmp}/m3d-inference-driver-${JOB_ID_SAFE}-$$.py"
+
+GPU_MONITOR_PID=""
+PYTHON_PID=""
+RECEIVED_SIGNAL=""
+COMMITTED_OUTPUT=""
+QUESTION_TEXT=""
+
+log() {
+    printf '[M3D inference job] %s\n' "$*"
+}
+
+warn() {
+    printf '[M3D inference job] WARNING: %s\n' "$*" >&2
+}
+
+fail() {
+    printf '[M3D inference job] ERROR: %s\n' "$*" >&2
+    exit 1
+}
+
+is_enabled() {
+    case "${1:-0}" in
+        1|true|TRUE|yes|YES|on|ON) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_positive_integer() {
+    [[ "${1:-}" =~ ^[1-9][0-9]*$ ]]
+}
+
+is_nonnegative_integer() {
+    [[ "${1:-}" =~ ^[0-9]+$ ]]
+}
+
+forward_signal() {
+    local signal_name="$1"
+    RECEIVED_SIGNAL="${signal_name}"
+    warn "Received ${signal_name}; forwarding it to the inference process."
+    if [[ -n "${PYTHON_PID}" ]] && kill -0 "${PYTHON_PID}" 2>/dev/null; then
+        kill -s "${signal_name}" "${PYTHON_PID}" 2>/dev/null || true
+        return
+    fi
+    case "${signal_name}" in
+        INT) exit 130 ;;
+        TERM) exit 143 ;;
+        HUP) exit 129 ;;
+        *) exit 1 ;;
+    esac
+}
+
+cleanup() {
+    local exit_code=$?
+    trap - EXIT
+
+    if [[ -n "${GPU_MONITOR_PID}" ]] && kill -0 "${GPU_MONITOR_PID}" 2>/dev/null; then
+        kill "${GPU_MONITOR_PID}" 2>/dev/null || true
+        wait "${GPU_MONITOR_PID}" 2>/dev/null || true
+    fi
+    if [[ -n "${PYTHON_PID}" ]] && kill -0 "${PYTHON_PID}" 2>/dev/null; then
+        kill -TERM "${PYTHON_PID}" 2>/dev/null || true
+        wait "${PYTHON_PID}" 2>/dev/null || true
+    fi
+
+    rm -f "${DRIVER_FILE}" 2>/dev/null || true
+
+    if (( exit_code != 0 )); then
+        if [[ -d "${STAGING_OUTPUT_DIR}" ]]; then
+            warn "Leaving incomplete staging output for diagnosis: ${STAGING_OUTPUT_DIR}"
+        fi
+        warn "Inference failed with exit code ${exit_code}."
+        if [[ -n "${RECEIVED_SIGNAL}" ]]; then
+            warn "Termination signal: ${RECEIVED_SIGNAL}."
+        fi
+        warn "Inspect ${LOG_FILE}. A valid result directory must contain COMPLETED.json."
+    else
+        log "Inference completed successfully."
+        log "Result directory: ${COMMITTED_OUTPUT:-${FINAL_OUTPUT_DIR}}"
+        log "Result JSON: ${FINAL_OUTPUT_DIR}/result.json"
+        log "Build report: ${FINAL_OUTPUT_DIR}/build_report.json"
+        log "Log: ${LOG_FILE}"
+        log "GPU telemetry: ${GPU_LOG_FILE}"
+    fi
+
+    exit "${exit_code}"
+}
+
+trap cleanup EXIT
+trap 'forward_signal INT' INT
+trap 'forward_signal TERM' TERM
+trap 'forward_signal HUP' HUP
+
+mkdir -p "${LOG_DIR}"
+exec > >(stdbuf -oL -eL tee -a "${LOG_FILE}") 2>&1
+
+# -----------------------------------------------------------------------------
+# 1. Validate the request before loading modules or allocating model memory
+# -----------------------------------------------------------------------------
+[[ -f "${PROJECT_ROOT}/src/m3d/inference.py" ]] || \
+    fail "Submit this PBS file from the M3D-modernized project root."
+[[ -d "${EXPORT_DIR}" ]] || fail "Portable export directory not found: ${EXPORT_DIR}"
+[[ -f "${EXPORT_DIR}/COMPLETED.json" ]] || \
+    fail "Portable export is incomplete: ${EXPORT_DIR}/COMPLETED.json is missing."
+[[ -f "${EXPORT_DIR}/export_manifest.json" ]] || \
+    fail "Portable export manifest is missing: ${EXPORT_DIR}/export_manifest.json"
+[[ -n "${IMAGE_PATH}" ]] || \
+    fail "M3D_IMAGE is required and must point to a .npy, .nii or .nii.gz volume."
+[[ -f "${IMAGE_PATH}" ]] || fail "Input image does not exist: ${IMAGE_PATH}"
+
+case "${IMAGE_PATH,,}" in
+    *.npy|*.nii|*.nii.gz) ;;
+    *) fail "M3D_IMAGE must end in .npy, .nii or .nii.gz: ${IMAGE_PATH}" ;;
+esac
+case "${MODE}" in
+    auto|text|segmentation) ;;
+    *) fail "M3D_MODE must be auto, text or segmentation; got ${MODE}." ;;
+esac
+is_positive_integer "${MAX_NEW_TOKENS}" || \
+    fail "M3D_MAX_NEW_TOKENS must be a positive integer."
+is_positive_integer "${NUM_BEAMS}" || \
+    fail "M3D_NUM_BEAMS must be a positive integer."
+is_nonnegative_integer "${SEED}" || fail "M3D_SEED must be a non-negative integer."
+is_positive_integer "${OMP_THREADS}" || \
+    fail "M3D_OMP_NUM_THREADS must be a positive integer."
+
+python3 - "${TEMPERATURE}" "${TOP_P}" "${REPETITION_PENALTY}" "${MASK_THRESHOLD}" <<'PY'
+from __future__ import annotations
+
+import math
+import sys
+
+temperature, top_p, repetition_penalty, threshold = map(float, sys.argv[1:])
+if not math.isfinite(temperature) or temperature <= 0:
+    raise SystemExit("M3D_TEMPERATURE must be finite and positive.")
+if not math.isfinite(top_p) or not 0 < top_p <= 1:
+    raise SystemExit("M3D_TOP_P must be in (0, 1].")
+if not math.isfinite(repetition_penalty) or repetition_penalty <= 0:
+    raise SystemExit("M3D_REPETITION_PENALTY must be finite and positive.")
+if not math.isfinite(threshold) or not 0 <= threshold <= 1:
+    raise SystemExit("M3D_MASK_THRESHOLD must be in [0, 1].")
+PY
+
+if is_enabled "${M3D_DO_SAMPLE:-0}" && (( NUM_BEAMS != 1 )); then
+    fail "Sampling and beam search cannot be combined; set M3D_NUM_BEAMS=1."
+fi
+
+if [[ -n "${M3D_QUESTION:-}" && -n "${M3D_QUESTION_FILE:-}" ]]; then
+    fail "Set only one of M3D_QUESTION or M3D_QUESTION_FILE."
+fi
+if [[ -n "${M3D_QUESTION_FILE:-}" ]]; then
+    [[ -f "${M3D_QUESTION_FILE}" ]] || \
+        fail "Question file does not exist: ${M3D_QUESTION_FILE}"
+    QUESTION_TEXT="$(cat "${M3D_QUESTION_FILE}")"
+else
+    QUESTION_TEXT="${M3D_QUESTION:-}"
+fi
+# Remove leading/trailing whitespace while preserving internal newlines.
+QUESTION_TEXT="$(printf '%s' "${QUESTION_TEXT}" | python3 -c 'import sys; print(sys.stdin.read().strip(), end="")')"
+[[ -n "${QUESTION_TEXT}" ]] || \
+    fail "A non-empty M3D_QUESTION or M3D_QUESTION_FILE is required."
+
+if [[ -e "${FINAL_OUTPUT_DIR}" && -L "${FINAL_OUTPUT_DIR}" ]]; then
+    fail "Refusing to replace a symbolic-link output directory: ${FINAL_OUTPUT_DIR}"
+fi
+if [[ -e "${FINAL_OUTPUT_DIR}" ]] && ! is_enabled "${M3D_OVERWRITE:-0}"; then
+    fail "Inference output already exists: ${FINAL_OUTPUT_DIR}. Set M3D_OVERWRITE=1 or choose another M3D_OUTPUT_DIR."
+fi
+[[ ! -e "${STAGING_OUTPUT_DIR}" ]] || \
+    fail "Unexpected pre-existing staging directory: ${STAGING_OUTPUT_DIR}"
+
+mkdir -p "${OUTPUT_PARENT}" "${STAGING_OUTPUT_DIR}"
+printf '%s\n' "${QUESTION_TEXT}" > "${STAGING_OUTPUT_DIR}/question.txt"
+
+log "Job ID: ${JOB_ID}"
+log "Host: $(hostname -f 2>/dev/null || hostname)"
+log "Project root: ${PROJECT_ROOT}"
+log "Portable export: ${EXPORT_DIR}"
+log "Input image: ${IMAGE_PATH}"
+log "Inference mode: ${MODE}"
+log "Question: ${QUESTION_TEXT//$'\n'/ }"
+log "Final output: ${FINAL_OUTPUT_DIR}"
+log "Maximum new tokens: ${MAX_NEW_TOKENS}"
+log "Mask threshold: ${MASK_THRESHOLD}"
+
+# -----------------------------------------------------------------------------
+# 2. Recreate the pinned ASPIRE 2A software environment
+# -----------------------------------------------------------------------------
+type module >/dev/null 2>&1 || \
+    fail "The ASPIRE 2A environment-modules command is unavailable."
+
+module reset >/dev/null 2>&1 || module purge
+module load PrgEnv-gnu/8.3.3
+module load gcc/11.4.0-nscc
+module load python/3.10.9
+module load cuda/11.8.0
+module load cmake/3.31.3
+module load ninja/1.11.1
+
+module -t list 2> "${MODULE_FILE}"
+log "Loaded modules:"
+sed 's/^/  /' "${MODULE_FILE}"
+
+[[ -x "${VENV_DIR}/bin/python" ]] || \
+    fail "Virtual environment not found at ${VENV_DIR}. Run scripts/00_setup_environment.sh first."
+# shellcheck disable=SC1091
+source "${VENV_DIR}/bin/activate"
+
+export PYTHONNOUSERSITE=1
+export PYTHONPATH="${PROJECT_ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}"
+export CUDA_HOME="$(dirname "$(dirname "$(command -v nvcc)")")"
+export CUDACXX="${CUDA_HOME}/bin/nvcc"
+export TOKENIZERS_PARALLELISM=false
+export OMP_NUM_THREADS="${OMP_THREADS}"
+export MKL_NUM_THREADS="${OMP_THREADS}"
+export NUMEXPR_NUM_THREADS="${OMP_THREADS}"
+export PYTHONFAULTHANDLER=1
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
+export TORCH_SHOW_CPP_STACKTRACES=1
+
+readonly CACHE_ROOT="${M3D_CACHE_ROOT:-${PROJECT_ROOT}/.cache}"
+export HF_HOME="${CACHE_ROOT}/huggingface"
+export HUGGINGFACE_HUB_CACHE="${HF_HOME}/hub"
+export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
+export TORCH_HOME="${CACHE_ROOT}/torch"
+mkdir -p "${HF_HOME}" "${HUGGINGFACE_HUB_CACHE}" "${TRANSFORMERS_CACHE}" "${TORCH_HOME}"
+
+readonly JOB_TMPDIR="${TMPDIR:-/tmp}/m3d_inference_${JOB_ID_SAFE}"
+mkdir -p "${JOB_TMPDIR}/triton" "${JOB_TMPDIR}/torch_extensions" "${JOB_TMPDIR}/torchinductor"
+export TRITON_CACHE_DIR="${JOB_TMPDIR}/triton"
+export TORCH_EXTENSIONS_DIR="${JOB_TMPDIR}/torch_extensions"
+export TORCHINDUCTOR_CACHE_DIR="${JOB_TMPDIR}/torchinductor"
+
+if is_enabled "${M3D_LOCAL_FILES_ONLY:-0}"; then
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+    log "Hugging Face offline mode enabled."
+fi
+
+python -m pip freeze > "${PIP_FREEZE_FILE}"
+{
+    printf 'PBS_JOBID=%s\n' "${JOB_ID}"
+    printf 'HOSTNAME=%s\n' "$(hostname -f 2>/dev/null || hostname)"
+    printf 'PROJECT_ROOT=%s\n' "${PROJECT_ROOT}"
+    printf 'VENV_DIR=%s\n' "${VENV_DIR}"
+    printf 'EXPORT_DIR=%s\n' "${EXPORT_DIR}"
+    printf 'IMAGE_PATH=%s\n' "${IMAGE_PATH}"
+    printf 'MODE=%s\n' "${MODE}"
+    printf 'FINAL_OUTPUT_DIR=%s\n' "${FINAL_OUTPUT_DIR}"
+    printf 'CUDA_VISIBLE_DEVICES=%s\n' "${CUDA_VISIBLE_DEVICES:-<unset>}"
+    printf 'CUDA_HOME=%s\n' "${CUDA_HOME}"
+    printf 'HF_HOME=%s\n' "${HF_HOME}"
+    printf 'TRITON_CACHE_DIR=%s\n' "${TRITON_CACHE_DIR}"
+} > "${ENVIRONMENT_FILE}"
+
+# -----------------------------------------------------------------------------
+# 3. Validate the Python/CUDA/A100 runtime before loading the model
+# -----------------------------------------------------------------------------
+python - <<'PY'
+from __future__ import annotations
+
+import importlib.metadata as metadata
+import os
+import platform
+import sys
+
+import torch
+
+expected = {
+    "torch": "2.6.0",
+    "torchvision": "0.21.0",
+    "transformers": "4.52.4",
+    "peft": "0.15.2",
+    "monai": "1.4.0",
+    "numpy": "1.26.4",
+    "safetensors": "0.5.3",
+    "nibabel": "5.3.2",
+}
+allow_versions = os.environ.get("M3D_ALLOW_VERSION_MISMATCH", "0").lower() in {
+    "1", "true", "yes", "on"
+}
+allow_gpu = os.environ.get("M3D_ALLOW_NON_A100", "0").lower() in {
+    "1", "true", "yes", "on"
+}
+
+def normalise(value: str) -> str:
+    return value.split("+")[0]
+
+observed = {
+    "torch": normalise(torch.__version__),
+    **{
+        name: normalise(metadata.version(name))
+        for name in expected
+        if name != "torch"
+    },
+}
+problems = [
+    f"{name}: expected {version}, observed {observed[name]}"
+    for name, version in expected.items()
+    if observed[name] != version
+]
+if problems and not allow_versions:
+    raise SystemExit("Pinned package versions do not match:\n  " + "\n  ".join(problems))
+if not torch.cuda.is_available():
+    raise SystemExit("CUDA is unavailable in the inference job.")
+if torch.cuda.device_count() != 1:
+    raise SystemExit(
+        f"Expected exactly one PBS-visible GPU, observed {torch.cuda.device_count()}."
+    )
+name = torch.cuda.get_device_name(0)
+capability = torch.cuda.get_device_capability(0)
+if ("A100" not in name or capability != (8, 0)) and not allow_gpu:
+    raise SystemExit(
+        f"Expected an NVIDIA A100 with capability 8.0; observed {name}, {capability}."
+    )
+if not torch.cuda.is_bf16_supported():
+    raise SystemExit("The allocated GPU does not report BF16 support.")
+if normalise(str(torch.version.cuda)) != "11.8" and not allow_versions:
+    raise SystemExit(f"Expected PyTorch CUDA 11.8, observed {torch.version.cuda}.")
+
+print("Runtime validation passed")
+print(f"  Python:       {platform.python_version()}")
+print(f"  PyTorch:      {torch.__version__}")
+print(f"  PyTorch CUDA: {torch.version.cuda}")
+print(f"  GPU:          {name}")
+print(f"  Capability:   {capability}")
+print(f"  BF16:         {torch.cuda.is_bf16_supported()}")
+for package, version in observed.items():
+    if package != "torch":
+        print(f"  {package}: {version}")
+PY
+
+# -----------------------------------------------------------------------------
+# 4. Start GPU telemetry
+# -----------------------------------------------------------------------------
+if command -v nvidia-smi >/dev/null 2>&1; then
+    nvidia-smi \
+        --query-gpu=timestamp,index,uuid,name,utilization.gpu,utilization.memory,memory.used,memory.free,temperature.gpu,power.draw \
+        --format=csv \
+        -l 10 > "${GPU_LOG_FILE}" 2>&1 &
+    GPU_MONITOR_PID=$!
+    log "GPU telemetry started with PID ${GPU_MONITOR_PID}."
+else
+    warn "nvidia-smi is unavailable; GPU telemetry will not be recorded."
+fi
+
+# -----------------------------------------------------------------------------
+# 5. Create a one-process driver that saves masks only when [SEG] is generated
+# -----------------------------------------------------------------------------
+cat > "${DRIVER_FILE}" <<'PY'
+from __future__ import annotations
+
+import json
+import os
+import random
+import tempfile
+from pathlib import Path
+from typing import Any, Mapping
+
+import numpy as np
+import torch
+
+from m3d.inference import (
+    GenerationSettings,
+    M3DInferenceEngine,
+    load_inference_volume,
+    save_prediction_volume,
+)
+
+
+def enabled(name: str, default: str = "0") -> bool:
+    return os.environ.get(name, default).strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+
+
+def atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        delete=False,
+    ) as handle:
+        temporary = Path(handle.name)
+        json.dump(payload, handle, ensure_ascii=False, indent=2, sort_keys=True)
+        handle.write("\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(temporary, path)
+
+
+export_dir = Path(os.environ["M3D_DRIVER_EXPORT_DIR"]).expanduser().resolve()
+image_path = Path(os.environ["M3D_DRIVER_IMAGE_PATH"]).expanduser().resolve()
+output_dir = Path(os.environ["M3D_DRIVER_OUTPUT_DIR"]).expanduser().resolve()
+final_output_dir = Path(os.environ["M3D_DRIVER_FINAL_OUTPUT_DIR"]).expanduser().resolve()
+question = Path(os.environ["M3D_DRIVER_QUESTION_FILE"]).read_text(
+    encoding="utf-8"
+).strip()
+mode = os.environ["M3D_DRIVER_MODE"]
+seed = int(os.environ["M3D_DRIVER_SEED"])
+
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+
+generation = GenerationSettings(
+    max_new_tokens=int(os.environ["M3D_DRIVER_MAX_NEW_TOKENS"]),
+    do_sample=enabled("M3D_DRIVER_DO_SAMPLE"),
+    temperature=float(os.environ["M3D_DRIVER_TEMPERATURE"]),
+    top_p=float(os.environ["M3D_DRIVER_TOP_P"]),
+    num_beams=int(os.environ["M3D_DRIVER_NUM_BEAMS"]),
+    repetition_penalty=float(os.environ["M3D_DRIVER_REPETITION_PENALTY"]),
+)
+
+engine = M3DInferenceEngine.from_export(
+    export_dir,
+    device="cuda:0",
+    cache_dir=Path(os.environ["M3D_DRIVER_CACHE_DIR"]),
+    local_files_only=enabled("M3D_DRIVER_LOCAL_FILES_ONLY"),
+    verify_shard_hashes=not enabled("M3D_DRIVER_SKIP_HASH"),
+    allow_cpu=False,
+)
+result = engine.predict_paths(
+    [image_path],
+    [question],
+    mode=mode,
+    generation=generation,
+    mask_threshold=float(os.environ["M3D_DRIVER_MASK_THRESHOLD"]),
+)
+prediction = result.predictions[0]
+
+saved_outputs: dict[str, str] = {}
+if prediction.has_segmentation:
+    _, source_volume = load_inference_volume(engine.config, image_path)
+    is_nifti = image_path.name.lower().endswith((".nii", ".nii.gz"))
+    extension = ".nii.gz" if is_nifti else ".npy"
+    if enabled("M3D_DRIVER_SAVE_MASK", "1"):
+        mask_path = output_dir / f"mask{extension}"
+        save_prediction_volume(
+            prediction.segmentation_mask,
+            mask_path,
+            source_volume=source_volume,
+            probability=False,
+        )
+        saved_outputs["mask"] = str(final_output_dir / mask_path.name)
+    if enabled("M3D_DRIVER_SAVE_PROBABILITY", "1"):
+        probability_path = output_dir / f"probability{extension}"
+        save_prediction_volume(
+            prediction.segmentation_probability,
+            probability_path,
+            source_volume=source_volume,
+            probability=True,
+        )
+        saved_outputs["probability"] = str(final_output_dir / probability_path.name)
+
+payload = result.summary()
+payload.update(
+    {
+        "export_directory": str(export_dir),
+        "device": str(engine.device),
+        "input_image": str(image_path),
+        "inference_mode": mode,
+        "saved_outputs": saved_outputs,
+    }
+)
+atomic_json(output_dir / "result.json", payload)
+atomic_json(output_dir / "build_report.json", engine.build_report.to_dict())
+print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+PY
+
+export M3D_DRIVER_EXPORT_DIR="${EXPORT_DIR}"
+export M3D_DRIVER_IMAGE_PATH="${IMAGE_PATH}"
+export M3D_DRIVER_OUTPUT_DIR="${STAGING_OUTPUT_DIR}"
+export M3D_DRIVER_FINAL_OUTPUT_DIR="${FINAL_OUTPUT_DIR}"
+export M3D_DRIVER_QUESTION_FILE="${STAGING_OUTPUT_DIR}/question.txt"
+export M3D_DRIVER_MODE="${MODE}"
+export M3D_DRIVER_SEED="${SEED}"
+export M3D_DRIVER_MAX_NEW_TOKENS="${MAX_NEW_TOKENS}"
+export M3D_DRIVER_DO_SAMPLE="${M3D_DO_SAMPLE:-0}"
+export M3D_DRIVER_TEMPERATURE="${TEMPERATURE}"
+export M3D_DRIVER_TOP_P="${TOP_P}"
+export M3D_DRIVER_NUM_BEAMS="${NUM_BEAMS}"
+export M3D_DRIVER_REPETITION_PENALTY="${REPETITION_PENALTY}"
+export M3D_DRIVER_MASK_THRESHOLD="${MASK_THRESHOLD}"
+export M3D_DRIVER_SAVE_MASK="${M3D_SAVE_MASK:-1}"
+export M3D_DRIVER_SAVE_PROBABILITY="${M3D_SAVE_PROBABILITY:-1}"
+export M3D_DRIVER_CACHE_DIR="${HF_HOME}"
+export M3D_DRIVER_LOCAL_FILES_ONLY="${M3D_LOCAL_FILES_ONLY:-0}"
+export M3D_DRIVER_SKIP_HASH="${M3D_SKIP_SHARD_HASH_VERIFICATION:-0}"
+
+{
+    printf '%q ' "${VENV_DIR}/bin/python" "${DRIVER_FILE}"
+    printf '\n'
+} > "${COMMAND_FILE}"
+
+log "Starting one-GPU M3D inference."
+"${VENV_DIR}/bin/python" "${DRIVER_FILE}" &
+PYTHON_PID=$!
+set +e
+wait "${PYTHON_PID}"
+python_exit=$?
+set -e
+PYTHON_PID=""
+(( python_exit == 0 )) || fail "Inference process exited with code ${python_exit}."
+
+# -----------------------------------------------------------------------------
+# 6. Validate outputs, write completion marker and atomically commit the result
+# -----------------------------------------------------------------------------
+[[ -f "${STAGING_OUTPUT_DIR}/result.json" ]] || \
+    fail "Inference did not create result.json."
+[[ -f "${STAGING_OUTPUT_DIR}/build_report.json" ]] || \
+    fail "Inference did not create build_report.json."
+
+python - "${STAGING_OUTPUT_DIR}" "${MODE}" <<'PY'
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import sys
+import tempfile
+from pathlib import Path
+
+root = Path(sys.argv[1]).resolve()
+mode = sys.argv[2]
+result_path = root / "result.json"
+build_path = root / "build_report.json"
+result = json.loads(result_path.read_text(encoding="utf-8"))
+predictions = result.get("predictions")
+if result.get("status") != "complete" or not isinstance(predictions, list) or len(predictions) != 1:
+    raise SystemExit("result.json does not describe exactly one complete prediction.")
+prediction = predictions[0]
+if not isinstance(prediction, dict):
+    raise SystemExit("Prediction payload is malformed.")
+has_segmentation = bool(prediction.get("has_segmentation"))
+if mode == "text" and has_segmentation:
+    raise SystemExit("Text mode unexpectedly returned a segmentation mask.")
+if mode == "segmentation" and not has_segmentation:
+    raise SystemExit("Segmentation mode completed without a segmentation mask.")
+for key, value in result.get("saved_outputs", {}).items():
+    public_path = Path(value)
+    staged_path = root / public_path.name
+    if not staged_path.is_file() or staged_path.stat().st_size <= 0:
+        raise SystemExit(
+            f"Saved {key} output is missing or empty in staging: {staged_path}"
+        )
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        while chunk := handle.read(8 * 1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+completion = {
+    "status": "complete",
+    "mode": mode,
+    "has_segmentation": has_segmentation,
+    "result_sha256": sha256(result_path),
+    "build_report_sha256": sha256(build_path),
+    "saved_outputs": result.get("saved_outputs", {}),
+}
+with tempfile.NamedTemporaryFile(
+    mode="w",
+    encoding="utf-8",
+    dir=root,
+    prefix=".COMPLETED.",
+    suffix=".tmp",
+    delete=False,
+) as handle:
+    temporary = Path(handle.name)
+    json.dump(completion, handle, indent=2, sort_keys=True)
+    handle.write("\n")
+    handle.flush()
+    os.fsync(handle.fileno())
+os.replace(temporary, root / "COMPLETED.json")
+PY
+
+if [[ -e "${FINAL_OUTPUT_DIR}" ]]; then
+    readonly BACKUP_OUTPUT_DIR="${OUTPUT_PARENT}/.${OUTPUT_NAME}.backup-${JOB_ID_SAFE}-$$"
+    mv "${FINAL_OUTPUT_DIR}" "${BACKUP_OUTPUT_DIR}"
+    if mv "${STAGING_OUTPUT_DIR}" "${FINAL_OUTPUT_DIR}"; then
+        rm -rf "${BACKUP_OUTPUT_DIR}"
+    else
+        mv "${BACKUP_OUTPUT_DIR}" "${FINAL_OUTPUT_DIR}" || true
+        fail "Failed to commit the new inference output; the previous output was restored."
+    fi
+else
+    mv "${STAGING_OUTPUT_DIR}" "${FINAL_OUTPUT_DIR}"
+fi
+COMMITTED_OUTPUT="${FINAL_OUTPUT_DIR}"
+
+# -----------------------------------------------------------------------------
+# 7. Print a compact result summary
+# -----------------------------------------------------------------------------
+python - "${FINAL_OUTPUT_DIR}/result.json" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+prediction = payload["predictions"][0]
+print("\n[M3D inference summary]")
+print(f"  Answer: {prediction.get('answer', '')}")
+print(f"  Raw answer: {prediction.get('raw_answer', '')}")
+print(f"  Stop reason: {prediction.get('stop_reason')}")
+print(f"  Generated [SEG] count: {prediction.get('generated_segmentation_token_count')}")
+print(f"  Has segmentation: {prediction.get('has_segmentation')}")
+print(f"  Segmentation shape: {prediction.get('segmentation_shape')}")
+print(f"  Foreground voxels: {prediction.get('foreground_voxel_count')}")
+print(f"  Saved outputs: {payload.get('saved_outputs', {})}")
+print(f"  Main ViT seconds: {payload.get('main_vision_seconds')}")
+print(f"  Generation seconds: {payload.get('generation_seconds')}")
+print(f"  Segmentation seconds: {payload.get('segmentation_seconds')}")
+print(f"  Total seconds: {payload.get('total_seconds')}")
+PY
