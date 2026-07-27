@@ -882,9 +882,18 @@ def _prepare_output_directory(
             output_dir.mkdir(parents=True, exist_ok=True)
         except Exception as exc:
             local_error = f"{type(exc).__name__}: {exc}"
-    payload = runtime.broadcast_object(local_error if runtime.is_main_process else None)
-    if payload is not None:
-        raise CheckpointIntegrationError(str(payload))
+    payload = runtime.broadcast_object(
+        {"error": local_error} if runtime.is_main_process else None
+    )
+    if not isinstance(payload, Mapping):
+        raise CheckpointIntegrationError(
+            "Output-directory status broadcast returned an invalid payload."
+        )
+
+    output_error = payload.get("error")
+    if output_error is not None:
+        raise CheckpointIntegrationError(str(output_error))
+
     runtime.barrier()
 
 
@@ -1374,13 +1383,20 @@ def run_checkpoint_integration(
                     pass
                 except Exception as exc:
                     local_cleanup_error = f"{type(exc).__name__}: {exc}"
-            cleanup_error = runtime.broadcast_object(
-                local_cleanup_error if runtime.is_main_process else None
+            cleanup_payload = runtime.broadcast_object(
+                {"error": local_cleanup_error} if runtime.is_main_process else None
             )
+            if not isinstance(cleanup_payload, Mapping):
+                raise CheckpointIntegrationError(
+                    "Checkpoint cleanup status broadcast returned an invalid payload."
+                )
+
+            cleanup_error = cleanup_payload.get("error")
             if cleanup_error is not None:
                 raise CheckpointIntegrationError(
                     f"Checkpoint passed but cleanup failed: {cleanup_error}"
                 )
+
             runtime.barrier()
 
         runtime.logger.info(
