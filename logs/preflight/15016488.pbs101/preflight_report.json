@@ -1,25 +1,25 @@
 {
   "expected_gpus": 2,
-  "host": "x1000c1s7b0n1",
+  "host": "x1000c0s6b0n1",
   "nvidia_smi": [
     {
       "driver_version": "570.124.06",
       "index": "0",
       "memory_mib": "40960",
       "name": "NVIDIA A100-SXM4-40GB",
-      "pci_bus_id": "00000000:41:00.0",
-      "uuid": "GPU-05d11eaa-c602-3ae6-847d-58de1aa5ba04"
+      "pci_bus_id": "00000000:03:00.0",
+      "uuid": "GPU-bc33bc29-cd08-501e-e505-7510b19fb48c"
     },
     {
       "driver_version": "570.124.06",
       "index": "1",
       "memory_mib": "40960",
       "name": "NVIDIA A100-SXM4-40GB",
-      "pci_bus_id": "00000000:81:00.0",
-      "uuid": "GPU-8c921395-c819-e71c-d7cd-a860038ab3eb"
+      "pci_bus_id": "00000000:41:00.0",
+      "uuid": "GPU-f9521efc-6855-d1f6-a2fa-f8c6a95cfff7"
     }
   ],
-  "pbs_job_id": "14993674.pbs101",
+  "pbs_job_id": "15016488.pbs101",
   "platform": "Linux-4.18.0-553.125.1.el8_10.x86_64-x86_64-with-glibc2.28",
   "ranks": [
     {
@@ -33,16 +33,16 @@
         "total_memory_bytes": 42406903808,
         "world_size": 2
       },
-      "host": "x1000c1s7b0n1",
-      "pid": 1348234,
+      "host": "x1000c0s6b0n1",
+      "pid": 1685519,
       "rank": 0,
       "tests": {
         "language_flash_sdpa": {
           "backend": "FLASH_ATTENTION",
           "causal": true,
           "dtype": "bfloat16",
-          "forward_backward_ms": 142.8838348388672,
-          "loss": 0.026485925540328026,
+          "forward_backward_ms": 248.93338012695312,
+          "loss": 0.026448935270309448,
           "peak_memory": "10.52 MiB",
           "peak_memory_bytes": 11035648,
           "shape": [
@@ -53,8 +53,8 @@
           ]
         },
         "nccl_all_reduce": {
-          "effective_payload_gib_per_second": 5.55368733924054,
-          "elapsed_ms": 2.8134461026638746,
+          "effective_payload_gib_per_second": 0.31695133354937965,
+          "elapsed_ms": 49.29778911173344,
           "executed": true,
           "expected_reduced_value": 3.0,
           "payload": "16.00 MiB",
@@ -62,7 +62,7 @@
         },
         "patch_embedding_3d": {
           "dtype": "bfloat16",
-          "forward_backward_ms": 5811.2666015625,
+          "forward_backward_ms": 7886.20263671875,
           "input_shape": [
             1,
             1,
@@ -70,7 +70,7 @@
             256,
             256
           ],
-          "loss": 0.3338997960090637,
+          "loss": 0.3336420953273773,
           "output_shape": [
             1,
             768,
@@ -85,8 +85,8 @@
           "backend": "FLASH_ATTENTION",
           "causal": false,
           "dtype": "bfloat16",
-          "forward_backward_ms": 1460.9981689453125,
-          "loss": 0.0012846338795498013,
+          "forward_backward_ms": 2546.77294921875,
+          "loss": 0.0012880077119916677,
           "peak_memory": "42.12 MiB",
           "peak_memory_bytes": 44161536,
           "shape": [
@@ -109,16 +109,16 @@
         "total_memory_bytes": 42406903808,
         "world_size": 2
       },
-      "host": "x1000c1s7b0n1",
-      "pid": 1348235,
+      "host": "x1000c0s6b0n1",
+      "pid": 1685520,
       "rank": 1,
       "tests": {
         "language_flash_sdpa": {
           "backend": "FLASH_ATTENTION",
           "causal": true,
           "dtype": "bfloat16",
-          "forward_backward_ms": 142.94015502929688,
-          "loss": 0.026374131441116333,
+          "forward_backward_ms": 248.97740173339844,
+          "loss": 0.026359528303146362,
           "peak_memory": "10.52 MiB",
           "peak_memory_bytes": 11035648,
           "shape": [
@@ -129,8 +129,8 @@
           ]
         },
         "nccl_all_reduce": {
-          "effective_payload_gib_per_second": 5.5863346169523025,
-          "elapsed_ms": 2.797003951855004,
+          "effective_payload_gib_per_second": 0.31725290545303914,
+          "elapsed_ms": 49.25092798657715,
           "executed": true,
           "expected_reduced_value": 3.0,
           "payload": "16.00 MiB",
@@ -138,7 +138,7 @@
         },
         "patch_embedding_3d": {
           "dtype": "bfloat16",
-          "forward_backward_ms": 5811.3056640625,
+          "forward_backward_ms": 7886.16796875,
           "input_shape": [
             1,
             1,
@@ -146,7 +146,7 @@
             256,
             256
           ],
-          "loss": 0.3338649272918701,
+          "loss": 0.3340812623500824,
           "output_shape": [
             1,
             768,
@@ -161,8 +161,8 @@
           "backend": "FLASH_ATTENTION",
           "causal": false,
           "dtype": "bfloat16",
-          "forward_backward_ms": 1461.0103759765625,
-          "loss": 0.0013045778032392263,
+          "forward_backward_ms": 2546.809814453125,
+          "loss": 0.0013026818633079529,
           "peak_memory": "42.12 MiB",
           "peak_memory_bytes": 44161536,
           "shape": [
@@ -199,6 +199,6 @@
     "pytorch_cuda": "11.8"
   },
   "status": "passed",
-  "timestamp_unix": 1784999067.2467217,
+  "timestamp_unix": 1785212374.1977,
   "world_size": 2
 }

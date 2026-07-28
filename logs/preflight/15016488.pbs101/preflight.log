@@ -1,0 +1,60 @@
+[M3D preflight job] Job ID: 15016488.pbs101
+[M3D preflight job] Host: x1000c0s6b0n1.hostmgmt2000.cm.asp2a.nscc.sg
+[M3D preflight job] Submission directory: /scratch/users/nus/e1129906/M3D_MODERN
+[M3D preflight job] Virtual environment: /scratch/users/nus/e1129906/M3D_MODERN/.venv
+[M3D preflight job] Expected GPUs: 2
+[M3D preflight job] Purging loaded modules
+[M3D preflight job] Loading PrgEnv-gnu/8.3.3
+[M3D preflight job] Loading python/3.10.9
+[M3D preflight job] Loading cuda/11.8.0
+[M3D preflight job] Loading cmake/3.31.3
+[M3D preflight job] Loading ninja/1.11.1
+[M3D preflight job] Swapping gcc/12.1.0-nscc for gcc/11.4.0-nscc
+[M3D preflight job] Loaded modules:
+  Currently Loaded Modulefiles:
+  craype/2.7.15
+  cray-dsmml/0.2.2
+  libfabric/1.11.0.4.125
+  craype-network-ofi
+  cray-mpich/8.1.15
+  cray-pals/1.1.6
+  PrgEnv-gnu/8.3.3
+  gcc/11.4.0-nscc
+  python/3.10.9
+  cuda/11.8.0
+  cmake/3.31.3
+  ninja/1.11.1
+[M3D preflight job] GCC executable: /app/apps/gcc/11.4.0-nscc/bin/gcc
+[M3D preflight job] GCC version: gcc (GCC) 11.4.0
+[M3D preflight job] Python: Python 3.10.9
+[M3D preflight job] Python executable: /scratch/users/nus/e1129906/M3D_MODERN/.venv/bin/python
+[M3D preflight job] CUDA_HOME: /scratch/GPFS/app/apps/cuda/11.8.0
+[M3D preflight job] NVCC: Cuda compilation tools, release 11.8, V11.8.89
+[M3D preflight job] OMP_NUM_THREADS: 8
+[M3D preflight job] CUDA_VISIBLE_DEVICES: GPU-f9521efc-6855-d1f6-a2fa-f8c6a95cfff7,GPU-bc33bc29-cd08-501e-e505-7510b19fb48c
+GPU 0: NVIDIA A100-SXM4-40GB (UUID: GPU-bc33bc29-cd08-501e-e505-7510b19fb48c)
+GPU 1: NVIDIA A100-SXM4-40GB (UUID: GPU-f9521efc-6855-d1f6-a2fa-f8c6a95cfff7)
+[M3D preflight job] Launching 2-GPU preflight with torchrun
+[M3D preflight][rank 0] Using NVIDIA A100-SXM4-40GB on cuda:0[M3D preflight][rank 1] Using NVIDIA A100-SXM4-40GB on cuda:1
+
+[M3D preflight][rank 1] Vision Flash-SDPA forward/backward passed
+[M3D preflight][rank 0] Vision Flash-SDPA forward/backward passed
+[M3D preflight][rank 1] Causal language Flash-SDPA forward/backward passed
+[M3D preflight][rank 0] Causal language Flash-SDPA forward/backward passed
+[M3D preflight][rank 1] 3D patch-embedding forward/backward passed
+[M3D preflight][rank 0] 3D patch-embedding forward/backward passed
+NCCL version 2.21.5+cuda11.0
+[M3D preflight][rank 1] NCCL all-reduce passed
+[M3D preflight][rank 0] NCCL all-reduce passed
+
+[M3D preflight] ALL CHECKS PASSED
+[M3D preflight] Report: /scratch/users/nus/e1129906/M3D_MODERN/logs/preflight/15016488.pbs101/preflight_report.json
+[M3D preflight job] Preflight report summary:
+  status: passed
+  world_size: 2
+  rank 0: NVIDIA A100-SXM4-40GB | 39.49 GiB
+  rank 1: NVIDIA A100-SXM4-40GB | 39.49 GiB
+[M3D preflight job] Job completed successfully.
+[M3D preflight job] Report: /scratch/users/nus/e1129906/M3D_MODERN/logs/preflight/15016488.pbs101/preflight_report.json
+[M3D preflight job] Log: /scratch/users/nus/e1129906/M3D_MODERN/logs/preflight/15016488.pbs101/preflight.log
+[M3D preflight job] GPU telemetry: /scratch/users/nus/e1129906/M3D_MODERN/logs/preflight/15016488.pbs101/gpu.csv
