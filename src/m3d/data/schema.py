@@ -203,6 +203,22 @@ class SampleProvenance:
         object.__setattr__(self, "mask_path", mask_path)
         object.__setattr__(self, "metadata", metadata)
 
+    def __reduce__(self) -> tuple[Any, tuple[Any, ...]]:
+        """Serialize metadata through a dict for DataLoader worker transfer."""
+
+        return (
+            SampleProvenance,
+            (
+                self.sample_id,
+                self.source_name,
+                self.source_index,
+                self.split,
+                self.image_path,
+                self.mask_path,
+                dict(self.metadata),
+            ),
+        )
+
     def with_resolved_paths(self, root: str | Path) -> "SampleProvenance":
         """Return a copy whose relative paths are resolved below ``root``."""
 
