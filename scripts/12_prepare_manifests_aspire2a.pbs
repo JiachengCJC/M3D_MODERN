@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -P personal-e1129906
+#PBS -P 58001002
 #PBS -q normal
 #PBS -N M3D_MANIFESTS
 #PBS -l select=1:ncpus=16:mem=64gb
@@ -30,7 +30,7 @@ type module >/dev/null 2>&1 || {
     exit 2
 }
 
-module purge
+module reset >/dev/null 2>&1 || module purge
 module load python/3.10.9
 hash -r
 

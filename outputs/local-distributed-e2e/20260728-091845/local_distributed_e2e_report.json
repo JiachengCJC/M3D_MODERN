@@ -1,0 +1,44 @@
+{
+  "cases": [],
+  "elapsed_seconds": 7.2195868492126465,
+  "environment": {
+    "cuda_available": false,
+    "packages": {
+      "PyYAML": "6.0.2",
+      "monai": "1.4.0",
+      "numpy": "1.26.4",
+      "peft": "0.15.2",
+      "safetensors": "0.5.3",
+      "tokenizers": "0.21.1",
+      "torch": "2.6.0",
+      "torchvision": "0.21.0",
+      "transformers": "4.52.4"
+    },
+    "pinned_mismatches": [],
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "python": "3.10.15",
+    "torch_distributed_available": true
+  },
+  "error": "LocalE2EError: ddp_runtime failed with exit code 1; inspect /Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-091845/command_logs/ddp_runtime.log.",
+  "finished_at_unix": 1785201532.866461,
+  "fixtures": {
+    "counts_by_task": {
+      "caption": 4,
+      "segmentation": 4
+    },
+    "data_root": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-091845/fixtures/data",
+    "manifest": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-091845/fixtures/manifests/train.jsonl",
+    "manifest_fingerprint": "3d2b4d749266de47030933d360e8e5a28fb5cc5b7e4db8ba4bee887305271982",
+    "manifest_summary": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-091845/fixtures/manifests/train.jsonl.summary.json",
+    "model_dir": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-091845/fixtures/tiny-phi3",
+    "record_count": 8
+  },
+  "limitations": [
+    "Local test uses CPU BF16 and Gloo.",
+    "CUDA 11.8, NCCL, A100 Flash-SDPA, PBS, and cluster fabric require ASPIRE 2A."
+  ],
+  "project_root": "/Users/jiacheng/Documents/GitHub/M3D_MODERN",
+  "started_at_unix": 1785201525.6468742,
+  "status": "failed",
+  "work_dir": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-091845"
+}

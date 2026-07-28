@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-#PBS -P personal-e1129906
-#PBS -q glong
+#PBS -P 58001002
+#PBS -q normal
 #PBS -N M3D_train
 #PBS -l select=1:ncpus=64:mem=440gb:ngpus=2
 #PBS -l walltime=120:00:00
@@ -225,7 +225,7 @@ log "Expected GPUs: ${EXPECTED_GPUS}"
 type module >/dev/null 2>&1 || \
     fail "The ASPIRE 2A environment-modules command is unavailable."
 
-module purge
+module reset >/dev/null 2>&1 || module purge
 module load PrgEnv-gnu/8.3.3
 module load python/3.10.9
 module load cuda/11.8.0
@@ -252,6 +252,9 @@ fi
 
 # Clear any command paths cached before the module swap.
 hash -r
+FINAL_GCC_VERSION="$(gcc -dumpfullversion -dumpversion)"
+[[ "${FINAL_GCC_VERSION}" == 11.4.0* ]] || \
+    fail "Expected GCC 11.4.0, but gcc reports ${FINAL_GCC_VERSION}."
 
 module -t list 2> "${MODULE_FILE}"
 log "Loaded modules:"

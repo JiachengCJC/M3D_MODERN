@@ -205,6 +205,7 @@ class TwoWayAttentionBlock(nn.Module):
             key_pe=key_pe,
             embedding_dim=self.embedding_dim,
         )
+        input_dtype = queries.dtype
 
         # (1) Sparse-token self-attention.  The first block deliberately omits
         # both positional encoding and the residual around this first
@@ -232,7 +233,15 @@ class TwoWayAttentionBlock(nn.Module):
         attention_output = self.cross_attn_image_to_token(q=k, k=q, v=queries)
         keys = self.norm4(keys + attention_output)
 
-        return queries, keys
+        # CPU and CUDA autocast have different allowlists for LayerNorm and
+        # residual additions. Preserve the block's input activation dtype at
+        # layer boundaries so a multi-layer decoder cannot leave sparse and
+        # dense streams in different dtypes. The Linear projections still run
+        # in the autocast compute dtype.
+        return (
+            queries.to(dtype=input_dtype),
+            keys.to(dtype=input_dtype),
+        )
 
     def extra_repr(self) -> str:
         return (
@@ -828,6 +837,27 @@ def run_cpu_self_test() -> dict[str, object]:
         raise AssertionError("Backward did not produce input gradients.")
     if not torch.isfinite(image.grad).all() or not torch.isfinite(sparse.grad).all():
         raise AssertionError("Backward produced non-finite gradients.")
+
+    autocast_image = image.detach().clone().requires_grad_(True)
+    autocast_sparse = sparse.detach().clone().requires_grad_(True)
+    with torch.autocast(device_type="cpu", dtype=torch.bfloat16):
+        autocast_queries, autocast_keys = transformer(
+            autocast_image,
+            image_pe,
+            autocast_sparse,
+        )
+        autocast_loss = (
+            autocast_queries.float().square().mean()
+            + autocast_keys.float().square().mean()
+        )
+    autocast_loss.backward()
+    if autocast_image.grad is None or autocast_sparse.grad is None:
+        raise AssertionError("Autocast backward did not produce input gradients.")
+    if (
+        not torch.isfinite(autocast_image.grad).all()
+        or not torch.isfinite(autocast_sparse.grad).all()
+    ):
+        raise AssertionError("Autocast backward produced non-finite gradients.")
 
     checkpointed = TwoWayTransformer(
         depth=2,

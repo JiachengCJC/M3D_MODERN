@@ -1,6 +1,6 @@
 #!/bin/bash
 #PBS -P 58001002
-#PBS -q glong
+#PBS -q normal
 #PBS -N M3D_CLIP
 #PBS -l select=1:ncpus=32:mem=256gb:ngpus=2
 #PBS -l walltime=120:00:00
@@ -18,11 +18,22 @@ exec > >(stdbuf -oL tee -a "${LOG_DIR}/train.log") 2>&1
 
 module reset
 module load PrgEnv-gnu/8.3.3
-module load gcc/11.4.0-nscc
 module load python/3.10.9
 module load cuda/11.8.0
 module load cmake/3.31.3
 module load ninja/1.11.1
+LOADED_GCC="$(module -t list 2>&1 | sed -n '/^gcc\//{p;q;}')"
+if [[ -z "${LOADED_GCC}" ]]; then
+    module load gcc/11.4.0-nscc
+elif [[ "${LOADED_GCC}" != "gcc/11.4.0-nscc" ]]; then
+    module swap "${LOADED_GCC}" gcc/11.4.0-nscc
+fi
+hash -r
+FINAL_GCC_VERSION="$(gcc -dumpfullversion -dumpversion)"
+[[ "${FINAL_GCC_VERSION}" == 11.4.0* ]] || {
+    echo "Expected GCC 11.4.0, but gcc reports ${FINAL_GCC_VERSION}." >&2
+    exit 2
+}
 source "${VENV}/bin/activate"
 cd "${PROJECT_ROOT}"
 
@@ -35,7 +46,7 @@ export TORCH_HOME="${CACHE_ROOT}/torch"
 export TRITON_CACHE_DIR="${TMPDIR:-/tmp}/triton-${PBS_JOBID:-manual}"
 export TORCH_EXTENSIONS_DIR="${TMPDIR:-/tmp}/torch-extensions-${PBS_JOBID:-manual}"
 export TOKENIZERS_PARALLELISM=false
-export NCCL_ASYNC_ERROR_HANDLING=1
+export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
 export NCCL_DEBUG="${NCCL_DEBUG:-WARN}"
 mkdir -p "${TRITON_CACHE_DIR}" "${TORCH_EXTENSIONS_DIR}"
 

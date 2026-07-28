@@ -129,8 +129,8 @@ type module >/dev/null 2>&1 || \
 # -----------------------------------------------------------------------------
 # 1. Load an explicit ASPIRE 2A software stack
 # -----------------------------------------------------------------------------
-log "Purging loaded modules"
-module purge
+log "Resetting loaded modules"
+module reset >/dev/null 2>&1 || module purge
 
 log "Loading ${MODULE_PRGENV}"
 module load "${MODULE_PRGENV}"
@@ -402,11 +402,11 @@ Activate it in future login/PBS sessions only after loading the same modules:
 
     module reset
     module load ${MODULE_PRGENV}
-    module load ${MODULE_GCC}
     module load ${MODULE_PYTHON}
     module load ${MODULE_CUDA}
     module load ${MODULE_CMAKE}
     module load ${MODULE_NINJA}
+    module load ${MODULE_GCC}
     source "${VENV_DIR}/bin/activate"
 
 Module lock:

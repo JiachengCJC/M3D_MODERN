@@ -1,0 +1,226 @@
+{
+  "checkpoint": {
+    "asynchronous": true,
+    "export_safetensors_at_end": false,
+    "format": "distributed_checkpoint",
+    "keep_last_n": 2,
+    "output_dir": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-100259/ddp_training",
+    "resume_from": null,
+    "save_every_steps": 1,
+    "save_optimizer": true,
+    "save_rng_state": true,
+    "save_scheduler": true
+  },
+  "data": {
+    "dynamic_padding": true,
+    "local_cache_root": null,
+    "non_blocking_transfer": false,
+    "num_workers": 0,
+    "pad_to_multiple_of": 8,
+    "paths": {
+      "caption_json": "M3D_Cap_npy/M3D_Cap.json",
+      "data_root": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-100259/fixtures/data",
+      "referring_segmentation_test_csv": "M3D_RefSeg_npy/M3D_RefSeg_test.csv",
+      "referring_segmentation_train_csv": "M3D_RefSeg_npy/M3D_RefSeg.csv",
+      "segmentation_root": "M3D_Seg_npy",
+      "vqa_test_csv": "M3D-VQA/M3D_VQA_test.csv",
+      "vqa_train_csv": "M3D-VQA/M3D_VQA_train.csv",
+      "vqa_val_csv": "M3D-VQA/M3D_VQA_val.csv",
+      "vqa_yes_no_train_csv": "M3D-VQA/M3D_VQA_yn_train.csv"
+    },
+    "persistent_workers": false,
+    "pin_memory": false,
+    "prefetch_factor": 1,
+    "pretokenize_text": true,
+    "sequence_length_buckets": [
+      32,
+      64
+    ],
+    "task_sampling": {
+      "enabled": true,
+      "homogeneous_batches": true,
+      "steps_per_epoch": 2,
+      "task_weights": {
+        "caption": 1.0,
+        "positioning": 0.0,
+        "segmentation": 1.0,
+        "vqa_closed": 0.0,
+        "vqa_open": 0.0,
+        "vqa_yes_no": 0.0
+      },
+      "temperature_alpha": 0.5
+    },
+    "verify_files_at_startup": true
+  },
+  "distributed": {
+    "backend": "gloo",
+    "ddp": {
+      "bucket_cap_mb": 25,
+      "find_unused_parameters": true,
+      "gradient_as_bucket_view": true,
+      "static_graph": false
+    },
+    "fsdp2": {
+      "cpu_offload": false,
+      "mixed_precision": "bf16",
+      "reshard_after_forward": true,
+      "wrap_language_layers": true,
+      "wrap_main_vision_layers": true,
+      "wrap_seg_vision_layers": true,
+      "wrap_segmentation_decoder_layers": true
+    },
+    "strategy": "ddp",
+    "timeout_seconds": 300
+  },
+  "experiment_name": "m3d-local-e2e-ddp",
+  "logging": {
+    "log_every_steps": 1,
+    "log_gpu_memory": false,
+    "profile_steps": [],
+    "report_to": [],
+    "tensorboard_dir": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-100259/ddp_training/tensorboard"
+  },
+  "model": {
+    "box_end_token": "<bx_end>",
+    "box_start_token": "<bx_start>",
+    "image_token": "<im_patch>",
+    "language_model_family": "phi3",
+    "language_model_name_or_path": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-100259/fixtures/tiny-phi3",
+    "lora": {
+      "adapter_checkpoint_path": null,
+      "alpha": 8,
+      "bias": "none",
+      "dropout": 0.0,
+      "enabled": true,
+      "rank": 4,
+      "target_modules": [
+        "qkv_proj",
+        "o_proj",
+        "gate_up_proj",
+        "down_proj"
+      ]
+    },
+    "main_vision": {
+      "activation_checkpoint_every_n_layers": 0,
+      "architecture": "vit3d",
+      "attention_backend": "math",
+      "checkpoint_path": null,
+      "depth": 2,
+      "dropout": 0.0,
+      "enabled": true,
+      "freeze": false,
+      "hidden_size": 32,
+      "image_channels": 1,
+      "image_size": [
+        8,
+        16,
+        16
+      ],
+      "mlp_dim": 64,
+      "num_heads": 4,
+      "patch_size": [
+        4,
+        8,
+        8
+      ],
+      "qkv_bias": false,
+      "require_flash_sdpa": false,
+      "unfreeze_last_n_layers": 0,
+      "use_cls_token": true
+    },
+    "model_max_length": 64,
+    "projector": {
+      "checkpoint_path": null,
+      "freeze": false,
+      "layer_type": "mlp",
+      "num_layers": 2,
+      "pooling_size": 2,
+      "pooling_type": "spatial",
+      "projector_type": "spatial_pooling"
+    },
+    "seg_vision": {
+      "activation_checkpoint_every_n_layers": 0,
+      "architecture": "vit3d",
+      "attention_backend": "math",
+      "checkpoint_path": null,
+      "depth": 2,
+      "dropout": 0.0,
+      "enabled": true,
+      "freeze": false,
+      "hidden_size": 32,
+      "image_channels": 1,
+      "image_size": [
+        8,
+        16,
+        16
+      ],
+      "mlp_dim": 64,
+      "num_heads": 4,
+      "patch_size": [
+        4,
+        8,
+        8
+      ],
+      "qkv_bias": false,
+      "require_flash_sdpa": false,
+      "unfreeze_last_n_layers": 0,
+      "use_cls_token": false
+    },
+    "segmentation": {
+      "architecture": "segvol",
+      "bce_loss_weight": 1.0,
+      "checkpoint_path": null,
+      "decoder_depth": 2,
+      "decoder_heads": 4,
+      "dice_loss_weight": 1.0,
+      "enabled": true,
+      "freeze_mask_decoder": false,
+      "freeze_prompt_encoder": false,
+      "prompt_embed_dim": 32
+    },
+    "segmentation_token": "[SEG]",
+    "tokenizer_name_or_path": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-100259/fixtures/tiny-phi3",
+    "trust_remote_code": false
+  },
+  "optimization": {
+    "allow_tf32": false,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "checkpoint_language_model": false,
+    "checkpoint_main_vision": false,
+    "checkpoint_seg_vision": false,
+    "checkpoint_segmentation_decoder": false,
+    "compile_mode": "default",
+    "compile_model": false,
+    "epochs": 1.0,
+    "epsilon": 1e-08,
+    "gradient_accumulation_steps": 1,
+    "learning_rates": {
+      "language_model": 1e-05,
+      "main_vision": 5e-06,
+      "projector": 5e-05,
+      "seg_vision": 5e-06,
+      "segmentation_decoder": 1e-05,
+      "segmentation_projector": 5e-05,
+      "token_embeddings": 5e-05
+    },
+    "matmul_precision": "highest",
+    "max_grad_norm": 1.0,
+    "optimizer": "adamw_fused",
+    "per_device_batch_size": 1,
+    "precision": "bf16",
+    "scheduler": "cosine",
+    "stage": "joint_finetune",
+    "warmup_ratio": 0.0,
+    "weight_decay": 0.0
+  },
+  "runtime": {
+    "detect_anomaly": false,
+    "deterministic": true,
+    "fail_on_nondeterministic_ops": false,
+    "seed": 1729
+  },
+  "schema_version": 1
+}

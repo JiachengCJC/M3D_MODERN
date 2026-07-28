@@ -29,6 +29,7 @@ import yaml
 
 
 CONFIG_SCHEMA_VERSION = 1
+LATEST_CHECKPOINT_SENTINEL = "latest"
 
 T = TypeVar("T")
 
@@ -255,7 +256,10 @@ class FSDP2Config:
 @dataclass(slots=True)
 class DistributedConfig:
     strategy: DistributedStrategy = "ddp"
-    backend: Literal["nccl"] = "nccl"
+    # ``gloo`` is accepted only by the explicitly gated local CPU integration
+    # harness.  The production runtime still rejects it unless
+    # M3D_CPU_DISTRIBUTED_SMOKE=1 is present.
+    backend: Literal["nccl", "gloo"] = "nccl"
     timeout_seconds: int = 1800
     ddp: DDPConfig = field(default_factory=DDPConfig)
     fsdp2: FSDP2Config = field(default_factory=FSDP2Config)
@@ -505,7 +509,13 @@ class ExperimentConfig:
         self.data.paths.data_root = resolve(self.data.paths.data_root) or ""
         self.data.local_cache_root = resolve(self.data.local_cache_root)
         self.checkpoint.output_dir = resolve(self.checkpoint.output_dir) or ""
-        self.checkpoint.resume_from = resolve(self.checkpoint.resume_from)
+        resume_from = self.checkpoint.resume_from
+        self.checkpoint.resume_from = (
+            LATEST_CHECKPOINT_SENTINEL
+            if resume_from is not None
+            and resume_from.strip() == LATEST_CHECKPOINT_SENTINEL
+            else resolve(resume_from)
+        )
         self.logging.tensorboard_dir = resolve(self.logging.tensorboard_dir) or ""
 
         self.model.main_vision.checkpoint_path = resolve(
@@ -576,7 +586,11 @@ class ExperimentConfig:
             ("model.lora.adapter_checkpoint_path", self.model.lora.adapter_checkpoint_path),
             ("checkpoint.resume_from", self.checkpoint.resume_from),
         ):
-            if path_value is not None and not Path(path_value).exists():
+            if (
+                path_value is not None
+                and path_value != LATEST_CHECKPOINT_SENTINEL
+                and not Path(path_value).exists()
+            ):
                 missing.append(f"{name}: {path_value}")
 
         if missing:

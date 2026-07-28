@@ -1,0 +1,74 @@
+W0728 09:23:14.387000 17457 /private/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+2026-07-28 09:23:16 | INFO | rank=0 local=0 | Runtime initialized in isolated CPU smoke mode: host=Chungs-MacBook-Pro-2.local strategy=ddp world_size=2 backend=gloo device=cpu seed=1729
+2026-07-28 09:23:16 | INFO | rank=0 local=0 | Numerics: precision=bf16 TF32=False matmul_precision=highest deterministic=True
+2026-07-28 09:23:16 | INFO | rank=0 local=0 | Task sampler initialized: {"committed_step": 0, "epoch": 0, "global_batch_size": 2, "local_batch_size": 1, "probabilities": [{"configured_weight": 1.0, "dataset_name": "m3d_caption_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "caption", "temperature_alpha": 0.5}, {"configured_weight": 1.0, "dataset_name": "m3d_segmentation_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "segmentation", "temperature_alpha": 0.5}], "remaining_steps": 2, "sampler_fingerprint": "7b774534e6c083f4c48afd3eac81a7918f33e0b0a6016f9194968a061db07f36", "schedule": {"counts": {"caption": 1, "segmentation": 1}, "epoch": 0, "fingerprint": "c12f7205bbdf6d293b4a42e85e1a076e9a1fcdcaf7f56168188c781d189eec39", "steps": 2}, "steps_per_epoch": 2, "temperature_alpha": 0.5, "world_size": 2}
+2026-07-28 09:23:16 | INFO | rank=0 local=0 | Training DataLoader initialized: {"manifest_fingerprint": "3d2b4d749266de47030933d360e8e5a28fb5cc5b7e4db8ba4bee887305271982", "sampler": {"committed_step": 0, "epoch": 0, "global_batch_size": 2, "local_batch_size": 1, "probabilities": [{"configured_weight": 1.0, "dataset_name": "m3d_caption_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "caption", "temperature_alpha": 0.5}, {"configured_weight": 1.0, "dataset_name": "m3d_segmentation_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "segmentation", "temperature_alpha": 0.5}], "remaining_steps": 2, "sampler_fingerprint": "7b774534e6c083f4c48afd3eac81a7918f33e0b0a6016f9194968a061db07f36", "schedule": {"counts": {"caption": 1, "segmentation": 1}, "epoch": 0, "fingerprint": "c12f7205bbdf6d293b4a42e85e1a076e9a1fcdcaf7f56168188c781d189eec39", "steps": 2}, "steps_per_epoch": 2, "temperature_alpha": 0.5, "world_size": 2}, "split": "train", "tasks": ["caption", "segmentation"], "worker_settings": {"non_blocking_transfer": false, "num_workers": 0, "persistent_workers": false, "pin_memory": false, "prefetch_factor": null}}
+2026-07-28 09:23:17 | INFO | rank=0 local=0 | Distributed model prepared: strategy=ddp parameters=458624 trainable=435808 parameter_tensors=234 FSDP_groups=0
+/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/autograd/graph.py:823: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+grad.sizes() = [1, 1, 32], strides() = [288, 32, 1]
+bucket_view.sizes() = [1, 1, 32], strides() = [32, 32, 1] (Triggered internally at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/distributed/c10d/reducer.cpp:341.)
+  return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/autograd/graph.py:823: UserWarning: Grad strides do not match bucket view strides. This may indicate grad was not created according to the gradient layout contract, or that the param's strides changed since DDP was constructed.  This is not an error, but may impair performance.
+grad.sizes() = [1, 1, 32], strides() = [288, 32, 1]
+bucket_view.sizes() = [1, 1, 32], strides() = [32, 32, 1] (Triggered internally at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/distributed/c10d/reducer.cpp:341.)
+  return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/filesystem.py:116: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  if tensor.storage().size() != tensor.numel():
+/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/filesystem.py:116: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  if tensor.storage().size() != tensor.numel():
+{
+  "error": "DCP model/optimizer load failed from /Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/ddp_checkpoint/checkpoints/checkpoint-step-00000001.",
+  "error_type": "CheckpointCompatibilityError",
+  "local_rank": 1,
+  "rank": 1,
+  "status": "failed",
+  "traceback": "Traceback (most recent call last):\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py\", line 1080, in load\n    dcp.load(\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/logger.py\", line 83, in wrapper\n    result = func(*args, **kwargs)\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/utils.py\", line 429, in inner_func\n    return func(*args, **kwargs)\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict_loader.py\", line 186, in load\n    elem.load_state_dict(statetful_sd[key])\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py\", line 465, in load_state_dict\n    incompatible = set_state_dict(\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict.py\", line 1305, in set_state_dict\n    _load_optim_state_dict(model, optimizers, optim_state_dict, info)\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/utils/_contextlib.py\", line 116, in decorate_context\n    return func(*args, **kwargs)\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict.py\", line 887, in _load_optim_state_dict\n    optim_state_dict = _split_optim_state_dict(\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict.py\", line 853, in _split_optim_state_dict\n    state[fqn] = cast(DictValueType, optim_state_dict[_STATE])[fqn]\nKeyError: 'model.seg_module.mask_decoder.iou_prediction_head.layers.0.weight'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/04_aspire2a_checkpoint_integration.py\", line 1718, in main\n    report = run_checkpoint_integration(options)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/04_aspire2a_checkpoint_integration.py\", line 1137, in run_checkpoint_integration\n    resume_report = manager.load(checkpoint_path, exact=True)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py\", line 1085, in load\n    raise CheckpointCompatibilityError(\nm3d.checkpointing.CheckpointCompatibilityError: DCP model/optimizer load failed from /Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/ddp_checkpoint/checkpoints/checkpoint-step-00000001.\n"
+}
+{
+  "error": "DCP model/optimizer load failed from /Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/ddp_checkpoint/checkpoints/checkpoint-step-00000001.",
+  "error_type": "CheckpointCompatibilityError",
+  "local_rank": 0,
+  "rank": 0,
+  "status": "failed",
+  "traceback": "Traceback (most recent call last):\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py\", line 1080, in load\n    dcp.load(\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/logger.py\", line 83, in wrapper\n    result = func(*args, **kwargs)\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/utils.py\", line 429, in inner_func\n    return func(*args, **kwargs)\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict_loader.py\", line 186, in load\n    elem.load_state_dict(statetful_sd[key])\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py\", line 465, in load_state_dict\n    incompatible = set_state_dict(\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict.py\", line 1305, in set_state_dict\n    _load_optim_state_dict(model, optimizers, optim_state_dict, info)\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/utils/_contextlib.py\", line 116, in decorate_context\n    return func(*args, **kwargs)\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict.py\", line 887, in _load_optim_state_dict\n    optim_state_dict = _split_optim_state_dict(\n  File \"/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict.py\", line 853, in _split_optim_state_dict\n    state[fqn] = cast(DictValueType, optim_state_dict[_STATE])[fqn]\nKeyError: 'model.seg_module.mask_decoder.iou_prediction_head.layers.0.weight'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/04_aspire2a_checkpoint_integration.py\", line 1718, in main\n    report = run_checkpoint_integration(options)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/04_aspire2a_checkpoint_integration.py\", line 1137, in run_checkpoint_integration\n    resume_report = manager.load(checkpoint_path, exact=True)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py\", line 1085, in load\n    raise CheckpointCompatibilityError(\nm3d.checkpointing.CheckpointCompatibilityError: DCP model/optimizer load failed from /Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/ddp_checkpoint/checkpoints/checkpoint-step-00000001.\n"
+}
+E0728 09:23:18.246000 17457 /private/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 17460) of binary: /tmp/m3d-resolve-venv/bin/python
+Traceback (most recent call last):
+  File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 922, in <module>
+    main()
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 918, in main
+    run(args)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 909, in run
+    elastic_launch(
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/04_aspire2a_checkpoint_integration.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-07-28_09:23:18
+  host      : 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 17461)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-07-28_09:23:18
+  host      : 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 17460)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

@@ -59,13 +59,25 @@ Create the environment:
 ```bash
 cd /scratch/users/industry/theiahealth/theiahth/M3D-modernized
 bash scripts/00_setup_environment.sh
+module load python/3.10.9
+source .venv/bin/activate
+python -m pip install -e . --no-deps
 ```
+
+All PBS files currently charge project `58001002`. Before submitting, confirm
+that it appears in your ASPIRE 2A project list. If your allocation uses another
+project ID, update every `#PBS -P` line consistently or override it with
+`qsub -P <project-id>`.
 
 Run the preflight PBS job:
 
 ```bash
 qsub scripts/02_preflight.pbs
 ```
+
+`qsub` returns as soon as PBS accepts a job. Do not run a dependent step merely
+because the preceding `qsub` command returned successfully: wait for the job to
+leave `qstat`, then require its log/report status to be `passed`.
 
 ## Data contract
 
@@ -308,16 +320,39 @@ python scripts/13_release_audit.py --root . --output release_audit.json
 
 The audit checks:
 
-- all 64 planned files exist;
+- all 65 planned files exist;
 - every Python file compiles;
 - every PBS/shell file passes `bash -n`;
 - every YAML file parses;
 - dual-encoder contracts remain present;
 - prohibited hard-coded `.cuda()` and mask-sum task routing are absent.
+- PBS project IDs are consistent and only submit-capable routing queues are used;
+- the joint release-component paths and Phi-3 fused LoRA targets are correct.
+
+## Local distributed end-to-end validation
+
+Before submitting the GPU jobs, a two-process CPU system can exercise the real
+training entry point, DDP, FSDP2, LoRA, both independent 3D encoders, SegVol,
+distributed-checkpoint save/load/replay, full training, and
+`resume_from=latest` with a generated tiny Phi-3 model and synthetic volumes:
+
+```bash
+python scripts/14_local_distributed_e2e.py --require-pinned
+```
+
+The command writes a consolidated
+`local_distributed_e2e_report.json` and individual command logs below
+`outputs/local-distributed-e2e/<timestamp>/`. It intentionally uses CPU BF16
+and Gloo. Because PyTorch 2.6 CPU composable FSDP cannot safely reshard between
+forward and backward, only this explicitly gated local mode delays resharding
+until backward; the CUDA path uses the configured post-forward resharding.
+CUDA 11.8, NCCL, A100 Flash-SDPA, PBS, and cluster-fabric validation remain
+mandatory in `02_preflight.pbs` and `05_aspire2a_integration.pbs`.
 
 ## Package installation
 
-After the environment is created:
+After the environment is created (this is already included in the setup
+sequence above):
 
 ```bash
 pip install -e . --no-deps

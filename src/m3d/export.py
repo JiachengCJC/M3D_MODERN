@@ -56,7 +56,7 @@ from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import torch
 import torch.distributed.checkpoint as dcp
@@ -78,8 +78,11 @@ from .distributed import (
     prepare_distributed_model,
 )
 from .model.language import M3DLanguageModel, build_language_model
-from .model.m3d import M3DModel, build_m3d_model
+from .model.m3d import build_m3d_model
 from .runtime import RuntimeContext, atomic_write_json, distributed_runtime
+
+if TYPE_CHECKING:
+    from .tokenization import TokenizerBundle
 
 
 _EXPORT_STATE_VERSION = 1
@@ -1269,7 +1272,6 @@ def run_export(args: argparse.Namespace) -> dict[str, Any]:
             status_path=status_path,
             export_fn=export_fn,
         )
-        del full_state
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         return cast(dict[str, Any], payload["report"])

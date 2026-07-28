@@ -1,0 +1,18 @@
+{
+  "added_token_count": 4,
+  "box_end_token": "<bx_end>",
+  "box_end_token_id": 32,
+  "box_start_token": "<bx_start>",
+  "box_start_token_id": 31,
+  "eos_token_id": 2,
+  "image_token": "<im_patch>",
+  "image_token_id": 30,
+  "original_vocab_size": 30,
+  "pad_token_id": 3,
+  "requires_embedding_resize": true,
+  "segmentation_token": "[SEG]",
+  "segmentation_token_id": 33,
+  "tokenizer_name_or_path": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-101106/fixtures/tiny-phi3",
+  "visual_token_count": 1,
+  "vocabulary_size": 34
+}

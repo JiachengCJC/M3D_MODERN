@@ -686,6 +686,14 @@ def _validate_decoder_inputs(
     reference_device = sparse_prompt_embeddings.device
     reference_dtype = sparse_prompt_embeddings.dtype
     for name, tensor in tensors.items():
+        # Model-boundary activations must be ordinary local tensors. In
+        # particular, allowing an FSDP DTensor parameter/view to reach these
+        # numerical validations can dispatch a distributed reduction (and
+        # older PyTorch releases may crash instead of raising cleanly).
+        if type(tensor) is not Tensor:
+            raise SegVolMaskDecoderExecutionError(
+                f"{name} must be a local Tensor, got {type(tensor).__name__}."
+            )
         if not tensor.is_floating_point():
             raise SegVolMaskDecoderExecutionError(
                 f"{name} must be floating point, got {tensor.dtype}."
@@ -698,7 +706,20 @@ def _validate_decoder_inputs(
             raise SegVolMaskDecoderExecutionError(
                 f"{name} uses {tensor.dtype}, expected {reference_dtype}."
             )
-        if not torch.isfinite(tensor).all():
+        # PyTorch 2.6 on macOS/ARM can crash in the native CPU BF16 isfinite
+        # kernel after composable-FSDP collectives. Upcast only this validation
+        # view; CUDA and the actual model computation remain unchanged.
+        try:
+            finite_view = (
+                tensor.float()
+                if tensor.device.type == "cpu" and tensor.dtype is torch.bfloat16
+                else tensor
+            )
+        except RuntimeError as exc:
+            raise SegVolMaskDecoderExecutionError(
+                f"{name} does not own accessible local tensor storage."
+            ) from exc
+        if not torch.isfinite(finite_view).all():
             raise SegVolMaskDecoderExecutionError(
                 f"{name} contains NaN or Inf values."
             )
@@ -724,7 +745,18 @@ def _validate_decoder_outputs(
             "IoU output shape is "
             f"{tuple(iou_predictions.shape)}, expected {expected_iou}."
         )
-    if not torch.isfinite(masks).all() or not torch.isfinite(iou_predictions).all():
+    finite_masks = (
+        masks.float()
+        if masks.device.type == "cpu" and masks.dtype is torch.bfloat16
+        else masks
+    )
+    finite_iou = (
+        iou_predictions.float()
+        if iou_predictions.device.type == "cpu"
+        and iou_predictions.dtype is torch.bfloat16
+        else iou_predictions
+    )
+    if not torch.isfinite(finite_masks).all() or not torch.isfinite(finite_iou).all():
         raise SegVolMaskDecoderExecutionError(
             "Mask decoder produced NaN or Inf values."
         )

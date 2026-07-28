@@ -1,0 +1,17 @@
+{
+  "report": {
+    "asynchronous": true,
+    "checkpoint_path": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092545/ddp_training/checkpoint-step-00000001",
+    "committed_microbatches": 1,
+    "completed_at_utc": "2026-07-28T01:26:00+00:00",
+    "duration_seconds": 0.09974254103144631,
+    "epoch": 0,
+    "exact_resume_capable": true,
+    "optimizer_step": 1,
+    "saved_optimizer": true,
+    "saved_rng_state": true,
+    "saved_scheduler": true
+  },
+  "state_version": 1,
+  "status": "complete"
+}

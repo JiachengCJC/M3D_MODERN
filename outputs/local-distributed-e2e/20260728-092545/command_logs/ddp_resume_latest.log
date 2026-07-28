@@ -1,0 +1,65 @@
+W0728 09:26:04.035000 17865 /private/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+2026-07-28 09:26:05 | INFO | rank=0 local=0 | Runtime initialized in isolated CPU smoke mode: host=Chungs-MacBook-Pro-2.local strategy=ddp world_size=2 backend=gloo device=cpu seed=1729
+2026-07-28 09:26:05 | INFO | rank=0 local=0 | Numerics: precision=bf16 TF32=False matmul_precision=highest deterministic=True
+2026-07-28 09:26:05 | INFO | rank=0 local=0 | Starting M3D construction: experiment=m3d-local-e2e-ddp config=/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092545/configs/ddp_training.yaml strategy=ddp
+2026-07-28 09:26:06 | INFO | rank=0 local=0 | Task sampler initialized: {"committed_step": 0, "epoch": 0, "global_batch_size": 2, "local_batch_size": 1, "probabilities": [{"configured_weight": 1.0, "dataset_name": "m3d_caption_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "caption", "temperature_alpha": 0.5}, {"configured_weight": 1.0, "dataset_name": "m3d_segmentation_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "segmentation", "temperature_alpha": 0.5}], "remaining_steps": 2, "sampler_fingerprint": "7b774534e6c083f4c48afd3eac81a7918f33e0b0a6016f9194968a061db07f36", "schedule": {"counts": {"caption": 1, "segmentation": 1}, "epoch": 0, "fingerprint": "c12f7205bbdf6d293b4a42e85e1a076e9a1fcdcaf7f56168188c781d189eec39", "steps": 2}, "steps_per_epoch": 2, "temperature_alpha": 0.5, "world_size": 2}
+2026-07-28 09:26:06 | INFO | rank=0 local=0 | Training DataLoader initialized: {"manifest_fingerprint": "3d2b4d749266de47030933d360e8e5a28fb5cc5b7e4db8ba4bee887305271982", "sampler": {"committed_step": 0, "epoch": 0, "global_batch_size": 2, "local_batch_size": 1, "probabilities": [{"configured_weight": 1.0, "dataset_name": "m3d_caption_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "caption", "temperature_alpha": 0.5}, {"configured_weight": 1.0, "dataset_name": "m3d_segmentation_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "segmentation", "temperature_alpha": 0.5}], "remaining_steps": 2, "sampler_fingerprint": "7b774534e6c083f4c48afd3eac81a7918f33e0b0a6016f9194968a061db07f36", "schedule": {"counts": {"caption": 1, "segmentation": 1}, "epoch": 0, "fingerprint": "c12f7205bbdf6d293b4a42e85e1a076e9a1fcdcaf7f56168188c781d189eec39", "steps": 2}, "steps_per_epoch": 2, "temperature_alpha": 0.5, "world_size": 2}, "split": "train", "tasks": ["caption", "segmentation"], "worker_settings": {"non_blocking_transfer": false, "num_workers": 0, "persistent_workers": false, "pin_memory": false, "prefetch_factor": null}}
+2026-07-28 09:26:06 | INFO | rank=0 local=0 | Distributed model prepared: strategy=ddp parameters=458624 trainable=435808 parameter_tensors=234 FSDP_groups=0
+2026-07-28 09:26:06 | INFO | rank=0 local=0 | M3D startup validation complete: optimizer_steps=2 microbatches=2 visual_tokens=1
+M3D training entry point failed: CheckpointCompatibilityError: Checkpoint path does not exist or is incomplete: /Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092545/configs/latest
+Traceback (most recent call last):
+  File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/train.py", line 801, in main
+    result = run_training(options)
+  File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/train.py", line 752, in run_training
+    result = trainer.train(resume=True)
+  File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/trainer.py", line 956, in train
+    resumed = self.resume_if_configured() if resume else None
+  File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/trainer.py", line 765, in resume_if_configured
+    report = self.checkpoint_manager.load(resume_from, exact=True)
+  File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py", line 1106, in load
+    path = self.resolve_resume_path(
+  File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py", line 1088, in resolve_resume_path
+    return resolve_checkpoint_path(
+  File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py", line 1328, in resolve_checkpoint_path
+    raise CheckpointCompatibilityError(
+m3d.checkpointing.CheckpointCompatibilityError: Checkpoint path does not exist or is incomplete: /Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092545/configs/latest
+E0728 09:26:07.266000 17865 /private/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 17868) of binary: /tmp/m3d-resolve-venv/bin/python
+Traceback (most recent call last):
+  File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 922, in <module>
+    main()
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 918, in main
+    run(args)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 909, in run
+    elastic_launch(
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+m3d.train FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-07-28_09:26:07
+  host      : 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 17869)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-07-28_09:26:07
+  host      : 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 17868)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

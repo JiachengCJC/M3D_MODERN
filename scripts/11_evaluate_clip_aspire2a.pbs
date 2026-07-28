@@ -19,9 +19,20 @@ exec > >(stdbuf -oL tee -a "${LOG_DIR}/evaluation.log") 2>&1
 
 module reset
 module load PrgEnv-gnu/8.3.3
-module load gcc/11.4.0-nscc
 module load python/3.10.9
 module load cuda/11.8.0
+LOADED_GCC="$(module -t list 2>&1 | sed -n '/^gcc\//{p;q;}')"
+if [[ -z "${LOADED_GCC}" ]]; then
+    module load gcc/11.4.0-nscc
+elif [[ "${LOADED_GCC}" != "gcc/11.4.0-nscc" ]]; then
+    module swap "${LOADED_GCC}" gcc/11.4.0-nscc
+fi
+hash -r
+FINAL_GCC_VERSION="$(gcc -dumpfullversion -dumpversion)"
+[[ "${FINAL_GCC_VERSION}" == 11.4.0* ]] || {
+    echo "Expected GCC 11.4.0, but gcc reports ${FINAL_GCC_VERSION}." >&2
+    exit 2
+}
 source "${VENV}/bin/activate"
 cd "${PROJECT_ROOT}"
 export PYTHONNOUSERSITE=1

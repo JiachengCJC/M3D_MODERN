@@ -1,0 +1,10 @@
+{
+  "expected_file_count": 65,
+  "forbidden_patterns": [],
+  "missing_files": [],
+  "python_files_compiled": 47,
+  "shell_files_checked": 10,
+  "source_sha256": "12fc6bda97948040d91dcb59462129ad944bbe28625ea4a98ca3e2a7ee4623d7",
+  "status": "passed",
+  "yaml_files_parsed": 4
+}

@@ -223,22 +223,21 @@ is_nonnegative_integer "${SEED}" || fail "M3D_SEED must be a non-negative intege
 is_positive_integer "${OMP_THREADS}" || \
     fail "M3D_OMP_NUM_THREADS must be a positive integer."
 
-python3 - "${TEMPERATURE}" "${TOP_P}" "${REPETITION_PENALTY}" "${MASK_THRESHOLD}" <<'PY'
-from __future__ import annotations
-
-import math
-import sys
-
-temperature, top_p, repetition_penalty, threshold = map(float, sys.argv[1:])
-if not math.isfinite(temperature) or temperature <= 0:
-    raise SystemExit("M3D_TEMPERATURE must be finite and positive.")
-if not math.isfinite(top_p) or not 0 < top_p <= 1:
-    raise SystemExit("M3D_TOP_P must be in (0, 1].")
-if not math.isfinite(repetition_penalty) or repetition_penalty <= 0:
-    raise SystemExit("M3D_REPETITION_PENALTY must be finite and positive.")
-if not math.isfinite(threshold) or not 0 <= threshold <= 1:
-    raise SystemExit("M3D_MASK_THRESHOLD must be in [0, 1].")
-PY
+awk \
+    -v temperature="${TEMPERATURE}" \
+    -v top_p="${TOP_P}" \
+    -v repetition="${REPETITION_PENALTY}" \
+    -v threshold="${MASK_THRESHOLD}" '
+    function number(value) {
+        return value ~ /^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?$/
+    }
+    BEGIN {
+        if (!number(temperature) || temperature <= 0) exit 1
+        if (!number(top_p) || top_p <= 0 || top_p > 1) exit 1
+        if (!number(repetition) || repetition <= 0) exit 1
+        if (!number(threshold) || threshold < 0 || threshold > 1) exit 1
+    }
+' </dev/null || fail "Generation floats are invalid; check M3D_TEMPERATURE, M3D_TOP_P, M3D_REPETITION_PENALTY and M3D_MASK_THRESHOLD."
 
 if is_enabled "${M3D_DO_SAMPLE:-0}" && (( NUM_BEAMS != 1 )); then
     fail "Sampling and beam search cannot be combined; set M3D_NUM_BEAMS=1."
@@ -254,9 +253,11 @@ if [[ -n "${M3D_QUESTION_FILE:-}" ]]; then
 else
     QUESTION_TEXT="${M3D_QUESTION:-}"
 fi
-# Remove leading/trailing whitespace while preserving internal newlines.
-QUESTION_TEXT="$(printf '%s' "${QUESTION_TEXT}" | python3 -c 'import sys; print(sys.stdin.read().strip(), end="")')"
-[[ -n "${QUESTION_TEXT}" ]] || \
+# Trim outer whitespace while preserving internal newlines, without relying on
+# an unpinned system Python.
+QUESTION_TEXT="${QUESTION_TEXT#"${QUESTION_TEXT%%[![:space:]]*}"}"
+QUESTION_TEXT="${QUESTION_TEXT%"${QUESTION_TEXT##*[![:space:]]}"}"
+[[ "${QUESTION_TEXT}" =~ [^[:space:]] ]] || \
     fail "A non-empty M3D_QUESTION or M3D_QUESTION_FILE is required."
 
 if [[ -e "${FINAL_OUTPUT_DIR}" && -L "${FINAL_OUTPUT_DIR}" ]]; then
@@ -290,11 +291,22 @@ type module >/dev/null 2>&1 || \
 
 module reset >/dev/null 2>&1 || module purge
 module load PrgEnv-gnu/8.3.3
-module load gcc/11.4.0-nscc
 module load python/3.10.9
 module load cuda/11.8.0
 module load cmake/3.31.3
 module load ninja/1.11.1
+
+# Python may replace GCC as a module dependency, so resolve GCC last.
+LOADED_GCC="$(module -t list 2>&1 | sed -n '/^gcc\//{p;q;}')"
+if [[ -z "${LOADED_GCC}" ]]; then
+    module load gcc/11.4.0-nscc
+elif [[ "${LOADED_GCC}" != "gcc/11.4.0-nscc" ]]; then
+    module swap "${LOADED_GCC}" gcc/11.4.0-nscc
+fi
+hash -r
+FINAL_GCC_VERSION="$(gcc -dumpfullversion -dumpversion)"
+[[ "${FINAL_GCC_VERSION}" == 11.4.0* ]] || \
+    fail "Expected GCC 11.4.0, but gcc reports ${FINAL_GCC_VERSION}."
 
 module -t list 2> "${MODULE_FILE}"
 log "Loaded modules:"

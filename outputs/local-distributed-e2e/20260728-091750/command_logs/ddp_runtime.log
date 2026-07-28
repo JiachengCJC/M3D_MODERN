@@ -1,0 +1,59 @@
+W0728 09:17:51.132000 15975 /private/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+2026-07-28 09:17:53 | INFO | rank=0 local=0 | Runtime initialized in isolated CPU smoke mode: host=Chungs-MacBook-Pro-2.local strategy=ddp world_size=2 backend=gloo device=cpu seed=1729
+2026-07-28 09:17:53 | INFO | rank=0 local=0 | Numerics: precision=bf16 TF32=False matmul_precision=highest deterministic=True
+{
+  "error": "Required Python package 'torchvision' is not installed.",
+  "error_type": "EnvironmentContractError",
+  "local_rank": 0,
+  "rank": 0,
+  "status": "failed",
+  "traceback": "Traceback (most recent call last):\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 368, in _package_version\n    return importlib.metadata.version(distribution_name)\n  File \"/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/importlib/metadata/__init__.py\", line 996, in version\n    return distribution(distribution_name).version\n  File \"/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/importlib/metadata/__init__.py\", line 969, in distribution\n    return Distribution.from_name(distribution_name)\n  File \"/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/importlib/metadata/__init__.py\", line 548, in from_name\n    raise PackageNotFoundError(name)\nimportlib.metadata.PackageNotFoundError: No package metadata was found for torchvision\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 1518, in main\n    report = run_integration(options)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 1106, in run_integration\n    environment = _environment_report(runtime, options)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 551, in _environment_report\n    package_versions = _validate_versions(allow_mismatch=True)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 499, in _validate_versions\n    observed = {\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 500, in <dictcomp>\n    name: _package_version(name)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 370, in _package_version\n    raise EnvironmentContractError(\nEnvironmentContractError: Required Python package 'torchvision' is not installed.\n"
+}
+{
+  "error": "Required Python package 'torchvision' is not installed.",
+  "error_type": "EnvironmentContractError",
+  "local_rank": 1,
+  "rank": 1,
+  "status": "failed",
+  "traceback": "Traceback (most recent call last):\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 368, in _package_version\n    return importlib.metadata.version(distribution_name)\n  File \"/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/importlib/metadata/__init__.py\", line 996, in version\n    return distribution(distribution_name).version\n  File \"/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/importlib/metadata/__init__.py\", line 969, in distribution\n    return Distribution.from_name(distribution_name)\n  File \"/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/importlib/metadata/__init__.py\", line 548, in from_name\n    raise PackageNotFoundError(name)\nimportlib.metadata.PackageNotFoundError: No package metadata was found for torchvision\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 1518, in main\n    report = run_integration(options)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 1106, in run_integration\n    environment = _environment_report(runtime, options)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 551, in _environment_report\n    package_versions = _validate_versions(allow_mismatch=True)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 499, in _validate_versions\n    observed = {\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 500, in <dictcomp>\n    name: _package_version(name)\n  File \"/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py\", line 370, in _package_version\n    raise EnvironmentContractError(\nEnvironmentContractError: Required Python package 'torchvision' is not installed.\n"
+}
+E0728 09:17:53.565000 15975 /private/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 15978) of binary: /tmp/m3d-resolve-venv/bin/python
+Traceback (most recent call last):
+  File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 922, in <module>
+    main()
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 918, in main
+    run(args)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 909, in run
+    elastic_launch(
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-07-28_09:17:53
+  host      : 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 15979)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-07-28_09:17:53
+  host      : 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 15978)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

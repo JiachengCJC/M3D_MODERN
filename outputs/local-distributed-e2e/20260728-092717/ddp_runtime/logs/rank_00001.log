@@ -1,0 +1,3 @@
+2026-07-28 09:27:20 | INFO | rank=1 local=1 | Runtime initialized in isolated CPU smoke mode: host=Chungs-MacBook-Pro-2.local strategy=ddp world_size=2 backend=gloo device=cpu seed=1730
+2026-07-28 09:27:20 | INFO | rank=1 local=1 | Numerics: precision=bf16 TF32=False matmul_precision=highest deterministic=True
+2026-07-28 09:27:21 | INFO | rank=1 local=1 | Distributed model prepared: strategy=ddp parameters=458624 trainable=435808 parameter_tensors=234 FSDP_groups=0

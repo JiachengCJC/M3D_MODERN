@@ -1,0 +1,154 @@
+W0728 09:27:36.391000 18129 /private/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+2026-07-28 09:27:38 | INFO | rank=0 local=0 | Runtime initialized in isolated CPU smoke mode: host=Chungs-MacBook-Pro-2.local strategy=ddp world_size=2 backend=gloo device=cpu seed=1729
+2026-07-28 09:27:38 | INFO | rank=0 local=0 | Numerics: precision=bf16 TF32=False matmul_precision=highest deterministic=True
+2026-07-28 09:27:38 | INFO | rank=0 local=0 | Starting M3D construction: experiment=m3d-local-e2e-ddp config=/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092717/configs/ddp_training.yaml strategy=ddp
+2026-07-28 09:27:38 | INFO | rank=0 local=0 | Task sampler initialized: {"committed_step": 0, "epoch": 0, "global_batch_size": 2, "local_batch_size": 1, "probabilities": [{"configured_weight": 1.0, "dataset_name": "m3d_caption_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "caption", "temperature_alpha": 0.5}, {"configured_weight": 1.0, "dataset_name": "m3d_segmentation_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "segmentation", "temperature_alpha": 0.5}], "remaining_steps": 2, "sampler_fingerprint": "7b774534e6c083f4c48afd3eac81a7918f33e0b0a6016f9194968a061db07f36", "schedule": {"counts": {"caption": 1, "segmentation": 1}, "epoch": 0, "fingerprint": "c12f7205bbdf6d293b4a42e85e1a076e9a1fcdcaf7f56168188c781d189eec39", "steps": 2}, "steps_per_epoch": 2, "temperature_alpha": 0.5, "world_size": 2}
+2026-07-28 09:27:38 | INFO | rank=0 local=0 | Training DataLoader initialized: {"manifest_fingerprint": "3d2b4d749266de47030933d360e8e5a28fb5cc5b7e4db8ba4bee887305271982", "sampler": {"committed_step": 0, "epoch": 0, "global_batch_size": 2, "local_batch_size": 1, "probabilities": [{"configured_weight": 1.0, "dataset_name": "m3d_caption_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "caption", "temperature_alpha": 0.5}, {"configured_weight": 1.0, "dataset_name": "m3d_segmentation_train", "dataset_size": 4, "probability": 0.5, "score": 2.0, "task": "segmentation", "temperature_alpha": 0.5}], "remaining_steps": 2, "sampler_fingerprint": "7b774534e6c083f4c48afd3eac81a7918f33e0b0a6016f9194968a061db07f36", "schedule": {"counts": {"caption": 1, "segmentation": 1}, "epoch": 0, "fingerprint": "c12f7205bbdf6d293b4a42e85e1a076e9a1fcdcaf7f56168188c781d189eec39", "steps": 2}, "steps_per_epoch": 2, "temperature_alpha": 0.5, "world_size": 2}, "split": "train", "tasks": ["caption", "segmentation"], "worker_settings": {"non_blocking_transfer": false, "num_workers": 0, "persistent_workers": false, "pin_memory": false, "prefetch_factor": null}}
+2026-07-28 09:27:39 | INFO | rank=0 local=0 | Distributed model prepared: strategy=ddp parameters=458624 trainable=435808 parameter_tensors=234 FSDP_groups=0
+2026-07-28 09:27:39 | INFO | rank=0 local=0 | M3D startup validation complete: optimizer_steps=2 microbatches=2 visual_tokens=1
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+[rank0]:     return _run_code(code, main_globals, None,
+[rank0]:   File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 86, in _run_code
+[rank0]:     exec(code, run_globals)
+[rank0]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/train.py", line 906, in <module>
+[rank0]:     raise SystemExit(main())
+[rank0]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/train.py", line 801, in main
+[rank0]:     result = run_training(options)
+[rank0]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/train.py", line 752, in run_training
+[rank0]:     result = trainer.train(resume=True)
+[rank0]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/trainer.py", line 956, in train
+[rank0]:     resumed = self.resume_if_configured() if resume else None
+[rank0]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/trainer.py", line 765, in resume_if_configured
+[rank0]:     report = self.checkpoint_manager.load(resume_from, exact=True)
+[rank0]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py", line 1141, in load
+[rank0]:     dcp.load(
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/logger.py", line 83, in wrapper
+[rank0]:     result = func(*args, **kwargs)
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/utils.py", line 429, in inner_func
+[rank0]:     return func(*args, **kwargs)
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict_loader.py", line 172, in load
+[rank0]:     _load_state_dict(
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict_loader.py", line 229, in _load_state_dict
+[rank0]:     central_plan: LoadPlan = distW.reduce_scatter("plan", local_step, global_step)
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/utils.py", line 191, in reduce_scatter
+[rank0]:     raise result
+[rank0]: torch.distributed.checkpoint.api.CheckpointException: CheckpointException ranks:dict_keys([0, 1])
+[rank0]: Traceback (most recent call last): (RANK 0)
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/utils.py", line 164, in reduce_scatter
+[rank0]:     local_data = map_fun()
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/logger.py", line 83, in wrapper
+[rank0]:     result = func(*args, **kwargs)
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict_loader.py", line 218, in local_step
+[rank0]:     local_plan = planner.create_local_plan()
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/default_planner.py", line 233, in create_local_plan
+[rank0]:     return create_default_local_load_plan(
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/default_planner.py", line 354, in create_default_local_load_plan
+[rank0]:     raise RuntimeError(f"Missing key in checkpoint state_dict: {fqn}.")
+[rank0]: RuntimeError: Missing key in checkpoint state_dict: application.optimizer.state.seg_module.mask_decoder.iou_prediction_head.layers.0.weight.step.
+[rank0]: Traceback (most recent call last): (RANK 1)
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/utils.py", line 164, in reduce_scatter
+[rank0]:     local_data = map_fun()
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/logger.py", line 83, in wrapper
+[rank0]:     result = func(*args, **kwargs)
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict_loader.py", line 218, in local_step
+[rank0]:     local_plan = planner.create_local_plan()
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/default_planner.py", line 233, in create_local_plan
+[rank0]:     return create_default_local_load_plan(
+[rank0]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/default_planner.py", line 354, in create_default_local_load_plan
+[rank0]:     raise RuntimeError(f"Missing key in checkpoint state_dict: {fqn}.")
+[rank0]: RuntimeError: Missing key in checkpoint state_dict: application.optimizer.state.seg_module.mask_decoder.iou_prediction_head.layers.0.weight.step.
+
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+[rank1]:     return _run_code(code, main_globals, None,
+[rank1]:   File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 86, in _run_code
+[rank1]:     exec(code, run_globals)
+[rank1]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/train.py", line 906, in <module>
+[rank1]:     raise SystemExit(main())
+[rank1]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/train.py", line 801, in main
+[rank1]:     result = run_training(options)
+[rank1]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/train.py", line 752, in run_training
+[rank1]:     result = trainer.train(resume=True)
+[rank1]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/trainer.py", line 956, in train
+[rank1]:     resumed = self.resume_if_configured() if resume else None
+[rank1]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/trainer.py", line 765, in resume_if_configured
+[rank1]:     report = self.checkpoint_manager.load(resume_from, exact=True)
+[rank1]:   File "/Users/jiacheng/Documents/GitHub/M3D_MODERN/src/m3d/checkpointing.py", line 1141, in load
+[rank1]:     dcp.load(
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/logger.py", line 83, in wrapper
+[rank1]:     result = func(*args, **kwargs)
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/utils.py", line 429, in inner_func
+[rank1]:     return func(*args, **kwargs)
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict_loader.py", line 172, in load
+[rank1]:     _load_state_dict(
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict_loader.py", line 229, in _load_state_dict
+[rank1]:     central_plan: LoadPlan = distW.reduce_scatter("plan", local_step, global_step)
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/utils.py", line 191, in reduce_scatter
+[rank1]:     raise result
+[rank1]: torch.distributed.checkpoint.api.CheckpointException: CheckpointException ranks:dict_keys([0, 1])
+[rank1]: Traceback (most recent call last): (RANK 0)
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/utils.py", line 164, in reduce_scatter
+[rank1]:     local_data = map_fun()
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/logger.py", line 83, in wrapper
+[rank1]:     result = func(*args, **kwargs)
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict_loader.py", line 218, in local_step
+[rank1]:     local_plan = planner.create_local_plan()
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/default_planner.py", line 233, in create_local_plan
+[rank1]:     return create_default_local_load_plan(
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/default_planner.py", line 354, in create_default_local_load_plan
+[rank1]:     raise RuntimeError(f"Missing key in checkpoint state_dict: {fqn}.")
+[rank1]: RuntimeError: Missing key in checkpoint state_dict: application.optimizer.state.seg_module.mask_decoder.iou_prediction_head.layers.0.weight.step.
+[rank1]: Traceback (most recent call last): (RANK 1)
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/utils.py", line 164, in reduce_scatter
+[rank1]:     local_data = map_fun()
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/logger.py", line 83, in wrapper
+[rank1]:     result = func(*args, **kwargs)
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/state_dict_loader.py", line 218, in local_step
+[rank1]:     local_plan = planner.create_local_plan()
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/default_planner.py", line 233, in create_local_plan
+[rank1]:     return create_default_local_load_plan(
+[rank1]:   File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/checkpoint/default_planner.py", line 354, in create_default_local_load_plan
+[rank1]:     raise RuntimeError(f"Missing key in checkpoint state_dict: {fqn}.")
+[rank1]: RuntimeError: Missing key in checkpoint state_dict: application.optimizer.state.seg_module.mask_decoder.iou_prediction_head.layers.0.weight.step.
+
+E0728 09:27:40.060000 18129 /private/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 18132) of binary: /tmp/m3d-resolve-venv/bin/python
+Traceback (most recent call last):
+  File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/Users/jiacheng/.pyenv/versions/3.10.15/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 922, in <module>
+    main()
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 918, in main
+    run(args)
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/run.py", line 909, in run
+    elastic_launch(
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/tmp/m3d-resolve-venv/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+m3d.train FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-07-28_09:27:40
+  host      : 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 18133)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-07-28_09:27:40
+  host      : 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 18132)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

@@ -123,6 +123,7 @@ class CheckpointIntegrationOptions:
     strategy: str
     checkpoint_mode: str
     output_dir: str
+    manifest_dir: str
     cache_dir: str | None
     local_files_only: bool
     overrides: tuple[str, ...]
@@ -749,8 +750,9 @@ def _run_optimizer_update(
         non_blocking=data_pipeline.non_blocking_transfer,
     )
     optimizer.zero_grad(set_to_none=True)
-    torch.cuda.reset_peak_memory_stats(runtime.device)
-    torch.cuda.synchronize(runtime.device)
+    if runtime.device.type == "cuda":
+        torch.cuda.reset_peak_memory_stats(runtime.device)
+        torch.cuda.synchronize(runtime.device)
     started = time.perf_counter()
 
     with distributed_model.gradient_sync(enabled=True):
@@ -778,9 +780,13 @@ def _run_optimizer_update(
         name: compute_support._gradient_summary(module)  # noqa: SLF001
         for name, module in modules.items()
     }
+    contract_gradients = compute_support._global_gradient_contract_summaries(  # noqa: SLF001
+        runtime,
+        gradients,
+    )
     compute_support._validate_gradient_contract(  # noqa: SLF001
         task=gpu_batch.task.value,
-        summaries=gradients,
+        summaries=contract_gradients,
     )
 
     gradient_norm = distributed_model.clip_grad_norm_(
@@ -791,7 +797,8 @@ def _run_optimizer_update(
     optimizer.zero_grad(set_to_none=True)
     data_pipeline.commit_batch(cpu_batch)
 
-    torch.cuda.synchronize(runtime.device)
+    if runtime.device.type == "cuda":
+        torch.cuda.synchronize(runtime.device)
     elapsed = time.perf_counter() - started
     report = OptimizerUpdateReport(
         phase=phase,
@@ -808,7 +815,8 @@ def _run_optimizer_update(
     )
 
     del gpu_batch, output, backward_loss, gradient_norm
-    torch.cuda.empty_cache()
+    if runtime.device.type == "cuda":
+        torch.cuda.empty_cache()
     return report
 
 
@@ -908,7 +916,9 @@ def run_checkpoint_integration(
 
     from m3d.checkpointing import CheckpointManager
     from m3d.config import config_fingerprint
+    from m3d.data.dataset_catalog import load_dataset_catalog
     from m3d.data.loader import build_training_data_pipeline
+    from m3d.data.schema import DataSplit
     from m3d.distributed import build_model_synchronously, prepare_distributed_model
     from m3d.model.m3d import build_m3d_model
     from m3d.optim import build_optimizer
@@ -974,11 +984,17 @@ def run_checkpoint_integration(
             label="checkpoint integration tokenizer metadata",
         )
         text_processor = M3DTextProcessor(tokenizer_bundle, config)
+        train_catalog = load_dataset_catalog(
+            config,
+            DataSplit.TRAIN,
+            manifest_directory=options.manifest_dir,
+        )
         data_pipeline = build_training_data_pipeline(
             config=config,
             runtime=runtime,
             tokenizer_bundle=tokenizer_bundle,
             text_processor=text_processor,
+            catalog=train_catalog,
         )
         schedule = compute_support._validate_schedule(  # noqa: SLF001
             data_pipeline,
@@ -1006,9 +1022,16 @@ def run_checkpoint_integration(
             distributed_model.unwrapped_model,
             config,
             distributed_strategy=distributed_model.strategy,
-            allow_unfused_fallback=(distributed_model.strategy == "fsdp2"),
+            allow_unfused_fallback=(
+                distributed_model.strategy == "fsdp2"
+                or os.environ.get("M3D_CPU_DISTRIBUTED_SMOKE") == "1"
+            ),
         )
-        if distributed_model.strategy == "ddp" and not optimizer_report.fused_enabled:
+        if (
+            distributed_model.strategy == "ddp"
+            and os.environ.get("M3D_CPU_DISTRIBUTED_SMOKE") != "1"
+            and not optimizer_report.fused_enabled
+        ):
             raise CheckpointIntegrationError(
                 "DDP checkpoint integration requires fused AdamW on A100."
             )
@@ -1449,6 +1472,14 @@ def _build_parser() -> argparse.ArgumentParser:
             "outputs/aspire2a-checkpoint-integration-<strategy>-<mode>."
         ),
     )
+    parser.add_argument(
+        "--manifest-dir",
+        default=None,
+        help=(
+            "Directory containing train.jsonl. Defaults to <output-dir>.manifests "
+            "so --overwrite-output cannot delete the integration input."
+        ),
+    )
     parser.add_argument("--cache-dir", default=None)
     parser.add_argument("--local-files-only", action="store_true")
     parser.add_argument(
@@ -1525,12 +1556,18 @@ def _parse_options(
             )
         ).resolve()
     )
+    manifest_dir = (
+        Path(args.manifest_dir).expanduser().resolve()
+        if args.manifest_dir is not None
+        else Path(str(output_dir) + ".manifests")
+    )
     return (
         CheckpointIntegrationOptions(
             config_path=str(Path(args.config).expanduser().resolve()),
             strategy=str(args.strategy),
             checkpoint_mode=str(args.checkpoint_mode),
             output_dir=str(output_dir),
+            manifest_dir=str(manifest_dir),
             cache_dir=(
                 None
                 if args.cache_dir is None

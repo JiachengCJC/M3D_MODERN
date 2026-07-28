@@ -1,0 +1,80 @@
+{
+  "cases": [
+    {
+      "command": [
+        "/tmp/m3d-resolve-venv/bin/python",
+        "-m",
+        "torch.distributed.run",
+        "--nproc_per_node=2",
+        "--master_addr=127.0.0.1",
+        "--master_port=52642",
+        "/Users/jiacheng/Documents/GitHub/M3D_MODERN/scripts/03_aspire2a_integration.py",
+        "--config",
+        "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/configs/ddp_runtime.yaml",
+        "--strategy",
+        "ddp",
+        "--output-dir",
+        "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/ddp_runtime",
+        "--local-files-only",
+        "--skip-path-verification",
+        "--allow-version-mismatch",
+        "--expected-world-size",
+        "2",
+        "--num-workers",
+        "0"
+      ],
+      "completed_optimizer_steps": 2,
+      "elapsed_seconds": 6.131080708000809,
+      "log": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/command_logs/ddp_runtime.log",
+      "name": "ddp_runtime",
+      "report": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/ddp_runtime/integration_report.json",
+      "return_code": 0,
+      "status": "passed",
+      "task_schedule": [
+        "segmentation",
+        "caption"
+      ]
+    }
+  ],
+  "elapsed_seconds": 12.757188081741333,
+  "environment": {
+    "cuda_available": false,
+    "packages": {
+      "PyYAML": "6.0.2",
+      "monai": "1.4.0",
+      "numpy": "1.26.4",
+      "peft": "0.15.2",
+      "safetensors": "0.5.3",
+      "tokenizers": "0.21.1",
+      "torch": "2.6.0",
+      "torchvision": "0.21.0",
+      "transformers": "4.52.4"
+    },
+    "pinned_mismatches": [],
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "python": "3.10.15",
+    "torch_distributed_available": true
+  },
+  "error": "LocalE2EError: ddp_checkpoint failed with exit code 1; inspect /Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/command_logs/ddp_checkpoint.log.",
+  "finished_at_unix": 1785201800.1794171,
+  "fixtures": {
+    "counts_by_task": {
+      "caption": 4,
+      "segmentation": 4
+    },
+    "data_root": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/fixtures/data",
+    "manifest": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/fixtures/manifests/train.jsonl",
+    "manifest_fingerprint": "3d2b4d749266de47030933d360e8e5a28fb5cc5b7e4db8ba4bee887305271982",
+    "manifest_summary": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/fixtures/manifests/train.jsonl.summary.json",
+    "model_dir": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307/fixtures/tiny-phi3",
+    "record_count": 8
+  },
+  "limitations": [
+    "Local test uses CPU BF16 and Gloo.",
+    "CUDA 11.8, NCCL, A100 Flash-SDPA, PBS, and cluster fabric require ASPIRE 2A."
+  ],
+  "project_root": "/Users/jiacheng/Documents/GitHub/M3D_MODERN",
+  "started_at_unix": 1785201787.422229,
+  "status": "failed",
+  "work_dir": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092307"
+}

@@ -1,0 +1,880 @@
+{
+  "checkpoint_mode_requested": "async",
+  "checkpoint_mode_used": "async",
+  "checkpoint_model_state_by_rank": [
+    {
+      "digest": "46318383c6668d75f92237b7019d4ede83188a0f486dfe9425a47b98c7151f59",
+      "kind": "model_parameters",
+      "sampled_element_count": 1832,
+      "tensor_count": 234
+    },
+    {
+      "digest": "46318383c6668d75f92237b7019d4ede83188a0f486dfe9425a47b98c7151f59",
+      "kind": "model_parameters",
+      "sampled_element_count": 1832,
+      "tensor_count": 234
+    }
+  ],
+  "checkpoint_optimizer_state_by_rank": [
+    {
+      "digest": "064915a6a54ce84ba4904ec5aa79c7753097057849c85b01e44bc579fbb4ea0f",
+      "kind": "optimizer_state",
+      "sampled_element_count": 3318,
+      "tensor_count": 594
+    },
+    {
+      "digest": "064915a6a54ce84ba4904ec5aa79c7753097057849c85b01e44bc579fbb4ea0f",
+      "kind": "optimizer_state",
+      "sampled_element_count": 3318,
+      "tensor_count": 594
+    }
+  ],
+  "checkpoint_path": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-093028/ddp_checkpoint/checkpoints/checkpoint-step-00000001",
+  "checkpoint_retained": false,
+  "committed_microbatches": 2,
+  "completed_optimizer_steps": 2,
+  "config_path": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-093028/configs/ddp_checkpoint.yaml",
+  "data_cursor_restore_exact_by_rank": [
+    true,
+    true
+  ],
+  "data_pipeline": {
+    "manifest_fingerprint": "3d2b4d749266de47030933d360e8e5a28fb5cc5b7e4db8ba4bee887305271982",
+    "sampler": {
+      "committed_step": 2,
+      "epoch": 0,
+      "global_batch_size": 2,
+      "local_batch_size": 1,
+      "probabilities": [
+        {
+          "configured_weight": 1.0,
+          "dataset_name": "m3d_caption_train",
+          "dataset_size": 4,
+          "probability": 0.5,
+          "score": 2.0,
+          "task": "caption",
+          "temperature_alpha": 0.5
+        },
+        {
+          "configured_weight": 1.0,
+          "dataset_name": "m3d_segmentation_train",
+          "dataset_size": 4,
+          "probability": 0.5,
+          "score": 2.0,
+          "task": "segmentation",
+          "temperature_alpha": 0.5
+        }
+      ],
+      "remaining_steps": 0,
+      "sampler_fingerprint": "7b774534e6c083f4c48afd3eac81a7918f33e0b0a6016f9194968a061db07f36",
+      "schedule": {
+        "counts": {
+          "caption": 1,
+          "segmentation": 1
+        },
+        "epoch": 0,
+        "fingerprint": "c12f7205bbdf6d293b4a42e85e1a076e9a1fcdcaf7f56168188c781d189eec39",
+        "steps": 2
+      },
+      "steps_per_epoch": 2,
+      "temperature_alpha": 0.5,
+      "world_size": 2
+    },
+    "split": "train",
+    "tasks": [
+      "caption",
+      "segmentation"
+    ],
+    "worker_settings": {
+      "non_blocking_transfer": false,
+      "num_workers": 0,
+      "persistent_workers": false,
+      "pin_memory": false,
+      "prefetch_factor": null
+    }
+  },
+  "distributed": {
+    "ddp_broadcast_buffers_each_forward": false,
+    "ddp_bucket_cap_mb": 25,
+    "ddp_find_unused_parameters": true,
+    "ddp_gradient_as_bucket_view": true,
+    "ddp_static_graph": false,
+    "device": "cpu",
+    "fsdp_cpu_offload": null,
+    "fsdp_groups": [],
+    "fsdp_mixed_precision": null,
+    "fsdp_reduce_dtype": null,
+    "local_rank": 0,
+    "model_type": "M3DModel",
+    "parameter_layout": {
+      "layout_sha256": "1cb0de2ce075941afa681dd881809219ae58a67c9a6882a45cd4a415765f04c2",
+      "parameter_count": 458624,
+      "parameter_tensor_count": 234,
+      "persistent_buffer_count": 1,
+      "trainable_parameter_count": 435808,
+      "trainable_tensor_count": 219
+    },
+    "persistent_buffers_synchronised_once": 1,
+    "rank": 0,
+    "requires_even_evaluation_steps": false,
+    "strategy": "ddp",
+    "synchronous_initialization_seed": 1729,
+    "world_size": 2,
+    "wrapped_parameter_tensor_count": 234,
+    "wrapped_trainable_tensor_count": 219
+  },
+  "elapsed_seconds": 1.379319190979004,
+  "environment_by_rank": [
+    {
+      "bf16_supported": true,
+      "cudnn_version": null,
+      "distributed_backend": "gloo",
+      "flash_sdpa_enabled": false,
+      "gpu_compute_capability": [
+        0,
+        0
+      ],
+      "gpu_name": "CPU distributed smoke",
+      "gpu_total_memory_bytes": 0,
+      "hostname": "Chungs-MacBook-Pro-2.local",
+      "local_rank": 0,
+      "nccl_version": null,
+      "package_versions": {
+        "monai": "1.4.0",
+        "numpy": "1.26.4",
+        "peft": "0.15.2",
+        "torch": "2.6.0",
+        "torchvision": "0.21.0",
+        "transformers": "4.52.4"
+      },
+      "process_id": 18347,
+      "python_version": "3.10.15",
+      "rank": 0,
+      "torch_cuda_version": null,
+      "torch_version": "2.6.0",
+      "world_size": 2
+    },
+    {
+      "bf16_supported": true,
+      "cudnn_version": null,
+      "distributed_backend": "gloo",
+      "flash_sdpa_enabled": false,
+      "gpu_compute_capability": [
+        0,
+        0
+      ],
+      "gpu_name": "CPU distributed smoke",
+      "gpu_total_memory_bytes": 0,
+      "hostname": "Chungs-MacBook-Pro-2.local",
+      "local_rank": 1,
+      "nccl_version": null,
+      "package_versions": {
+        "monai": "1.4.0",
+        "numpy": "1.26.4",
+        "peft": "0.15.2",
+        "torch": "2.6.0",
+        "torchvision": "0.21.0",
+        "transformers": "4.52.4"
+      },
+      "process_id": 18348,
+      "python_version": "3.10.15",
+      "rank": 1,
+      "torch_cuda_version": null,
+      "torch_version": "2.6.0",
+      "world_size": 2
+    }
+  ],
+  "first_update_by_rank": [
+    {
+      "batch_digest": "dcba2732a7eb731bbeaf4182a85c89728a81ec90b3dc221d9ed9e94a445cabcf",
+      "cuda_memory": {
+        "allocated_gib": 0.0,
+        "peak_allocated_gib": 0.0,
+        "peak_reserved_gib": 0.0,
+        "reserved_gib": 0.0
+      },
+      "elapsed_seconds": 0.02986566600156948,
+      "global_backward_loss": 5.073195934295654,
+      "gradient_norm": 3.1534810066223145,
+      "local_total_loss": 5.073195934295654,
+      "phase": "before_checkpoint",
+      "sample_ids": [
+        "segmentation-2"
+      ],
+      "step_after": 1,
+      "step_before": 0,
+      "task": "segmentation"
+    },
+    {
+      "batch_digest": "cdd940c670c93cc88825f3f9324120a1ed781212a6b996c7d059c8401fbc9c74",
+      "cuda_memory": {
+        "allocated_gib": 0.0,
+        "peak_allocated_gib": 0.0,
+        "peak_reserved_gib": 0.0,
+        "reserved_gib": 0.0
+      },
+      "elapsed_seconds": 0.029905791976489127,
+      "global_backward_loss": 5.122256278991699,
+      "gradient_norm": 3.1534810066223145,
+      "local_total_loss": 5.122256755828857,
+      "phase": "before_checkpoint",
+      "sample_ids": [
+        "segmentation-3"
+      ],
+      "step_after": 1,
+      "step_before": 0,
+      "task": "segmentation"
+    }
+  ],
+  "flash_probe_by_rank": [
+    {
+      "elapsed_seconds": 0.008623207977507263,
+      "k_gradient_finite": true,
+      "loss": 0.09451489895582199,
+      "output_dtype": "torch.bfloat16",
+      "output_shape": [
+        1,
+        2,
+        16,
+        16
+      ],
+      "q_gradient_finite": true,
+      "qkv_shape": [
+        1,
+        2,
+        16,
+        16
+      ],
+      "v_gradient_finite": true
+    },
+    {
+      "elapsed_seconds": 0.00861008296487853,
+      "k_gradient_finite": true,
+      "loss": 0.1540975421667099,
+      "output_dtype": "torch.bfloat16",
+      "output_shape": [
+        1,
+        2,
+        16,
+        16
+      ],
+      "q_gradient_finite": true,
+      "qkv_shape": [
+        1,
+        2,
+        16,
+        16
+      ],
+      "v_gradient_finite": true
+    }
+  ],
+  "model": {
+    "language": {
+      "attention_implementation": "sdpa",
+      "gradient_checkpointing": false,
+      "hidden_size": 32,
+      "lora_alpha": 8,
+      "lora_enabled": true,
+      "lora_rank": 4,
+      "lora_target_modules": [
+        "qkv_proj",
+        "o_proj",
+        "gate_up_proj",
+        "down_proj"
+      ],
+      "matched_lora_module_count": 8,
+      "model_name_or_path": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-093028/fixtures/tiny-phi3",
+      "model_type": "phi3",
+      "token_resize": {
+        "added_token_count": 4,
+        "input_rows_initialised_from_mean": [
+          30,
+          31,
+          32,
+          33
+        ],
+        "new_vocabulary_size": 34,
+        "old_vocabulary_size": 32,
+        "output_rows_initialised_from_mean": [
+          30,
+          31,
+          32,
+          33
+        ],
+        "tied_input_output_embeddings": false
+      },
+      "total_parameter_count": 28576,
+      "trainable_parameter_count": 5760,
+      "use_cache": true,
+      "vocabulary_size": 34
+    },
+    "language_hidden_size": 32,
+    "legacy_component_names": [
+      "vision_tower",
+      "mm_projector",
+      "seg_projector",
+      "seg_module"
+    ],
+    "parameters": {
+      "frozen": 22816,
+      "language_model": 28576,
+      "main_vision": 25472,
+      "multimodal_projector": 2112,
+      "segmentation_module": 400352,
+      "segmentation_projector": 2112,
+      "shared_image_encoder_parameters": 0,
+      "shared_image_encoder_storages": 0,
+      "total": 458624,
+      "trainable": 435808,
+      "trainable_fraction": 0.9502511861568518
+    },
+    "pretrained": {
+      "main_vision": null,
+      "multimodal_projector": null,
+      "projector_input_embeddings": null,
+      "segmentation_module": null,
+      "segmentation_vision_override": null
+    },
+    "segmentation_enabled": true,
+    "segmentation_prompt_dim": 32,
+    "visual_token_count": 1
+  },
+  "model_restore_exact_by_rank": [
+    true,
+    true
+  ],
+  "next_batch_by_rank": [
+    {
+      "digest": "1d090b7049008f258fcbf07b777ac63af8a061da3ff677ac264a5d584333199f",
+      "image_shape": [
+        1,
+        1,
+        8,
+        16,
+        16
+      ],
+      "sample_ids": [
+        "caption-0"
+      ],
+      "segmentation_target_shape": null,
+      "sequence_length": 32,
+      "task": "caption"
+    },
+    {
+      "digest": "955619fbf80b650b857f15cf444b7d402a3eaff3060f8f25226dfdeb66410da3",
+      "image_shape": [
+        1,
+        1,
+        8,
+        16,
+        16
+      ],
+      "sample_ids": [
+        "caption-3"
+      ],
+      "segmentation_target_shape": null,
+      "sequence_length": 32,
+      "task": "caption"
+    }
+  ],
+  "optimizer": {
+    "active_roles": [
+      "language_model",
+      "main_vision",
+      "seg_vision",
+      "projector",
+      "segmentation_projector",
+      "segmentation_decoder",
+      "token_embeddings"
+    ],
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "configured_weight_decay": 0.0,
+    "distributed_strategy": "ddp",
+    "epsilon": 1e-08,
+    "frozen_parameter_tensor_count": 15,
+    "fused_enabled": false,
+    "fused_fallback_reason": "Fused AdamW requires CUDA parameters; found devices=['cpu'].",
+    "groups": [
+      {
+        "decay_kind": "decay",
+        "group_name": "language_model/decay",
+        "learning_rate": 1e-05,
+        "parameter_element_count": 3584,
+        "parameter_names_sha256": "59a18e9b6f154501d36e29e27f9e5c8ae082d6aba5426df8fd6dd2aa4e9cda07",
+        "parameter_tensor_count": 16,
+        "role": "language_model",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "decay",
+        "group_name": "main_vision/decay",
+        "learning_rate": 5e-06,
+        "parameter_element_count": 24576,
+        "parameter_names_sha256": "76fa70bcd2a22ca8dad0824c647e860f2da91482bd437844ccd784d766d396da",
+        "parameter_tensor_count": 9,
+        "role": "main_vision",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "no_decay",
+        "group_name": "main_vision/no_decay",
+        "learning_rate": 5e-06,
+        "parameter_element_count": 896,
+        "parameter_names_sha256": "c64f681d51bba9603eed5885792996ee8500dba4248bace4c4cebb5534ca4ee2",
+        "parameter_tensor_count": 19,
+        "role": "main_vision",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "decay",
+        "group_name": "seg_vision/decay",
+        "learning_rate": 5e-06,
+        "parameter_element_count": 24576,
+        "parameter_names_sha256": "e900777079b429729c7f3e7fa8f630ffcfffb33c7ec28f7efaac49fdebd09994",
+        "parameter_tensor_count": 9,
+        "role": "seg_vision",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "no_decay",
+        "group_name": "seg_vision/no_decay",
+        "learning_rate": 5e-06,
+        "parameter_element_count": 864,
+        "parameter_names_sha256": "c6c3310a7533848f44740890b0eac32fcebc31943da838f19e013f7a5fcada7a",
+        "parameter_tensor_count": 18,
+        "role": "seg_vision",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "decay",
+        "group_name": "projector/decay",
+        "learning_rate": 5e-05,
+        "parameter_element_count": 2048,
+        "parameter_names_sha256": "0f273ecf386613f5a69cdcbaa08404cb151921f687aad054f6304ce640c595ee",
+        "parameter_tensor_count": 2,
+        "role": "projector",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "no_decay",
+        "group_name": "projector/no_decay",
+        "learning_rate": 5e-05,
+        "parameter_element_count": 64,
+        "parameter_names_sha256": "86b85b2681653dd016880ab52a20485f240f50342af467e6bbe36a9bbed5ce91",
+        "parameter_tensor_count": 2,
+        "role": "projector",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "decay",
+        "group_name": "segmentation_projector/decay",
+        "learning_rate": 5e-05,
+        "parameter_element_count": 2048,
+        "parameter_names_sha256": "f899d930441af8017d54892c18334c937bda13b6dc2ec40e3a28790aaa021245",
+        "parameter_tensor_count": 2,
+        "role": "segmentation_projector",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "no_decay",
+        "group_name": "segmentation_projector/no_decay",
+        "learning_rate": 5e-05,
+        "parameter_element_count": 64,
+        "parameter_names_sha256": "a978acdc6d9c4dfb1159360f531c500a55f3bce9e156bb9ee458b7388ec152ca",
+        "parameter_tensor_count": 2,
+        "role": "segmentation_projector",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "decay",
+        "group_name": "segmentation_decoder/decay",
+        "learning_rate": 1e-05,
+        "parameter_element_count": 367248,
+        "parameter_names_sha256": "e46e66274370aebf4429c78c03285a6707eff29cec659808de4a80b290d0dc50",
+        "parameter_tensor_count": 53,
+        "role": "segmentation_decoder",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "no_decay",
+        "group_name": "segmentation_decoder/no_decay",
+        "learning_rate": 1e-05,
+        "parameter_element_count": 7664,
+        "parameter_names_sha256": "861213e90c0f08be8269f6bd0ed1771f834a2bd5019b65078e6778e5e435a94f",
+        "parameter_tensor_count": 85,
+        "role": "segmentation_decoder",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "decay",
+        "group_name": "token_embeddings/decay",
+        "learning_rate": 5e-05,
+        "parameter_element_count": 1088,
+        "parameter_names_sha256": "41c26a8476156154602ad1800fc6549c4265425c56f1ed5c7380e067aac8581c",
+        "parameter_tensor_count": 1,
+        "role": "token_embeddings",
+        "weight_decay": 0.0
+      },
+      {
+        "decay_kind": "no_decay",
+        "group_name": "token_embeddings/no_decay",
+        "learning_rate": 5e-05,
+        "parameter_element_count": 1088,
+        "parameter_names_sha256": "9b2c1b565bf98a0ddcbd4f26c8c9013c37f32fce879f9b32f96e33b65fdea2de",
+        "parameter_tensor_count": 1,
+        "role": "token_embeddings",
+        "weight_decay": 0.0
+      }
+    ],
+    "optimized_parameter_element_count": 435808,
+    "optimized_parameter_tensor_count": 219,
+    "optimizer_name": "torch.optim.AdamW",
+    "parameter_layout_sha256": "368b00c2025f656461a428f96fbccb734a8e547a96f8a9ee7f9e601ed72594e0",
+    "requested_fused": true,
+    "trainable_parameter_element_count": 435808,
+    "trainable_parameter_tensor_count": 219,
+    "training_stage": "joint_finetune",
+    "zero_learning_rate_roles": []
+  },
+  "optimizer_restore_exact_by_rank": [
+    true,
+    true
+  ],
+  "output_dir": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-093028/ddp_checkpoint",
+  "replay_model_distance_by_rank": [
+    {
+      "allclose": true,
+      "compared_entries": 234,
+      "compared_values": 1832,
+      "first_mismatch": null,
+      "max_absolute_difference": 0.0,
+      "max_relative_difference": 0.0
+    },
+    {
+      "allclose": true,
+      "compared_entries": 234,
+      "compared_values": 1832,
+      "first_mismatch": null,
+      "max_absolute_difference": 0.0,
+      "max_relative_difference": 0.0
+    }
+  ],
+  "replay_optimizer_distance_by_rank": [
+    {
+      "allclose": true,
+      "compared_entries": 594,
+      "compared_values": 3318,
+      "first_mismatch": null,
+      "max_absolute_difference": 0.0,
+      "max_relative_difference": 0.0
+    },
+    {
+      "allclose": true,
+      "compared_entries": 594,
+      "compared_values": 3318,
+      "first_mismatch": null,
+      "max_absolute_difference": 0.0,
+      "max_relative_difference": 0.0
+    }
+  ],
+  "replayed_batch_by_rank": [
+    {
+      "digest": "1d090b7049008f258fcbf07b777ac63af8a061da3ff677ac264a5d584333199f",
+      "image_shape": [
+        1,
+        1,
+        8,
+        16,
+        16
+      ],
+      "sample_ids": [
+        "caption-0"
+      ],
+      "segmentation_target_shape": null,
+      "sequence_length": 32,
+      "task": "caption"
+    },
+    {
+      "digest": "955619fbf80b650b857f15cf444b7d402a3eaff3060f8f25226dfdeb66410da3",
+      "image_shape": [
+        1,
+        1,
+        8,
+        16,
+        16
+      ],
+      "sample_ids": [
+        "caption-3"
+      ],
+      "segmentation_target_shape": null,
+      "sequence_length": 32,
+      "task": "caption"
+    }
+  ],
+  "replayed_update_by_rank": [
+    {
+      "batch_digest": "1d090b7049008f258fcbf07b777ac63af8a061da3ff677ac264a5d584333199f",
+      "cuda_memory": {
+        "allocated_gib": 0.0,
+        "peak_allocated_gib": 0.0,
+        "peak_reserved_gib": 0.0,
+        "reserved_gib": 0.0
+      },
+      "elapsed_seconds": 0.012608207995072007,
+      "global_backward_loss": 3.48854923248291,
+      "gradient_norm": 2.1359169483184814,
+      "local_total_loss": 3.48854923248291,
+      "phase": "replayed_after_resume",
+      "sample_ids": [
+        "caption-0"
+      ],
+      "step_after": 2,
+      "step_before": 1,
+      "task": "caption"
+    },
+    {
+      "batch_digest": "955619fbf80b650b857f15cf444b7d402a3eaff3060f8f25226dfdeb66410da3",
+      "cuda_memory": {
+        "allocated_gib": 0.0,
+        "peak_allocated_gib": 0.0,
+        "peak_reserved_gib": 0.0,
+        "reserved_gib": 0.0
+      },
+      "elapsed_seconds": 0.013002749998122454,
+      "global_backward_loss": 3.4866843223571777,
+      "gradient_norm": 2.1359169483184814,
+      "local_total_loss": 3.4866843223571777,
+      "phase": "replayed_after_resume",
+      "sample_ids": [
+        "caption-3"
+      ],
+      "step_after": 2,
+      "step_before": 1,
+      "task": "caption"
+    }
+  ],
+  "restored_model_state_by_rank": [
+    {
+      "digest": "46318383c6668d75f92237b7019d4ede83188a0f486dfe9425a47b98c7151f59",
+      "kind": "model_parameters",
+      "sampled_element_count": 1832,
+      "tensor_count": 234
+    },
+    {
+      "digest": "46318383c6668d75f92237b7019d4ede83188a0f486dfe9425a47b98c7151f59",
+      "kind": "model_parameters",
+      "sampled_element_count": 1832,
+      "tensor_count": 234
+    }
+  ],
+  "restored_optimizer_state_by_rank": [
+    {
+      "digest": "064915a6a54ce84ba4904ec5aa79c7753097057849c85b01e44bc579fbb4ea0f",
+      "kind": "optimizer_state",
+      "sampled_element_count": 3318,
+      "tensor_count": 594
+    },
+    {
+      "digest": "064915a6a54ce84ba4904ec5aa79c7753097057849c85b01e44bc579fbb4ea0f",
+      "kind": "optimizer_state",
+      "sampled_element_count": 3318,
+      "tensor_count": 594
+    }
+  ],
+  "resume_report": {
+    "checkpoint_path": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-093028/ddp_checkpoint/checkpoints/checkpoint-step-00000001",
+    "committed_microbatches": 1,
+    "current_strategy": "ddp",
+    "current_world_size": 2,
+    "epoch": 0,
+    "loaded_at_utc": "2026-07-28T01:30:38+00:00",
+    "optimizer_step": 1,
+    "restored_optimizer": true,
+    "restored_rng_state": true,
+    "restored_scheduler": true,
+    "saved_strategy": "ddp",
+    "saved_world_size": 2
+  },
+  "rng_exact_by_rank": [
+    true,
+    true
+  ],
+  "save_report": {
+    "asynchronous": true,
+    "checkpoint_path": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-093028/ddp_checkpoint/checkpoints/checkpoint-step-00000001",
+    "committed_microbatches": 1,
+    "completed_at_utc": "2026-07-28T01:30:38+00:00",
+    "duration_seconds": 0.10158729099202901,
+    "epoch": 0,
+    "exact_resume_capable": true,
+    "optimizer_step": 1,
+    "saved_optimizer": true,
+    "saved_rng_state": true,
+    "saved_scheduler": true
+  },
+  "scheduler": {
+    "groups": [
+      {
+        "base_learning_rate": 1e-05,
+        "group_name": "language_model/decay",
+        "role": "language_model"
+      },
+      {
+        "base_learning_rate": 5e-06,
+        "group_name": "main_vision/decay",
+        "role": "main_vision"
+      },
+      {
+        "base_learning_rate": 5e-06,
+        "group_name": "main_vision/no_decay",
+        "role": "main_vision"
+      },
+      {
+        "base_learning_rate": 5e-05,
+        "group_name": "projector/decay",
+        "role": "projector"
+      },
+      {
+        "base_learning_rate": 5e-05,
+        "group_name": "projector/no_decay",
+        "role": "projector"
+      },
+      {
+        "base_learning_rate": 5e-06,
+        "group_name": "seg_vision/decay",
+        "role": "seg_vision"
+      },
+      {
+        "base_learning_rate": 5e-06,
+        "group_name": "seg_vision/no_decay",
+        "role": "seg_vision"
+      },
+      {
+        "base_learning_rate": 1e-05,
+        "group_name": "segmentation_decoder/decay",
+        "role": "segmentation_decoder"
+      },
+      {
+        "base_learning_rate": 1e-05,
+        "group_name": "segmentation_decoder/no_decay",
+        "role": "segmentation_decoder"
+      },
+      {
+        "base_learning_rate": 5e-05,
+        "group_name": "segmentation_projector/decay",
+        "role": "segmentation_projector"
+      },
+      {
+        "base_learning_rate": 5e-05,
+        "group_name": "segmentation_projector/no_decay",
+        "role": "segmentation_projector"
+      },
+      {
+        "base_learning_rate": 5e-05,
+        "group_name": "token_embeddings/decay",
+        "role": "token_embeddings"
+      },
+      {
+        "base_learning_rate": 5e-05,
+        "group_name": "token_embeddings/no_decay",
+        "role": "token_embeddings"
+      }
+    ],
+    "optimizer_group_layout_sha256": "509f09aa6051bdf297d0a3aa53cbab6155738c5f8b6e559edae5592e244e8cbe",
+    "plan": {
+      "configured_epochs": "1.0",
+      "decay_steps": 2,
+      "epoch_count": 1,
+      "epoch_microbatch_limits": [
+        2
+      ],
+      "gradient_accumulation_steps": 1,
+      "is_fractional_final_epoch": false,
+      "optimizer_steps_per_epoch": [
+        2
+      ],
+      "plan_sha256": "7f2e63ecefd4a58496d47f740cdaf2ff76b90f4639d415c262809b07308a05be",
+      "steps_per_epoch": 2,
+      "total_microbatches": 2,
+      "total_optimizer_steps": 2,
+      "warmup_ratio": 0.0,
+      "warmup_steps": 0
+    },
+    "scheduler_name": "CosineWarmupScheduler",
+    "scheduler_type": "linear_warmup_cosine_decay"
+  },
+  "scheduler_restore_exact_by_rank": [
+    true,
+    true
+  ],
+  "state_version": 1,
+  "status": "passed",
+  "strategy": "ddp",
+  "task_schedule": [
+    "segmentation",
+    "caption"
+  ],
+  "tokenizer": {
+    "added_token_count": 4,
+    "box_end_token": "<bx_end>",
+    "box_end_token_id": 32,
+    "box_start_token": "<bx_start>",
+    "box_start_token_id": 31,
+    "eos_token_id": 2,
+    "image_token": "<im_patch>",
+    "image_token_id": 30,
+    "original_vocab_size": 30,
+    "pad_token_id": 3,
+    "requires_embedding_resize": true,
+    "segmentation_token": "[SEG]",
+    "segmentation_token_id": 33,
+    "tokenizer_name_or_path": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-093028/fixtures/tiny-phi3",
+    "visual_token_count": 1,
+    "vocabulary_size": 34
+  },
+  "uninterrupted_update_by_rank": [
+    {
+      "batch_digest": "1d090b7049008f258fcbf07b777ac63af8a061da3ff677ac264a5d584333199f",
+      "cuda_memory": {
+        "allocated_gib": 0.0,
+        "peak_allocated_gib": 0.0,
+        "peak_reserved_gib": 0.0,
+        "reserved_gib": 0.0
+      },
+      "elapsed_seconds": 0.013352292007766664,
+      "global_backward_loss": 3.48854923248291,
+      "gradient_norm": 2.1359169483184814,
+      "local_total_loss": 3.48854923248291,
+      "phase": "uninterrupted_after_checkpoint",
+      "sample_ids": [
+        "caption-0"
+      ],
+      "step_after": 2,
+      "step_before": 1,
+      "task": "caption"
+    },
+    {
+      "batch_digest": "955619fbf80b650b857f15cf444b7d402a3eaff3060f8f25226dfdeb66410da3",
+      "cuda_memory": {
+        "allocated_gib": 0.0,
+        "peak_allocated_gib": 0.0,
+        "peak_reserved_gib": 0.0,
+        "reserved_gib": 0.0
+      },
+      "elapsed_seconds": 0.013027999957557768,
+      "global_backward_loss": 3.4866843223571777,
+      "gradient_norm": 2.1359169483184814,
+      "local_total_loss": 3.4866843223571777,
+      "phase": "uninterrupted_after_checkpoint",
+      "sample_ids": [
+        "caption-3"
+      ],
+      "step_after": 2,
+      "step_before": 1,
+      "task": "caption"
+    }
+  ]
+}

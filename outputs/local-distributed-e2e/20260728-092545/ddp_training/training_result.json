@@ -1,0 +1,10 @@
+{
+  "completed_optimizer_steps": 2,
+  "elapsed_seconds": 0.3782025839900598,
+  "final_checkpoint": "/Users/jiacheng/Documents/GitHub/M3D_MODERN/outputs/local-distributed-e2e/20260728-092545/ddp_training/checkpoint-step-00000002",
+  "final_committed_microbatches": 2,
+  "final_epoch": 0,
+  "finished_at_unix": 1785201961.039097,
+  "resumed_from": null,
+  "total_optimizer_steps": 2
+}

@@ -418,7 +418,15 @@ def _selected_environment() -> dict[str, Any]:
 
 
 def _runtime_rank_payload(runtime: Any) -> dict[str, Any]:
-    properties = torch.cuda.get_device_properties(runtime.device)
+    if runtime.device.type == "cuda":
+        properties = torch.cuda.get_device_properties(runtime.device)
+        device_name = properties.name
+        total_memory = int(properties.total_memory)
+        capability = [int(properties.major), int(properties.minor)]
+    else:
+        device_name = "CPU distributed smoke"
+        total_memory = 0
+        capability = [0, 0]
     return {
         "rank": runtime.rank,
         "local_rank": runtime.local_rank,
@@ -428,9 +436,9 @@ def _runtime_rank_payload(runtime: Any) -> dict[str, Any]:
         "hostname": socket.gethostname(),
         "process_id": os.getpid(),
         "device": str(runtime.device),
-        "gpu_name": properties.name,
-        "gpu_total_memory_bytes": int(properties.total_memory),
-        "gpu_compute_capability": [int(properties.major), int(properties.minor)],
+        "gpu_name": device_name,
+        "gpu_total_memory_bytes": total_memory,
+        "gpu_compute_capability": capability,
         "rank_seed": int(runtime.seed),
     }
 
@@ -847,6 +855,17 @@ def _self_test() -> dict[str, Any]:
         assert parsed.overrides[0] == "optimization.epochs=2.5"
         assert parsed.overrides[1].startswith("checkpoint.resume_from=")
 
+        latest = parse_cli_options(
+            ["--config", str(config_path), "--resume-from", "latest"]
+        )
+        latest_config = load_config(
+            config_path,
+            latest.overrides,
+            resolve_paths=True,
+            verify_paths=False,
+        )
+        assert latest_config.checkpoint.resume_from == "latest"
+
         payload = {
             "state_version": _ENTRYPOINT_STATE_VERSION,
             "sha256": _sha256_text("m3d"),
@@ -870,6 +889,9 @@ def _self_test() -> dict[str, Any]:
             "status": "passed",
             "override_count": len(parsed.overrides),
             "resume_path_yaml_quoted": "checkpoint step 10" in parsed.overrides[1],
+            "latest_resume_sentinel_preserved": (
+                latest_config.checkpoint.resume_from == "latest"
+            ),
             "atomic_json_roundtrip": loaded == payload,
             "consistency_fingerprint_stable": consistency_a == consistency_b,
             "entrypoint_state_version": _ENTRYPOINT_STATE_VERSION,
