@@ -130,7 +130,7 @@ type module >/dev/null 2>&1 || \
 # 1. Load an explicit ASPIRE 2A software stack
 # -----------------------------------------------------------------------------
 log "Resetting loaded modules"
-module reset >/dev/null 2>&1 || module purge
+module purge
 
 log "Loading ${MODULE_PRGENV}"
 module load "${MODULE_PRGENV}"

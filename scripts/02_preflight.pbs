@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#PBS -P 58001002
+#PBS -P personal-e1129906
 #PBS -q normal
 #PBS -N M3D_preflight
 #PBS -l select=1:ncpus=16:mem=64gb:ngpus=2
@@ -97,7 +97,7 @@ type module >/dev/null 2>&1 || \
     fail "The ASPIRE 2A module command is unavailable."
 
 log "Purging loaded modules"
-module reset >/dev/null 2>&1 || module purge
+module purge
 
 log "Loading PrgEnv-gnu/8.3.3"
 module load PrgEnv-gnu/8.3.3
