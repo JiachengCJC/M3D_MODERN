@@ -137,7 +137,7 @@ log "DataLoader workers per rank: ${NUM_WORKERS}"
 # -----------------------------------------------------------------------------
 type module >/dev/null 2>&1 || fail "The ASPIRE 2A module command is unavailable."
 
-module reset >/dev/null 2>&1 || module purge
+module purge
 module load PrgEnv-gnu/8.3.3
 module load python/3.10.9
 module load cuda/11.8.0
