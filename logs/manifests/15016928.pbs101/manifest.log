@@ -1,6 +1,0 @@
-2026-07-28 12:33:07,295 | INFO | Wrote 15 records for train: /scratch/users/nus/e1129906/M3D_MODERN/outputs/m3d-phi3-joint-modernized-a100/manifests/train.jsonl (summary: /scratch/users/nus/e1129906/M3D_MODERN/outputs/m3d-phi3-joint-modernized-a100/manifests/train.jsonl.summary.json)
-2026-07-28 12:33:07,295 | INFO | Counts by task: {'caption': 2, 'positioning': 4, 'segmentation': 3, 'vqa_closed': 2, 'vqa_open': 2, 'vqa_yes_no': 2}
-2026-07-28 12:33:07,311 | INFO | Wrote 3 records for validation: /scratch/users/nus/e1129906/M3D_MODERN/outputs/m3d-phi3-joint-modernized-a100/manifests/validation.jsonl (summary: /scratch/users/nus/e1129906/M3D_MODERN/outputs/m3d-phi3-joint-modernized-a100/manifests/validation.jsonl.summary.json)
-2026-07-28 12:33:07,311 | INFO | Counts by task: {'caption': 1, 'vqa_closed': 1, 'vqa_open': 1}
-2026-07-28 12:33:07,323 | INFO | Wrote 10 records for test: /scratch/users/nus/e1129906/M3D_MODERN/outputs/m3d-phi3-joint-modernized-a100/manifests/test.jsonl (summary: /scratch/users/nus/e1129906/M3D_MODERN/outputs/m3d-phi3-joint-modernized-a100/manifests/test.jsonl.summary.json)
-2026-07-28 12:33:07,323 | INFO | Counts by task: {'caption': 1, 'positioning': 4, 'segmentation': 3, 'vqa_closed': 1, 'vqa_open': 1}
