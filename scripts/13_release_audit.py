@@ -194,7 +194,7 @@ def audit(root: Path) -> AuditResult:
         joint = yaml.safe_load(joint_path.read_text(encoding="utf-8"))
         joint_model = joint.get("model", {}) if isinstance(joint, dict) else {}
         if joint_model.get("language_model_name_or_path") != (
-            "microsoft/Phi-3-mini-4k-instruct"
+            "../llm_models/phi-3-mini-128k-instruct"
         ):
             forbidden.append("joint_baseline_wrong_language_model")
         projector = joint_model.get("projector", {})

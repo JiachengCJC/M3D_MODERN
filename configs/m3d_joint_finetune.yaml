@@ -17,7 +17,7 @@ schema_version: 1
 experiment_name: m3d-phi3-joint-modernized-a100
 
 model:
-  language_model_name_or_path: microsoft/Phi-3-mini-4k-instruct
+  language_model_name_or_path: ../llm_models/phi-3-mini-128k-instruct
   tokenizer_name_or_path: null
   language_model_family: phi3
   trust_remote_code: false
