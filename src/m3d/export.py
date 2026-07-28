@@ -303,6 +303,21 @@ def _checkpoint_fingerprint(path: Path) -> str:
         )
     return _sha256_payload(entries)
 
+def _canonical_state_dict_model(
+    distributed_model: DistributedM3DModel,
+) -> nn.Module:
+    """Return the same model namespace used when training checkpoints are saved."""
+
+    if distributed_model.is_ddp:
+        # DDP wraps M3DModel inside:
+        # DistributedDataParallel -> _DDPForwardAdapter -> model.
+        # Training checkpoints deliberately save the underlying M3DModel so
+        # durable keys do not contain the adapter's extra "model." prefix.
+        return distributed_model.unwrapped_model
+
+    # FSDP2 mutates/shards the original model in place, so state-dict
+    # operations must use the distributed wrapped model on every rank.
+    return distributed_model.wrapped_model
 
 class _ModelOnlyDCPState(Stateful):
     """Load only the model part of a training DCP application state."""
@@ -356,7 +371,10 @@ def load_model_only_checkpoint(
         raise ExportCompatibilityError(
             f"Checkpoint is not marked complete: {checkpoint_path}"
         )
-    state = _ModelOnlyDCPState(distributed_model.wrapped_model)
+    
+    state_dict_model = _canonical_state_dict_model(distributed_model)
+    state = _ModelOnlyDCPState(state_dict_model)
+
     try:
         dcp.load(
             {"application": state},
@@ -381,9 +399,17 @@ def gather_full_cpu_state(
         keep_submodule_prefixes=True,
         flatten_optimizer_state_dict=False,
     )
+
+    # Every DDP rank already owns a complete model. Only rank 0 needs to
+    # materialize the portable CPU state, and no collective is required.
+    if distributed_model.is_ddp and not runtime.is_main_process:
+        return {}
+
+    state_dict_model = _canonical_state_dict_model(distributed_model)
+
     try:
         gathered = get_model_state_dict(
-            distributed_model.wrapped_model,
+            state_dict_model,
             options=options,
         )
     except Exception as exc:
@@ -392,14 +418,19 @@ def gather_full_cpu_state(
     if runtime.is_main_process:
         if not gathered:
             raise ExportError("Rank 0 received an empty full model state.")
+
         state: dict[str, Tensor] = {}
         for name, value in gathered.items():
             state[str(name)] = _normalise_state_tensor(str(name), value)
         return state
+
+    # FSDP2 requires every rank to participate in the full-state gather, but
+    # cpu_offload/full_state_dict should publish the final state only on rank 0.
     if gathered:
         raise ExportError(
-            "Non-zero rank unexpectedly received a full state despite CPU offload."
+            "Non-zero FSDP2 rank unexpectedly received a full state."
         )
+
     return {}
 
 
