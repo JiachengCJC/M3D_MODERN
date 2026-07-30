@@ -1234,6 +1234,14 @@ def _build_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--no-verify-files", action="store_true")
     parser.add_argument("--allow-split-overlap", action="store_true")
+    parser.add_argument(
+        "--active-tasks-only",
+        action="store_true",
+        help=(
+            "Build only tasks whose data.task_sampling.task_weights value is "
+            "positive. This is required for caption-only projector pretraining."
+        ),
+    )
     parser.add_argument("--skip-caption", action="store_true")
     parser.add_argument("--skip-vqa-closed", action="store_true")
     parser.add_argument("--skip-vqa-open", action="store_true")
@@ -1261,15 +1269,33 @@ def main(argv: Sequence[str] | None = None) -> int:
         verify_paths=False,
     )
 
+    active_tasks = {
+        TaskName.parse(name)
+        for name, weight in config.data.task_sampling.task_weights.items()
+        if float(weight) > 0.0
+    }
+
+    def include(task: TaskName, explicitly_skipped: bool) -> bool:
+        return (
+            not explicitly_skipped
+            and (not args.active_tasks_only or task in active_tasks)
+        )
+
     options = ManifestBuildOptions(
         verify_files=not args.no_verify_files,
-        include_caption=not args.skip_caption,
-        include_vqa_closed=not args.skip_vqa_closed,
-        include_vqa_open=not args.skip_vqa_open,
-        include_vqa_yes_no=not args.skip_vqa_yes_no,
-        include_positioning=not args.skip_positioning,
-        include_generated_segmentation=not args.skip_generated_segmentation,
-        include_referring_segmentation=not args.skip_refseg,
+        include_caption=include(TaskName.CAPTION, args.skip_caption),
+        include_vqa_closed=include(TaskName.VQA_CLOSED, args.skip_vqa_closed),
+        include_vqa_open=include(TaskName.VQA_OPEN, args.skip_vqa_open),
+        include_vqa_yes_no=include(TaskName.VQA_YES_NO, args.skip_vqa_yes_no),
+        include_positioning=include(TaskName.POSITIONING, args.skip_positioning),
+        include_generated_segmentation=include(
+            TaskName.SEGMENTATION,
+            args.skip_generated_segmentation,
+        ),
+        include_referring_segmentation=include(
+            TaskName.SEGMENTATION,
+            args.skip_refseg,
+        ),
         fail_on_split_overlap=not args.allow_split_overlap,
     )
 

@@ -549,10 +549,33 @@ fi
     fail "Export tokenizer directory is missing: ${OUTPUT_DIR}/tokenizer"
 [[ -d "${OUTPUT_DIR}/m3d_model" ]] || \
     fail "Complete M3D bundle is missing: ${OUTPUT_DIR}/m3d_model"
-[[ -d "${OUTPUT_DIR}/components/main_vision" ]] || \
-    fail "Main 3D ViT component is missing."
-[[ -d "${OUTPUT_DIR}/components/segvol" ]] || \
-    fail "Independent SegVol component is missing."
+
+"${VENV_DIR}/bin/python" - "${OUTPUT_DIR}" <<'PY'
+from __future__ import annotations
+
+import sys
+import yaml
+from pathlib import Path
+
+output = Path(sys.argv[1])
+config = yaml.safe_load(
+    (output / "resolved_config.json").read_text(encoding="utf-8")
+)
+expected = {"main_vision", "multimodal_projector"}
+if bool(config["model"]["segmentation"]["enabled"]):
+    expected.update({"segmentation_projector", "segvol"})
+
+missing: list[str] = []
+for component in sorted(expected):
+    directory = output / "components" / component
+    index = directory / f"{component}.safetensors.index.json"
+    if not directory.is_dir():
+        missing.append(str(directory))
+    elif not index.is_file():
+        missing.append(str(index))
+if missing:
+    raise SystemExit("Missing required exported components:\n  - " + "\n  - ".join(missing))
+PY
 
 case "${EXPORT_FORMAT}" in
     adapter)

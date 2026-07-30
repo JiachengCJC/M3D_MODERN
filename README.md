@@ -25,6 +25,10 @@ The central architectural constraint is preserved throughout the repository:
 - DDP primary training path and FSDP2 memory fallback.
 - Distributed checkpoint save, exact resume and portable export.
 
+For the strict two-stage recipe—Stage 1 trains only `mm_projector`, then
+Stage 2 applies Phi-3 LoRA while unfreezing every non-language component—follow
+[TWO_STAGE_ASPIRE2A.md](TWO_STAGE_ASPIRE2A.md).
+
 ## Modernisation decisions
 
 - PyTorch native `scaled_dot_product_attention` with Flash-SDPA required on A100.
@@ -320,7 +324,7 @@ python scripts/13_release_audit.py --root . --output release_audit.json
 
 The audit checks:
 
-- all 65 planned files exist;
+- all 68 planned files exist;
 - every Python file compiles;
 - every PBS/shell file passes `bash -n`;
 - every YAML file parses;
