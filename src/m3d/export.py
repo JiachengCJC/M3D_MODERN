@@ -56,7 +56,7 @@ from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import torch
 import torch.distributed.checkpoint as dcp
@@ -78,8 +78,11 @@ from .distributed import (
     prepare_distributed_model,
 )
 from .model.language import M3DLanguageModel, build_language_model
-from .model.m3d import M3DModel, build_m3d_model
+from .model.m3d import build_m3d_model
 from .runtime import RuntimeContext, atomic_write_json, distributed_runtime
+
+if TYPE_CHECKING:
+    from .tokenization import TokenizerBundle
 
 
 _EXPORT_STATE_VERSION = 1
@@ -300,6 +303,21 @@ def _checkpoint_fingerprint(path: Path) -> str:
         )
     return _sha256_payload(entries)
 
+def _canonical_state_dict_model(
+    distributed_model: DistributedM3DModel,
+) -> nn.Module:
+    """Return the same model namespace used when training checkpoints are saved."""
+
+    if distributed_model.is_ddp:
+        # DDP wraps M3DModel inside:
+        # DistributedDataParallel -> _DDPForwardAdapter -> model.
+        # Training checkpoints deliberately save the underlying M3DModel so
+        # durable keys do not contain the adapter's extra "model." prefix.
+        return distributed_model.unwrapped_model
+
+    # FSDP2 mutates/shards the original model in place, so state-dict
+    # operations must use the distributed wrapped model on every rank.
+    return distributed_model.wrapped_model
 
 class _ModelOnlyDCPState(Stateful):
     """Load only the model part of a training DCP application state."""
@@ -353,7 +371,10 @@ def load_model_only_checkpoint(
         raise ExportCompatibilityError(
             f"Checkpoint is not marked complete: {checkpoint_path}"
         )
-    state = _ModelOnlyDCPState(distributed_model.wrapped_model)
+    
+    state_dict_model = _canonical_state_dict_model(distributed_model)
+    state = _ModelOnlyDCPState(state_dict_model)
+
     try:
         dcp.load(
             {"application": state},
@@ -378,9 +399,17 @@ def gather_full_cpu_state(
         keep_submodule_prefixes=True,
         flatten_optimizer_state_dict=False,
     )
+
+    # Every DDP rank already owns a complete model. Only rank 0 needs to
+    # materialize the portable CPU state, and no collective is required.
+    if distributed_model.is_ddp and not runtime.is_main_process:
+        return {}
+
+    state_dict_model = _canonical_state_dict_model(distributed_model)
+
     try:
         gathered = get_model_state_dict(
-            distributed_model.wrapped_model,
+            state_dict_model,
             options=options,
         )
     except Exception as exc:
@@ -389,14 +418,19 @@ def gather_full_cpu_state(
     if runtime.is_main_process:
         if not gathered:
             raise ExportError("Rank 0 received an empty full model state.")
+
         state: dict[str, Tensor] = {}
         for name, value in gathered.items():
             state[str(name)] = _normalise_state_tensor(str(name), value)
         return state
+
+    # FSDP2 requires every rank to participate in the full-state gather, but
+    # cpu_offload/full_state_dict should publish the final state only on rank 0.
     if gathered:
         raise ExportError(
-            "Non-zero rank unexpectedly received a full state despite CPU offload."
+            "Non-zero FSDP2 rank unexpectedly received a full state."
         )
+
     return {}
 
 
@@ -631,8 +665,13 @@ def _assert_independent_exported_encoders(full_state: Mapping[str, Tensor]) -> N
         full_state,
         "seg_module.image_encoder.",
         strip_prefix=True,
-        required=True,
+        required=False,
     )
+    # A projector-only stage deliberately has no SegVol branch.  The required
+    # Main ViT namespace above is still checked, while the two-encoder alias
+    # contract applies only when a segmentation encoder is actually present.
+    if not seg:
+        return
     if set(main) != set(seg):
         # CLS-token differences are expected; compare the common architecture
         # keys while requiring both namespaces to exist independently.
@@ -1269,7 +1308,6 @@ def run_export(args: argparse.Namespace) -> dict[str, Any]:
             status_path=status_path,
             export_fn=export_fn,
         )
-        del full_state
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         return cast(dict[str, Any], payload["report"])
@@ -1384,6 +1422,55 @@ def _self_test() -> dict[str, Any]:
             for left, right in zip(source.parameters(), target.parameters(), strict=True)
         )
 
+        projector_source = nn.Sequential(
+            nn.Linear(2, 4),
+            nn.GELU(),
+            nn.Linear(4, 2),
+        )
+        projector_stage_state = {
+            "vision_tower.vision_tower.patch_embedding.weight": torch.ones(2, 2),
+            **{
+                f"mm_projector.{name}": tensor
+                for name, tensor in projector_source.state_dict().items()
+            },
+        }
+        projector_stage_components = _component_states(projector_stage_state)
+        _assert_independent_exported_encoders(projector_stage_state)
+        projector_stage_export_supported = set(projector_stage_components) == {
+            "main_vision",
+            "multimodal_projector",
+        }
+        stage1_projector_report = save_sharded_safetensors(
+            projector_stage_components["multimodal_projector"],
+            root / "stage1-projector",
+            basename="multimodal_projector",
+            max_shard_bytes=1024 * 1024,
+        )
+        projector_target = copy.deepcopy(projector_source)
+        projector_target.requires_grad_(False)
+        for parameter in projector_target.parameters():
+            parameter.zero_()
+        from .model.checkpoint import load_projector_checkpoint
+
+        stage1_projector_load = load_projector_checkpoint(
+            projector_target,
+            root
+            / "stage1-projector"
+            / stage1_projector_report.shards[0].file,
+            strict=True,
+        )
+        projector_stage_handoff_roundtrip = (
+            stage1_projector_load.successful
+            and all(
+                torch.equal(source_tensor, target_tensor)
+                for source_tensor, target_tensor in zip(
+                    projector_source.state_dict().values(),
+                    projector_target.state_dict().values(),
+                    strict=True,
+                )
+            )
+        )
+
         result = {
             "status": "passed",
             "byte_size_4gb": _parse_byte_size("4GB"),
@@ -1393,6 +1480,10 @@ def _self_test() -> dict[str, Any]:
             "architecture_contract_ignores_runtime_fields": contract_stable,
             "architecture_contract_detects_lora_rank": contract_detects_layout_change,
             "model_only_dcp_roundtrip": model_only_dcp_roundtrip,
+            "projector_stage_export_supported": projector_stage_export_supported,
+            "projector_stage_handoff_roundtrip": (
+                projector_stage_handoff_roundtrip
+            ),
         }
         if not all(
             (
@@ -1400,6 +1491,8 @@ def _self_test() -> dict[str, Any]:
                 contract_stable,
                 contract_detects_layout_change,
                 model_only_dcp_roundtrip,
+                projector_stage_export_supported,
+                projector_stage_handoff_roundtrip,
                 len(report.shards) >= 2,
             )
         ):

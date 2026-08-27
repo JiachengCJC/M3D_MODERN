@@ -164,6 +164,9 @@ fi
 
 # Clear any command paths cached before the module swap.
 hash -r
+FINAL_GCC_VERSION="$(gcc -dumpfullversion -dumpversion)"
+[[ "${FINAL_GCC_VERSION}" == 11.4.0* ]] || \
+    fail "Expected GCC 11.4.0, but gcc reports ${FINAL_GCC_VERSION}."
 
 log "Loaded modules:"
 module -t list 2>&1 | sed 's/^/  /'
@@ -300,12 +303,23 @@ if [[ "${SUITE}" == "runtime" ]]; then
     readonly REPORT_FILE="${OUTPUT_DIR}/integration_report.json"
 else
     readonly OUTPUT_DIR="${PROJECT_ROOT}/outputs/aspire2a-checkpoint-integration-${STRATEGY}-${CHECKPOINT_MODE}-${JOB_ID_SAFE}"
+    readonly MANIFEST_DIR="${OUTPUT_DIR}.manifests"
+
+    log "Preparing an external training manifest for checkpoint integration."
+    "${VENV_DIR}/bin/python" -m m3d.data.manifest \
+        --config "${CONFIG_PATH}" \
+        --splits train \
+        --output-dir "${MANIFEST_DIR}"
+
+    [[ -s "${MANIFEST_DIR}/train.jsonl" ]] || \
+        fail "Checkpoint integration train manifest was not created."
 
     CHECKPOINT_ARGS=(
         --config "${CONFIG_PATH}"
         --strategy "${STRATEGY}"
         --checkpoint-mode "${CHECKPOINT_MODE}"
         --output-dir "${OUTPUT_DIR}"
+        --manifest-dir "${MANIFEST_DIR}"
         --cache-dir "${HF_HOME}"
         --expected-world-size "${EXPECTED_GPUS}"
         --num-workers "${NUM_WORKERS}"

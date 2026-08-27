@@ -240,6 +240,32 @@ def _validate_dropout(value: float) -> float:
     return value
 
 
+def _register_ddp_gradient_layout_hook(parameter: nn.Parameter) -> None:
+    """Keep singleton-broadcast gradients compatible with DDP bucket views."""
+
+    gradient_shape = tuple(parameter.shape)
+    gradient_stride = tuple(parameter.stride())
+
+    def _restore_layout(gradient: Tensor) -> Tensor:
+        # FSDP2 supplies a DTensor subclass and owns its gradient layout. DDP
+        # supplies an ordinary Tensor whose singleton dimensions may inherit a
+        # later full-sequence stride through cat/broadcast backward.
+        if (
+            type(gradient) is not Tensor
+            or tuple(gradient.stride()) == gradient_stride
+        ):
+            return gradient
+        aligned = torch.empty_strided(
+            gradient_shape,
+            gradient_stride,
+            dtype=gradient.dtype,
+            device=gradient.device,
+        )
+        return aligned.copy_(gradient)
+
+    parameter.register_hook(_restore_layout)
+
+
 def _build_shape(config: VisionEncoderConfig) -> VisionEncoderShape:
     image_size = _as_shape3d(config.image_size, name="image_size")
     patch_size = _as_shape3d(config.patch_size, name="patch_size")
@@ -452,6 +478,7 @@ class PatchEmbedding3D(nn.Module):
         self.position_embeddings = nn.Parameter(
             torch.zeros(1, self.n_patches, self.hidden_size)
         )
+        _register_ddp_gradient_layout_hook(self.position_embeddings)
         self.dropout = nn.Dropout(_validate_dropout(dropout_rate))
         self.reset_parameters_monai()
 
@@ -651,6 +678,7 @@ class ViT3DEncoder(nn.Module):
             self.cls_token = nn.Parameter(
                 torch.zeros(1, 1, self.shape.hidden_size)
             )
+            _register_ddp_gradient_layout_hook(self.cls_token)
 
         self.apply_trainability_policy(config)
 
@@ -741,7 +769,12 @@ class ViT3DEncoder(nn.Module):
     ) -> VisionEncoderOutput | tuple[Tensor, list[Tensor]]:
         x = self.patch_embedding(images)
         if self.shape.has_cls_token:
-            cls_token = self.cls_token.expand(x.shape[0], -1, -1)
+            # Materialize the tiny per-batch CLS activation. With batch size 1,
+            # ``expand`` lets the sliced upstream gradient retain the token
+            # sequence stride (for example 288 instead of 32), which violates
+            # DDP's gradient-as-bucket-view layout contract and forces a copy
+            # on every backward.
+            cls_token = self.cls_token.repeat(x.shape[0], 1, 1)
             x = torch.cat((cls_token, x), dim=1)
 
         expected = (images.shape[0], self.output_token_count, self.hidden_size)

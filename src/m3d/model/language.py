@@ -496,8 +496,12 @@ def resize_and_initialise_m3d_tokens(
 
     new_rows = tuple(range(tokenizer_base_vocab, target_vocab))
     if new_rows:
-        input_weight[old_vocab:].copy_(input_mean.to(input_weight.dtype))
-        output_weight[old_vocab:].copy_(output_mean.to(output_weight.dtype))
+        input_weight[tokenizer_base_vocab:target_vocab].copy_(
+            input_mean.to(input_weight.dtype)
+        )
+        output_weight[tokenizer_base_vocab:target_vocab].copy_(
+            output_mean.to(output_weight.dtype)
+        )
 
     configuration = getattr(causal_lm, "config", None)
     if configuration is not None:
@@ -1238,6 +1242,24 @@ class _ToyCausalLM(nn.Module):
     def get_output_embeddings(self) -> nn.Module:
         return self.lm_head
 
+    def resize_token_embeddings(
+        self,
+        new_num_tokens: int,
+        **_: Any,
+    ) -> nn.Module:
+        old_input = self.embed_tokens
+        old_output = self.lm_head
+        hidden_size = int(old_input.embedding_dim)
+        copy_rows = min(int(old_input.num_embeddings), new_num_tokens)
+
+        self.embed_tokens = nn.Embedding(new_num_tokens, hidden_size)
+        self.lm_head = nn.Linear(hidden_size, new_num_tokens, bias=False)
+        with torch.no_grad():
+            self.embed_tokens.weight[:copy_rows].copy_(old_input.weight[:copy_rows])
+            self.lm_head.weight[:copy_rows].copy_(old_output.weight[:copy_rows])
+        self.config.vocab_size = new_num_tokens
+        return self.embed_tokens
+
 
 
 def _toy_metadata() -> _TokenizerMetadataProtocol:
@@ -1262,6 +1284,35 @@ def _toy_metadata() -> _TokenizerMetadataProtocol:
 
 def _self_test() -> dict[str, Any]:
     torch.manual_seed(41)
+
+    # Phi-3 has padded model embeddings (32,064 rows) beyond its tokenizer
+    # vocabulary (32,011 rows). Verify added M3D rows are initialised from the
+    # real tokenizer rows even when the model starts with extra padded rows.
+    padded_model = _ToyCausalLM(vocabulary_size=16, hidden_size=8)
+    padded_input_mean = padded_model.embed_tokens.weight[:12].float().mean(dim=0)
+    padded_output_mean = padded_model.lm_head.weight[:12].float().mean(dim=0)
+    padded_metadata = SimpleNamespace(
+        original_vocab_size=12,
+        vocabulary_size=14,
+        added_token_count=2,
+        pad_token_id=0,
+        eos_token_id=2,
+    )
+    padded_resize = resize_and_initialise_m3d_tokens(
+        padded_model,
+        padded_metadata,
+    )
+    assert padded_resize.input_rows_initialised_from_mean == (12, 13)
+    assert padded_resize.output_rows_initialised_from_mean == (12, 13)
+    assert torch.allclose(
+        padded_model.embed_tokens.weight[12:14].float(),
+        padded_input_mean.expand(2, -1),
+    )
+    assert torch.allclose(
+        padded_model.lm_head.weight[12:14].float(),
+        padded_output_mean.expand(2, -1),
+    )
+
     model = M3DLanguageModel(
         _ToyCausalLM(vocabulary_size=12, hidden_size=8),
         tokenizer_metadata=_toy_metadata(),
@@ -1351,6 +1402,7 @@ def _self_test() -> dict[str, Any]:
         "selective_loss_matches_full_loss": True,
         "visual_gradient_is_finite": True,
         "malformed_image_prefix_detected": malformed_detected,
+        "padded_vocabulary_initialisation_is_correct": True,
     }
 
 

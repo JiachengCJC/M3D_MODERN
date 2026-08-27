@@ -21,6 +21,7 @@ PROJECT_ROOT="${M3D_PROJECT_ROOT:-${PBS_O_WORKDIR}}"
 CONFIG="${M3D_CONFIG:-${PROJECT_ROOT}/configs/m3d_joint_finetune.yaml}"
 VENV="${M3D_VENV_DIR:-${PROJECT_ROOT}/.venv}"
 SPLITS="${M3D_SPLITS:-train validation test}"
+MANIFEST_OUTPUT_DIR="${M3D_MANIFEST_OUTPUT_DIR:-}"
 LOG_DIR="${PROJECT_ROOT}/logs/manifests/${PBS_JOBID:-manual}"
 mkdir -p "${LOG_DIR}"
 exec > >(stdbuf -oL tee -a "${LOG_DIR}/manifest.log") 2>&1
@@ -30,7 +31,7 @@ type module >/dev/null 2>&1 || {
     exit 2
 }
 
-module purge
+module reset >/dev/null 2>&1 || module purge
 module load python/3.10.9
 hash -r
 
@@ -51,9 +52,14 @@ export OMP_NUM_THREADS="${OMP_NUM_THREADS:-8}" # 设置使用 OpenMP 的程序�
 # 把 split 字符串转换成 Bash 数组，SPLIT_ARGS[0]=train, SPLIT_ARGS[1]=validation, SPLIT_ARGS[2]=test
 read -r -a SPLIT_ARGS <<< "${SPLITS}"
 
-# 运行 manifest 准备脚本，传入配置文件和数据集划分参数。如果设置了 M3D_SKIP_FILE_VALIDATION 环境变量为 1，则添加 --no-verify-files 参数以跳过文件验证。
+# 运行 manifest 准备脚本，传入配置文件和数据集划分参数。默认只生成
+# task_weights > 0 的任务；这使 caption-only Stage 1 不会误带入 segmentation。
+# 设置 M3D_ACTIVE_TASKS_ONLY=0 可恢复“生成所有任务”的旧行为。
 ARGS=(--config "${CONFIG}" --splits "${SPLIT_ARGS[@]}")
+[[ "${M3D_ACTIVE_TASKS_ONLY:-1}" != "0" ]] && ARGS+=(--active-tasks-only)
 [[ "${M3D_SKIP_FILE_VALIDATION:-0}" == "1" ]] && ARGS+=(--no-verify-files)
+[[ -n "${MANIFEST_OUTPUT_DIR}" ]] && \
+    ARGS+=(--output-dir "${MANIFEST_OUTPUT_DIR}")
 
 python -m m3d.data.manifest "${ARGS[@]}"
 

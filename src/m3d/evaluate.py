@@ -179,7 +179,7 @@ class EvaluationEnvelopeCollator:
             batch=batch,
             questions=tuple(item.question for item in items),
             answers=tuple(item.answer for item in items),
-            metadata=tuple(item.provenance.metadata for item in items),
+            metadata=tuple(dict(item.provenance.metadata) for item in items),
         )
 
 

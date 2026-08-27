@@ -459,6 +459,63 @@ def _gradient_summary(module: nn.Module) -> GradientSummary:
     )
 
 
+def _global_gradient_contract_summaries(
+    runtime: Any,
+    summaries: Mapping[str, GradientSummary],
+) -> dict[str, GradientSummary]:
+    """Aggregate local FSDP shards before enforcing component contracts.
+
+    A valid sharded parameter may have zero local elements on one rank. Testing
+    ``has_nonzero_gradient`` independently per rank would let that rank raise
+    while peers continue into gradient-clipping collectives, producing a
+    misleading distributed deadlock.
+    """
+
+    gathered = runtime.all_gather_object(
+        {
+            name: dataclasses.asdict(summary)
+            for name, summary in summaries.items()
+        }
+    )
+    result: dict[str, GradientSummary] = {}
+    for name in summaries:
+        rank_values = [rank_payload[name] for rank_payload in gathered]
+        gradient_tensors = max(
+            int(value["gradient_parameter_tensors"]) for value in rank_values
+        )
+        all_finite = all(
+            int(value["gradient_parameter_tensors"])
+            == int(value["finite_gradient_parameter_tensors"])
+            for value in rank_values
+        )
+        result[name] = GradientSummary(
+            trainable_parameter_tensors=max(
+                int(value["trainable_parameter_tensors"])
+                for value in rank_values
+            ),
+            gradient_parameter_tensors=gradient_tensors,
+            finite_gradient_parameter_tensors=(
+                gradient_tensors if all_finite else max(gradient_tensors - 1, 0)
+            ),
+            nonzero_gradient_parameter_tensors=sum(
+                int(value["nonzero_gradient_parameter_tensors"])
+                for value in rank_values
+            ),
+            local_gradient_elements=sum(
+                int(value["local_gradient_elements"]) for value in rank_values
+            ),
+            local_nonzero_gradient_elements=sum(
+                int(value["local_nonzero_gradient_elements"])
+                for value in rank_values
+            ),
+            local_max_abs_gradient=max(
+                float(value["local_max_abs_gradient"])
+                for value in rank_values
+            ),
+        )
+    return result
+
+
 def _learning_rates_by_role(optimizer: torch.optim.Optimizer) -> dict[str, float]:
     by_role: dict[str, set[float]] = {}
     for group in optimizer.param_groups:
@@ -541,6 +598,33 @@ def _environment_report(runtime: Any, options: IntegrationOptions) -> Environmen
         raise EnvironmentContractError(
             "This integration test requires an initialized multi-process group."
         )
+    cpu_smoke = os.environ.get("M3D_CPU_DISTRIBUTED_SMOKE") == "1"
+    if cpu_smoke:
+        if dist.get_backend() != "gloo" or runtime.device.type != "cpu":
+            raise EnvironmentContractError(
+                "CPU smoke mode requires a Gloo process group on CPU, got "
+                f"backend={dist.get_backend()!r}, device={runtime.device}."
+            )
+        package_versions = _validate_versions(allow_mismatch=True)
+        return EnvironmentReport(
+            rank=int(runtime.rank),
+            local_rank=int(runtime.local_rank),
+            world_size=int(runtime.world_size),
+            hostname=socket.gethostname(),
+            process_id=os.getpid(),
+            python_version=platform.python_version(),
+            torch_version=str(torch.__version__),
+            torch_cuda_version=None,
+            cudnn_version=None,
+            nccl_version=None,
+            distributed_backend=str(dist.get_backend()),
+            gpu_name="CPU distributed smoke",
+            gpu_compute_capability=(0, 0),
+            gpu_total_memory_bytes=0,
+            bf16_supported=True,
+            flash_sdpa_enabled=False,
+            package_versions=package_versions,
+        )
     if dist.get_backend() != "nccl":
         raise EnvironmentContractError(
             f"Expected NCCL default process group, got {dist.get_backend()!r}."
@@ -609,7 +693,8 @@ def _run_flash_probe(runtime: Any) -> FlashProbeReport:
         scaled_dot_product_attention,
     )
 
-    shape = (1, 8, 128, 64)
+    cpu_smoke = os.environ.get("M3D_CPU_DISTRIBUTED_SMOKE") == "1"
+    shape = (1, 2, 16, 16) if cpu_smoke else (1, 8, 128, 64)
     generator = torch.Generator(device=runtime.device)
     generator.manual_seed(1729 + int(runtime.rank))
     q = torch.randn(
@@ -633,19 +718,21 @@ def _run_flash_probe(runtime: Any) -> FlashProbeReport:
         generator=generator,
         requires_grad=True,
     )
-    torch.cuda.synchronize(runtime.device)
+    if runtime.device.type == "cuda":
+        torch.cuda.synchronize(runtime.device)
     started = time.perf_counter()
     output = scaled_dot_product_attention(
         q,
         k,
         v,
-        policy=AttentionPolicy(backend="sdpa", require_flash=True),
+        policy=AttentionPolicy(backend="sdpa", require_flash=not cpu_smoke),
         training=True,
         dropout_p=0.0,
     )
     loss = output.float().square().mean()
     loss.backward()
-    torch.cuda.synchronize(runtime.device)
+    if runtime.device.type == "cuda":
+        torch.cuda.synchronize(runtime.device)
     elapsed = time.perf_counter() - started
 
     gradients = (q.grad, k.grad, v.grad)
@@ -669,7 +756,8 @@ def _run_flash_probe(runtime: Any) -> FlashProbeReport:
         elapsed_seconds=elapsed,
     )
     del q, k, v, output, loss
-    torch.cuda.empty_cache()
+    if runtime.device.type == "cuda":
+        torch.cuda.empty_cache()
     return report
 
 
@@ -894,8 +982,9 @@ def _run_two_microbatches(
             runtime.device,
             non_blocking=data_pipeline.non_blocking_transfer,
         )
-        torch.cuda.reset_peak_memory_stats(runtime.device)
-        torch.cuda.synchronize(runtime.device)
+        if runtime.device.type == "cuda":
+            torch.cuda.reset_peak_memory_stats(runtime.device)
+            torch.cuda.synchronize(runtime.device)
         started = time.perf_counter()
 
         with distributed_model.gradient_sync(enabled=True):
@@ -920,9 +1009,13 @@ def _run_two_microbatches(
             name: _gradient_summary(module)
             for name, module in modules.items()
         }
+        contract_summaries = _global_gradient_contract_summaries(
+            runtime,
+            summaries,
+        )
         _validate_gradient_contract(
             task=gpu_batch.task.value,
-            summaries=summaries,
+            summaries=contract_summaries,
         )
 
         gradient_norm = distributed_model.clip_grad_norm_(
@@ -933,7 +1026,8 @@ def _run_two_microbatches(
         optimizer.zero_grad(set_to_none=True)
         data_pipeline.commit_batch(cpu_batch)
 
-        torch.cuda.synchronize(runtime.device)
+        if runtime.device.type == "cuda":
+            torch.cuda.synchronize(runtime.device)
         elapsed = time.perf_counter() - started
         language_loss, dice_loss, bce_loss = _microbatch_metrics(output)
 
@@ -1001,7 +1095,8 @@ def _run_two_microbatches(
         observed_tasks.append(gpu_batch.task.value)
 
         del gpu_batch, output, backward_loss, gradient_norm
-        torch.cuda.empty_cache()
+        if runtime.device.type == "cuda":
+            torch.cuda.empty_cache()
 
         if len(reports) == 2:
             break
@@ -1133,9 +1228,16 @@ def run_integration(options: IntegrationOptions) -> IntegrationReport | None:
             distributed_model.unwrapped_model,
             config,
             distributed_strategy=distributed_model.strategy,
-            allow_unfused_fallback=(options.strategy == "fsdp2"),
+            allow_unfused_fallback=(
+                options.strategy == "fsdp2"
+                or os.environ.get("M3D_CPU_DISTRIBUTED_SMOKE") == "1"
+            ),
         )
-        if options.strategy == "ddp" and not optimizer_report.fused_enabled:
+        if (
+            options.strategy == "ddp"
+            and os.environ.get("M3D_CPU_DISTRIBUTED_SMOKE") != "1"
+            and not optimizer_report.fused_enabled
+        ):
             raise EnvironmentContractError(
                 "DDP integration requires fused AdamW, but it was not enabled: "
                 f"{optimizer_report.fused_fallback_reason!r}."
@@ -1431,6 +1533,40 @@ def _run_self_test() -> dict[str, Any]:
     empty_summary = _gradient_summary(empty)
     assert not empty_summary.has_gradient
 
+    empty_shard = GradientSummary(
+        trainable_parameter_tensors=1,
+        gradient_parameter_tensors=1,
+        finite_gradient_parameter_tensors=1,
+        nonzero_gradient_parameter_tensors=0,
+        local_gradient_elements=0,
+        local_nonzero_gradient_elements=0,
+        local_max_abs_gradient=0.0,
+    )
+    populated_shard = GradientSummary(
+        trainable_parameter_tensors=1,
+        gradient_parameter_tensors=1,
+        finite_gradient_parameter_tensors=1,
+        nonzero_gradient_parameter_tensors=1,
+        local_gradient_elements=8,
+        local_nonzero_gradient_elements=4,
+        local_max_abs_gradient=0.5,
+    )
+
+    class _GatherRuntime:
+        def all_gather_object(self, _: Any) -> list[dict[str, dict[str, Any]]]:
+            return [
+                {"component": dataclasses.asdict(populated_shard)},
+                {"component": dataclasses.asdict(empty_shard)},
+            ]
+
+    aggregated = _global_gradient_contract_summaries(
+        _GatherRuntime(),
+        {"component": empty_shard},
+    )["component"]
+    assert aggregated.has_nonzero_gradient
+    assert aggregated.all_gradients_finite
+    assert aggregated.local_gradient_elements == 8
+
     parser_options, self_test = _parse_options(
         [
             "--strategy",
@@ -1461,6 +1597,7 @@ def _run_self_test() -> dict[str, Any]:
         "task_weights": weights,
         "gradient_summary": summary.to_dict(),
         "empty_gradient_detected": True,
+        "fsdp_empty_shard_aggregation": True,
         "cli_parse": True,
         "atomic_json_roundtrip": True,
     }

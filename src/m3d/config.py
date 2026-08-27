@@ -29,6 +29,7 @@ import yaml
 
 
 CONFIG_SCHEMA_VERSION = 1
+LATEST_CHECKPOINT_SENTINEL = "latest"
 
 T = TypeVar("T")
 
@@ -204,6 +205,10 @@ class LearningRateConfig:
 @dataclass(slots=True)
 class OptimizationConfig:
     stage: TrainingStage = "lora_finetune"
+    # The original projector-pretraining recipe also updated the resized
+    # language embedding/lm-head tables.  Set this to false for a strict
+    # projector-only stage in which mm_projector is the sole trainable module.
+    projector_pretrain_train_token_embeddings: bool = True
     epochs: float = 5.0
     per_device_batch_size: int = 1
     gradient_accumulation_steps: int = 4
@@ -255,7 +260,10 @@ class FSDP2Config:
 @dataclass(slots=True)
 class DistributedConfig:
     strategy: DistributedStrategy = "ddp"
-    backend: Literal["nccl"] = "nccl"
+    # ``gloo`` is accepted only by the explicitly gated local CPU integration
+    # harness.  The production runtime still rejects it unless
+    # M3D_CPU_DISTRIBUTED_SMOKE=1 is present.
+    backend: Literal["nccl", "gloo"] = "nccl"
     timeout_seconds: int = 1800
     ddp: DDPConfig = field(default_factory=DDPConfig)
     fsdp2: FSDP2Config = field(default_factory=FSDP2Config)
@@ -392,6 +400,10 @@ class ExperimentConfig:
         stage = self.optimization.stage
         if stage == "projector_pretrain" and lora.enabled:
             errors.append("projector_pretrain must set model.lora.enabled=false")
+        if stage == "projector_pretrain" and self.model.segmentation.enabled:
+            errors.append(
+                "projector_pretrain must set model.segmentation.enabled=false"
+            )
         if stage == "lora_finetune" and not lora.enabled:
             errors.append("lora_finetune requires model.lora.enabled=true")
         if stage in {"segmentation_finetune", "joint_finetune"}:
@@ -440,8 +452,6 @@ class ExperimentConfig:
 
         if self.data.num_workers < 0:
             errors.append("data.num_workers cannot be negative")
-        if self.data.num_workers == 0 and self.data.persistent_workers:
-            errors.append("persistent_workers requires data.num_workers > 0")
         if self.data.num_workers > 0 and self.data.prefetch_factor <= 0:
             errors.append("data.prefetch_factor must be positive")
 
@@ -463,7 +473,11 @@ class ExperimentConfig:
                 errors.append(f"learning rate {group_name} cannot be negative")
 
         if self.distributed.strategy == "ddp":
-            if task_sampling.enabled and not self.distributed.ddp.find_unused_parameters:
+            if (
+                task_sampling.enabled
+                and self.model.segmentation.enabled
+                and not self.distributed.ddp.find_unused_parameters
+            ):
                 errors.append(
                     "DDP task-homogeneous batches conditionally skip segmentation modules; "
                     "set distributed.ddp.find_unused_parameters=true for the first correct "
@@ -505,7 +519,13 @@ class ExperimentConfig:
         self.data.paths.data_root = resolve(self.data.paths.data_root) or ""
         self.data.local_cache_root = resolve(self.data.local_cache_root)
         self.checkpoint.output_dir = resolve(self.checkpoint.output_dir) or ""
-        self.checkpoint.resume_from = resolve(self.checkpoint.resume_from)
+        resume_from = self.checkpoint.resume_from
+        self.checkpoint.resume_from = (
+            LATEST_CHECKPOINT_SENTINEL
+            if resume_from is not None
+            and resume_from.strip() == LATEST_CHECKPOINT_SENTINEL
+            else resolve(resume_from)
+        )
         self.logging.tensorboard_dir = resolve(self.logging.tensorboard_dir) or ""
 
         self.model.main_vision.checkpoint_path = resolve(
@@ -576,7 +596,11 @@ class ExperimentConfig:
             ("model.lora.adapter_checkpoint_path", self.model.lora.adapter_checkpoint_path),
             ("checkpoint.resume_from", self.checkpoint.resume_from),
         ):
-            if path_value is not None and not Path(path_value).exists():
+            if (
+                path_value is not None
+                and path_value != LATEST_CHECKPOINT_SENTINEL
+                and not Path(path_value).exists()
+            ):
                 missing.append(f"{name}: {path_value}")
 
         if missing:

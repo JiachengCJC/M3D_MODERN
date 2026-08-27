@@ -3556,6 +3556,7 @@ bash scripts/00_setup_environment.sh
 module load python/3.10.9
 source .venv/bin/activate
 python -m pip install -e . --no-deps
+
 # 4. Preflight
 qsub scripts/02_preflight.pbs
 
@@ -3565,27 +3566,75 @@ qsub scripts/12_prepare_manifests_aspire2a.pbs
 # 6. Release audit
 python scripts/13_release_audit.py --root . --output release_audit.json
 
-# 7. DDP runtime integration
+# 检查
+## 7. DDP runtime integration
 qsub scripts/05_aspire2a_integration.pbs
 
-# 8. DDP checkpoint integration
+## 8. DDP checkpoint integration
 qsub -v M3D_INTEGRATION_SUITE=checkpoint scripts/05_aspire2a_integration.pbs
 
-# 9. Startup-only
+## 9. Startup-only
 qsub -v M3D_STARTUP_ONLY=1 scripts/06_train_aspire2a.pbs
 
 # 10. 正式训练
-qsub scripts/06_train_aspire2a.pbs
+## DDP
+qsub -v M3D_LOCAL_FILES_ONLY=1 scripts/06_train_aspire2a.pbs
+
+## FSDP2
+qsub -v M3D_STRATEGY=fsdp2,M3D_CHECKPOINT_ASYNC=0,M3D_LOCAL_FILES_ONLY=1 scripts/06_train_aspire2a.pbs
 
 # 11. 断点续训
-qsub -v M3D_RESUME_FROM=latest scripts/06_train_aspire2a.pbs
+## DDP
+qsub -v M3D_RESUME_FROM=latest,M3D_LOCAL_FILES_ONLY=1 scripts/06_train_aspire2a.pbs
+
+## FSDP2
+qsub -v M3D_RESUME_FROM=latest,M3D_STRATEGY=fsdp2,M3D_CHECKPOINT_ASYNC=0,M3D_LOCAL_FILES_ONLY=1 scripts/06_train_aspire2a.pbs
 
 # 12. 导出
-qsub -v M3D_CHECKPOINT=/absolute/path/to/training-output scripts/08_export_aspire2a.pbs
+export M3D_ROOT="$(pwd -P)"
+export RUN_DIR="$M3D_ROOT/outputs/m3d-phi3-joint-modernized-a100"
+export EXPORT_DIR="$M3D_ROOT/outputs/m3d-phi3-joint-export-merged"
 
-# 13. 推理
-qsub -v M3D_EXPORT_DIR=/absolute/path/to/export,M3D_IMAGE=/absolute/path/to/ct.nii.gz,M3D_QUESTION_FILE=/absolute/path/to/question.txt scripts/09_inference_aspire2a.pbs
+EXPORT_JOB=$(
+  qsub \
+    -S /bin/bash \
+    -v "M3D_CHECKPOINT=${RUN_DIR},M3D_OUTPUT_DIR=${EXPORT_DIR},M3D_LOCAL_FILES_ONLY=1,M3D_STRATEGY=ddp,M3D_EXPORT_FORMAT=merged" \
+    scripts/08_export_aspire2a.pbs
+)
 
-# 14. 评估
-qsub -v M3D_EXPORT_DIR=/absolute/path/to/export scripts/07_evaluate_aspire2a.pbs
+echo "$EXPORT_JOB"
+
+## 如果训练 checkpoint 是 FSDP2，才改成：
+M3D_STRATEGY=fsdp2
+
+## 导出结束后验证：
+qstat -xf "$EXPORT_JOB" |
+  egrep 'job_state|Exit_status|resources_used.walltime'
+
+test -s "$EXPORT_DIR/COMPLETED.json" &&
+  echo "COMPLETED.json OK"
+
+test -s "$EXPORT_DIR/language_merged/config.json" &&
+  echo "language_merged/config.json OK"
+
+test -s "$EXPORT_DIR/export_manifest.json" &&
+  echo "export_manifest.json OK"
+
+# 13. 评估, 等待导出成功后：
+export M3D_ROOT="$(pwd -P)"
+export EXPORT_DIR="$M3D_ROOT/outputs/m3d-phi3-joint-export-merged"
+
+qsub -v "M3D_EXPORT_DIR=${EXPORT_DIR},M3D_LOCAL_FILES_ONLY=1" \
+  scripts/07_evaluate_aspire2a.pbs
+
+## 只评估 segmentation：
+qsub -v "M3D_EXPORT_DIR=${EXPORT_DIR},M3D_TASKS=segmentation,M3D_LOCAL_FILES_ONLY=1" \
+  scripts/07_evaluate_aspire2a.pbs
+
+# 14. 单病例推理
+export IMAGE=/scratch/users/nus/e1129906/M3D_MODERN/Data/test/test_00.npy
+export QUESTION_FILE=/scratch/users/nus/e1129906/M3D_MODERN/Data/test/test_00.txt
+
+qsub -v "M3D_EXPORT_DIR=${EXPORT_DIR},M3D_IMAGE=${IMAGE},M3D_QUESTION_FILE=${QUESTION_FILE},M3D_MODE=auto,M3D_LOCAL_FILES_ONLY=1" \
+  scripts/09_inference_aspire2a.pbs
 ```

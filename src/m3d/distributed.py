@@ -63,6 +63,7 @@ from .runtime import RuntimeContext
 DistributedStrategy = Literal["ddp", "fsdp2"]
 T = TypeVar("T")
 BuildT = TypeVar("BuildT")
+_FSDP_OUTPUT_PYTREES_REGISTERED = False
 
 
 class DistributedModelError(RuntimeError):
@@ -375,6 +376,45 @@ def _validate_ddp_contract(model: M3DModel, config: ExperimentConfig) -> None:
         raise DistributedModelError("DDP bucket_cap_mb must be positive.")
 
 
+class _DDPForwardAdapter(nn.Module):
+    """Expose only the backward root tensor to PyTorch 2.6 DDP.
+
+    ``M3DModelOutput`` is a typed dataclass containing diagnostic tensors that
+    are intentionally not all part of the training objective (for example the
+    SegVol IoU-quality head). PyTorch 2.6 DDP cannot distinguish those tensors
+    reliably when traversing a custom return object for unused-parameter
+    detection. Returning only ``loss_output.total`` gives the reducer the exact
+    autograd root while a short-lived side channel preserves the public typed
+    result for :class:`DistributedM3DModel`.
+    """
+
+    def __init__(self, model: M3DModel) -> None:
+        super().__init__()
+        self.model = model
+        self._last_output: M3DModelOutput | None = None
+
+    def forward(self, *args: Any, **kwargs: Any) -> Tensor:
+        if self._last_output is not None:
+            raise DistributedModelError(
+                "A previous DDP forward output was not consumed."
+            )
+        output = self.model(*args, **kwargs)
+        self._last_output = output
+        if output.loss_output is not None:
+            return output.loss_output.total
+        # Evaluation normally runs under no_grad, so reducer traversal is
+        # inactive. Return a real graph tensor rather than allocating a
+        # detached sentinel in case callers use grad-enabled diagnostics.
+        return output.language_output.last_hidden_state
+
+    def take_output(self) -> M3DModelOutput:
+        output = self._last_output
+        self._last_output = None
+        if output is None:
+            raise DistributedModelError("DDP forward produced no typed M3D output.")
+        return output
+
+
 def _wrap_ddp(
     model: M3DModel,
     runtime: RuntimeContext,
@@ -383,16 +423,19 @@ def _wrap_ddp(
     model.to(runtime.device)
 
     ddp_config = runtime.config.distributed.ddp
-    wrapped = DistributedDataParallel(
-        model,
-        device_ids=[runtime.local_rank],
-        output_device=runtime.local_rank,
+    ddp_kwargs: dict[str, Any] = dict(
         broadcast_buffers=False,
         bucket_cap_mb=int(ddp_config.bucket_cap_mb),
         find_unused_parameters=bool(ddp_config.find_unused_parameters),
         gradient_as_bucket_view=bool(ddp_config.gradient_as_bucket_view),
         static_graph=bool(ddp_config.static_graph),
     )
+    if runtime.device.type == "cuda":
+        ddp_kwargs.update(
+            device_ids=[runtime.local_rank],
+            output_device=runtime.local_rank,
+        )
+    wrapped = DistributedDataParallel(_DDPForwardAdapter(model), **ddp_kwargs)
     # PyTorch 2.6 DDP always performs its initial parameter sync during
     # construction; the configurable ``init_sync`` keyword only exists in newer
     # releases. Since DDP buffer broadcasting is disabled, synchronize persistent
@@ -462,6 +505,96 @@ def _append_unique(
     seen.add(identity)
 
 
+def _append_mixed_dtype_lora_groups(
+    destination: list[_NamedModule],
+    seen: set[int],
+    *,
+    layer_name: str,
+    layer: nn.Module,
+) -> None:
+    """Split PEFT LoRA targets whose base and adapters have different dtypes.
+
+    ``transformers`` loads the frozen Phi-3 weights in BF16 while PEFT creates
+    trainable LoRA A/B weights in FP32. FSDP2 requires every individual
+    ``fully_shard`` group to have one original parameter dtype. The A/B
+    adapter Linear modules are real forward boundaries, so sharding those
+    leaves their FP32 parameters in independent groups while the containing
+    decoder-layer group owns the BF16 base and normalization parameters.
+
+    Keeping the adapter groups in FP32 is intentional. The mixed-precision
+    policy casts it to BF16 for forward compute while its original parameters
+    and optimizer state retain FP32 precision.
+    """
+
+    for relative_name, candidate in layer.named_modules():
+        if not relative_name:
+            continue
+        base_layer = getattr(candidate, "base_layer", None)
+        lora_a = getattr(candidate, "lora_A", None)
+        lora_b = getattr(candidate, "lora_B", None)
+        if not (
+            isinstance(base_layer, nn.Module)
+            and isinstance(lora_a, nn.Module)
+            and isinstance(lora_b, nn.Module)
+        ):
+            continue
+
+        parameter_dtypes = {
+            parameter.dtype for parameter in candidate.parameters(recurse=True)
+        }
+        if len(parameter_dtypes) <= 1:
+            continue
+
+        base_dtypes = {parameter.dtype for parameter in base_layer.parameters()}
+        adapter_modules = [
+            (f"lora_A.{name}", module)
+            for name, module in lora_a.named_children()
+            if any(True for _ in module.parameters())
+        ] + [
+            (f"lora_B.{name}", module)
+            for name, module in lora_b.named_children()
+            if any(True for _ in module.parameters())
+        ]
+        adapter_parameter_ids = {
+            id(parameter)
+            for _, module in adapter_modules
+            for parameter in module.parameters()
+        }
+        base_parameter_ids = {id(parameter) for parameter in base_layer.parameters()}
+        remaining_parameter_ids = {
+            id(parameter) for parameter in candidate.parameters(recurse=True)
+        }.difference(base_parameter_ids, adapter_parameter_ids)
+        if not base_dtypes or not adapter_modules:
+            raise DistributedModelError(
+                f"Mixed-dtype LoRA target {layer_name}.{relative_name} does not "
+                "expose both base and adapter parameters."
+            )
+        adapter_dtype_sets = [
+            {parameter.dtype for parameter in module.parameters()}
+            for _, module in adapter_modules
+        ]
+        if (
+            len(base_dtypes) != 1
+            or any(len(dtypes) != 1 for dtypes in adapter_dtype_sets)
+            or remaining_parameter_ids
+        ):
+            raise DistributedModelError(
+                f"LoRA target {layer_name}.{relative_name} cannot be split into "
+                "uniform-dtype FSDP2 groups: "
+                f"base={sorted(map(str, base_dtypes))}, "
+                f"adapters={[sorted(map(str, value)) for value in adapter_dtype_sets]}, "
+                f"unclassified_parameter_count={len(remaining_parameter_ids)}."
+            )
+
+        for adapter_name, adapter_module in adapter_modules:
+            _append_unique(
+                destination,
+                seen,
+                name=f"{layer_name}.{relative_name}.{adapter_name}",
+                module=adapter_module,
+            )
+
+
 def build_fsdp2_wrap_plan(
     model: M3DModel,
     config: ExperimentConfig,
@@ -491,21 +624,57 @@ def build_fsdp2_wrap_plan(
         module=model.main_image_encoder,
     )
 
-    if fsdp.wrap_language_layers:
-        for index, layer in enumerate(_language_decoder_layers(model)):
-            _append_unique(
-                plan,
-                seen,
-                name=f"language.decoder.layers.{index}",
-                module=layer,
-            )
-    # The causal-LM root groups embeddings, final norm, LM head, PEFT wrappers,
-    # and any remaining parameters while excluding already-sharded layers.
+    # M3D intentionally bypasses ``causal_lm.forward``: it calls the input
+    # embeddings, decoder, and output head independently to inject visual
+    # embeddings and avoid allocating full-vocabulary logits. Each of those
+    # actual forward boundaries therefore needs its own FSDP2 hook. Wrapping
+    # only ``causal_lm`` would leave its DTensor parameters sharded because that
+    # parent's pre-forward hook is never entered.
+    input_embeddings = model.language_model.get_input_embeddings()
+    output_embeddings = model.language_model.get_output_embeddings()
+    shared_embedding_parameters = {
+        id(parameter) for parameter in input_embeddings.parameters()
+    }.intersection(id(parameter) for parameter in output_embeddings.parameters())
+    if shared_embedding_parameters:
+        raise DistributedModelError(
+            "FSDP2 requires untied Phi-3 input/output embedding parameters "
+            "because M3D invokes the embedding and LM head at separate forward "
+            "boundaries."
+        )
     _append_unique(
         plan,
         seen,
-        name="language.causal_lm",
-        module=model.language_model.causal_lm,
+        name="language.input_embeddings",
+        module=input_embeddings,
+    )
+
+    decoder = model.language_model.get_decoder()
+    if fsdp.wrap_language_layers:
+        for index, layer in enumerate(_language_decoder_layers(model)):
+            layer_name = f"language.decoder.layers.{index}"
+            _append_mixed_dtype_lora_groups(
+                plan,
+                seen,
+                layer_name=layer_name,
+                layer=layer,
+            )
+            _append_unique(
+                plan,
+                seen,
+                name=layer_name,
+                module=layer,
+            )
+    _append_unique(
+        plan,
+        seen,
+        name="language.decoder",
+        module=decoder,
+    )
+    _append_unique(
+        plan,
+        seen,
+        name="language.output_embeddings",
+        module=output_embeddings,
     )
 
     _append_unique(
@@ -596,6 +765,115 @@ def _import_fsdp2() -> tuple[Any, Any, Any, Any, Any]:
     return fully_shard, FSDPModule, MixedPrecisionPolicy, OffloadPolicy, CPUOffloadPolicy
 
 
+def _register_fsdp_output_pytrees() -> None:
+    """Expose tensors inside frozen model-output dataclasses to FSDP2.
+
+    PyTorch 2.6 FSDP2 installs its pre-backward unshard hook by flattening each
+    wrapped module's output. Plain dataclasses are otherwise treated as opaque
+    leaves, so no hook is attached and backward later reaches parameters whose
+    full storage was released by post-forward resharding.
+    """
+
+    global _FSDP_OUTPUT_PYTREES_REGISTERED
+    if _FSDP_OUTPUT_PYTREES_REGISTERED:
+        return
+
+    from torch.utils._pytree import register_pytree_node
+
+    from .model.language import (
+        CausalLanguageLoss,
+        LanguageModelOutput,
+        MultimodalEmbeddingOutput,
+    )
+    from .model.loss import M3DLossOutput, SegmentationLossOutput
+    from .model.projector import ProjectorOutput
+    from .model.segmentation_prompt import SegmentationPromptOutput
+    from .model.segvol import SegVolOutput
+    from .model.segvol_mask_decoder import SegVolMaskDecoderOutput
+    from .model.segvol_prompt_encoder import SegVolPromptOutput
+    from .model.vit3d import VisionEncoderOutput
+
+    output_types = (
+        MultimodalEmbeddingOutput,
+        CausalLanguageLoss,
+        LanguageModelOutput,
+        SegmentationLossOutput,
+        M3DLossOutput,
+        ProjectorOutput,
+        SegmentationPromptOutput,
+        SegVolPromptOutput,
+        SegVolMaskDecoderOutput,
+        SegVolOutput,
+        VisionEncoderOutput,
+        M3DModelOutput,
+    )
+    for output_type in output_types:
+        field_names = tuple(field.name for field in dataclasses.fields(output_type))
+
+        def _flatten(
+            value: Any,
+            names: tuple[str, ...] = field_names,
+        ) -> tuple[list[Any], tuple[str, ...]]:
+            return [getattr(value, name) for name in names], names
+
+        def _unflatten(
+            values: Iterable[Any],
+            names: tuple[str, ...],
+            cls: type[Any] = output_type,
+        ) -> Any:
+            return cls(**dict(zip(names, values, strict=True)))
+
+        try:
+            register_pytree_node(
+                output_type,
+                _flatten,
+                _unflatten,
+                serialized_type_name=(
+                    f"{output_type.__module__}.{output_type.__qualname__}"
+                ),
+            )
+        except ValueError as exc:
+            # Another import path may have registered the exact same class.
+            if "already registered" not in str(exc):
+                raise
+    _FSDP_OUTPUT_PYTREES_REGISTERED = True
+
+
+def _install_torch26_cpu_stream_compatibility() -> None:
+    """Provide synchronous stream helpers missing from PyTorch 2.6 CPU.
+
+    Composable FSDP2 uses the CUDA-shaped ``record_event``, ``wait_event``, and
+    ``wait_stream`` stream API even with a CPU device mesh. PyTorch 2.6's
+    ``torch.cpu.Stream`` lacks those convenience methods. CPU execution is
+    synchronous and FSDP separately waits for asynchronous Gloo ``Work``
+    handles, so the stream dependencies are no-ops and ``record_event`` returns
+    ``None`` (the value FSDP already uses for a synchronous operation). This
+    compatibility layer is reached only by the explicitly gated local CPU/Gloo
+    smoke mode; production ASPIRE 2A CUDA streams are untouched.
+    """
+
+    stream_type = torch.cpu.Stream
+    if not hasattr(stream_type, "record_event"):
+        def _record_event(
+            stream: Any,
+            event: Any | None = None,
+        ) -> None:
+            del stream, event
+            return None
+
+        setattr(stream_type, "record_event", _record_event)
+    if not hasattr(stream_type, "wait_event"):
+        def _wait_event(stream: Any, event: Any) -> None:
+            del stream, event
+
+        setattr(stream_type, "wait_event", _wait_event)
+    if not hasattr(stream_type, "wait_stream"):
+        def _wait_stream(stream: Any, other: Any) -> None:
+            del stream, other
+
+        setattr(stream_type, "wait_stream", _wait_stream)
+
+
 def _wrap_fsdp2(
     model: M3DModel,
     runtime: RuntimeContext,
@@ -614,6 +892,9 @@ def _wrap_fsdp2(
         )
     if runtime.device_mesh is None:
         raise DistributedModelError("FSDP2 requires RuntimeContext.device_mesh.")
+    _register_fsdp_output_pytrees()
+    if runtime.device.type == "cpu":
+        _install_torch26_cpu_stream_compatibility()
 
     fully_shard, _, MixedPrecisionPolicy, OffloadPolicy, CPUOffloadPolicy = _import_fsdp2()
     policy = MixedPrecisionPolicy(
@@ -632,20 +913,55 @@ def _wrap_fsdp2(
     records: list[FSDPWrapGroup] = []
     assigned_parameter_ids: set[int] = set()
     for item in build_fsdp2_wrap_plan(model, runtime.config):
+        unassigned_parameters = {
+            id(parameter): parameter
+            for parameter in item.module.parameters(recurse=True)
+            if id(parameter) not in assigned_parameter_ids
+        }
+        original_dtypes = {
+            parameter.dtype for parameter in unassigned_parameters.values()
+        }
+        if len(original_dtypes) > 1:
+            raise DistributedModelError(
+                f"FSDP2 group {item.name!r} has non-uniform original parameter "
+                f"dtypes: {sorted(map(str, original_dtypes))}."
+            )
         (
             tensor_count,
             element_count,
             trainable_count,
-            newly_assigned_ids,
+            _,
         ) = _unassigned_parameter_stats(item.module, assigned_parameter_ids)
+        # PEFT's tiny FP32 A/B weights are cast to BF16 during forward.
+        # Keeping those full parameters alive until backward avoids a
+        # PyTorch-2.6 version-counter conflict when an adapter is resharded and
+        # then materialized again. Their footprint is negligible relative to
+        # the sharded Phi-3 base; all large groups retain configured resharding.
+        # PyTorch 2.6 CPU composable FSDP has the same version-counter issue for
+        # arbitrary Linear views, so the explicitly gated local smoke mode
+        # keeps every tiny-fixture group full only until backward completes.
+        is_lora_adapter_group = (
+            ".lora_A." in item.name or ".lora_B." in item.name
+        )
+        reshard_after_forward = bool(
+            runtime.device.type != "cpu"
+            and fsdp_config.reshard_after_forward
+            and not is_lora_adapter_group
+        )
         fully_shard(
             item.module,
             mesh=runtime.device_mesh,
-            reshard_after_forward=bool(fsdp_config.reshard_after_forward),
+            reshard_after_forward=reshard_after_forward,
             mp_policy=policy,
             offload_policy=offload_policy,
         )
-        assigned_parameter_ids.update(newly_assigned_ids)
+        # ``fully_shard`` replaces this group's original Parameters with
+        # DTensor-backed Parameters. Track the post-wrap identities; retaining
+        # only ``newly_assigned_ids`` would make a later parent group mistake
+        # already-sharded child parameters for new ownership.
+        assigned_parameter_ids.update(
+            id(parameter) for parameter in item.module.parameters(recurse=True)
+        )
         records.append(
             FSDPWrapGroup(
                 name=item.name,
@@ -653,7 +969,7 @@ def _wrap_fsdp2(
                 parameter_tensor_count=tensor_count,
                 parameter_element_count=element_count,
                 trainable_parameter_count=trainable_count,
-                reshard_after_forward=bool(fsdp_config.reshard_after_forward),
+                reshard_after_forward=reshard_after_forward,
             )
         )
 
@@ -717,7 +1033,23 @@ class DistributedM3DModel(nn.Module):
         return self.is_fsdp2
 
     def forward(self, *args: Any, **kwargs: Any) -> M3DModelOutput:
-        output = self.wrapped_model(*args, **kwargs)
+        wrapped_output = self.wrapped_model(*args, **kwargs)
+        if self.is_ddp:
+            if not isinstance(self.wrapped_model, DistributedDataParallel):
+                raise DistributedModelError("DDP strategy does not hold a DDP wrapper.")
+            adapter = self.wrapped_model.module
+            if not isinstance(adapter, _DDPForwardAdapter):
+                raise DistributedModelError(
+                    "DDP wrapper does not contain the M3D forward adapter."
+                )
+            if not isinstance(wrapped_output, Tensor):
+                raise DistributedModelError(
+                    "DDP reducer marker is not a Tensor: "
+                    f"{type(wrapped_output).__name__}."
+                )
+            output = adapter.take_output()
+        else:
+            output = wrapped_output
         if not isinstance(output, M3DModelOutput):
             raise DistributedModelError(
                 "Distributed M3D forward returned an unexpected type: "
@@ -950,11 +1282,102 @@ def _test_layout_summary() -> dict[str, Any]:
     }
 
 
+def _test_mixed_dtype_lora_group_split() -> dict[str, Any]:
+    class _FakeLoRATarget(nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.base_layer = nn.Linear(4, 4, bias=False).to(torch.bfloat16)
+            self.lora_A = nn.ModuleDict({"default": nn.Linear(4, 2, bias=False)})
+            self.lora_B = nn.ModuleDict({"default": nn.Linear(2, 4, bias=False)})
+
+    layer = nn.Module()
+    layer.target = _FakeLoRATarget()
+    layer.norm = nn.LayerNorm(4).to(torch.bfloat16)
+    plan: list[_NamedModule] = []
+    seen: set[int] = set()
+    _append_mixed_dtype_lora_groups(
+        plan,
+        seen,
+        layer_name="language.decoder.layers.0",
+        layer=layer,
+    )
+    _append_unique(
+        plan,
+        seen,
+        name="language.decoder.layers.0",
+        module=layer,
+    )
+
+    assigned: set[int] = set()
+    group_dtypes: list[set[torch.dtype]] = []
+    for item in plan:
+        parameters = [
+            parameter
+            for parameter in item.module.parameters()
+            if id(parameter) not in assigned
+        ]
+        group_dtypes.append({parameter.dtype for parameter in parameters})
+        assigned.update(id(parameter) for parameter in parameters)
+    if not (
+        plan[0].name.endswith(".lora_A.default")
+        and plan[1].name.endswith(".lora_B.default")
+    ):
+        raise AssertionError(
+            "Mixed-dtype LoRA adapter groups were not ordered A then B."
+        )
+    if any(len(dtypes) > 1 for dtypes in group_dtypes):
+        raise AssertionError(f"LoRA split left a mixed-dtype group: {group_dtypes!r}.")
+    if group_dtypes[:3] != [
+        {torch.float32},
+        {torch.float32},
+        {torch.bfloat16},
+    ]:
+        raise AssertionError(f"Unexpected LoRA FSDP2 dtype split: {group_dtypes!r}.")
+    return {
+        "mixed_dtype_lora_split": True,
+        "lora_group_dtypes": [
+            sorted(map(str, dtypes)) for dtypes in group_dtypes
+        ],
+    }
+
+
+def _test_fsdp_output_pytree_registration() -> dict[str, Any]:
+    from torch.utils._pytree import tree_flatten
+
+    from .model.segvol_prompt_encoder import SegVolPromptOutput
+
+    _register_fsdp_output_pytrees()
+    output = SegVolPromptOutput(
+        sparse_embeddings=torch.randn(1, 1, 4, requires_grad=True),
+        dense_embeddings=torch.randn(1, 4, 1, 1, 1, requires_grad=True),
+        dense_positional_encoding=torch.randn(
+            1,
+            4,
+            1,
+            1,
+            1,
+            requires_grad=True,
+        ),
+    )
+    leaves, _ = tree_flatten(output)
+    tensors = [leaf for leaf in leaves if isinstance(leaf, Tensor)]
+    if len(tensors) != 3 or not all(tensor.requires_grad for tensor in tensors):
+        raise AssertionError(
+            "FSDP2 cannot see every differentiable SegVolPromptOutput tensor."
+        )
+    return {
+        "fsdp_output_dataclass_pytree": True,
+        "segvol_prompt_tensor_leaves": len(tensors),
+    }
+
+
 def run_self_test() -> Mapping[str, Any]:
     result: dict[str, Any] = {"status": "passed"}
     result.update(_test_synchronised_initialization())
     result.update(_test_persistent_buffer_filter())
     result.update(_test_layout_summary())
+    result.update(_test_mixed_dtype_lora_group_split())
+    result.update(_test_fsdp_output_pytree_registration())
     return result
 
 
