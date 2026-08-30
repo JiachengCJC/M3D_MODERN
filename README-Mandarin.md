@@ -3547,7 +3547,7 @@ SegVol 权重
 
 ```bash
 # 1. 进入项目
-cd /scratch/users/industry/theiahealth/theiahth/M3D-modernized
+cd /scratch/users/industry/theiahealth/theiahth/M3D-NSCC
 
 # 2. 建环境
 bash scripts/00_setup_environment.sh
@@ -3556,11 +3556,15 @@ bash scripts/00_setup_environment.sh
 module load python/3.10.9
 source .venv/bin/activate
 python -m pip install -e . --no-deps
-# 4. Preflight
+
+# 4. Preflight （检查 GPU、NCCL、Flash-SDPA）
 qsub scripts/02_preflight.pbs
 
 # 5. 生成 joint manifests
 qsub scripts/12_prepare_manifests_aspire2a.pbs
+### 查看作业状态
+qstat -u "$USER"
+tail -f logs/manifests/<作业ID>/manifest.log
 
 # 6. Release audit
 python scripts/13_release_audit.py --root . --output release_audit.json
