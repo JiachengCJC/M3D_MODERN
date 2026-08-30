@@ -86,9 +86,7 @@ model:
     enabled: false
     rank: 16
     target_modules:
-    - q_proj
-    - k_proj
-    - v_proj
+    - qkv_proj
     - o_proj
     - gate_up_proj
     - down_proj

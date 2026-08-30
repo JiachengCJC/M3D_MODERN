@@ -71,7 +71,11 @@ from torch.distributed.checkpoint.state_dict import (
 )
 from torch.distributed.checkpoint.stateful import Stateful
 
-from .config import CheckpointConfig, ExperimentConfig
+from .config import (
+    LATEST_CHECKPOINT_SENTINEL,
+    CheckpointConfig,
+    ExperimentConfig,
+)
 from .distributed import DistributedM3DModel
 from .optim import (
     optimizer_groups_by_name,
@@ -413,6 +417,43 @@ def _state_dict_options() -> StateDictOptions:
     )
 
 
+def _materialise_empty_lazy_optimizer_states(
+    optimizer_state: MutableMapping[str, Any],
+) -> None:
+    """Represent parameters AdamW has not seen yet with empty state mappings.
+
+    AdamW creates ``exp_avg``/``exp_avg_sq`` lazily on the first gradient.
+    Conditional M3D branches therefore have valid optimizer parameters with no
+    state at an early checkpoint, and the unsupervised SegVol IoU head may
+    remain lazy permanently. PyTorch 2.6 ``set_state_dict`` indexes every FQN
+    in each param group, so explicit empty mappings are required for an exact
+    load. ``Optimizer.load_state_dict`` preserves these as lazy empty states.
+    """
+
+    state = optimizer_state.get("state")
+    param_groups = optimizer_state.get("param_groups")
+    if not isinstance(state, MutableMapping) or not isinstance(param_groups, list):
+        raise CheckpointCompatibilityError(
+            "Optimizer state dictionary has an unexpected DCP structure."
+        )
+    for group in param_groups:
+        if not isinstance(group, Mapping):
+            raise CheckpointCompatibilityError(
+                "Optimizer param group is not a mapping."
+            )
+        parameters = group.get("params")
+        if not isinstance(parameters, list):
+            raise CheckpointCompatibilityError(
+                "Optimizer param group does not contain an FQN list."
+            )
+        for fqn in parameters:
+            if not isinstance(fqn, str) or not fqn:
+                raise CheckpointCompatibilityError(
+                    f"Optimizer parameter FQN is invalid: {fqn!r}."
+                )
+            state.setdefault(fqn, {})
+
+
 class _ModelOptimizerState(Stateful):
     """DCP Stateful wrapper using parallelism-aware state-dict APIs."""
 
@@ -462,6 +503,7 @@ class _ModelOptimizerState(Stateful):
                     "Exact resume requested optimizer state, but DCP checkpoint "
                     "does not contain it."
                 )
+            _materialise_empty_lazy_optimizer_states(optimizer_state)
             incompatible = set_state_dict(
                 self.model,
                 self.optimizer,
@@ -641,6 +683,20 @@ class CheckpointManager:
             and self.settings.save_rng_state
         )
 
+    @property
+    def _state_dict_model(self) -> nn.Module:
+        """Return the canonical model passed to PyTorch DCP state-dict APIs.
+
+        FSDP2 mutates the original M3D model in place, so its sharded module is
+        already ``unwrapped_model``. DDP, however, uses a reducer-only forward
+        adapter whose extra ``model.`` namespace must never become part of
+        durable model or optimizer FQNs.
+        """
+
+        if self.distributed_model.is_ddp:
+            return self.distributed_model.unwrapped_model
+        return self.distributed_model.wrapped_model
+
     def _prepare_output_directory(self) -> None:
         if self.runtime.is_main_process:
             self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -756,6 +812,11 @@ class CheckpointManager:
             "steps_per_epoch": self.data_pipeline.steps_per_epoch,
             "training_compatibility_sha256": self._compatibility_sha256,
             "optimizer_group_layout_sha256": optimizer_layout,
+            "lazy_optimizer_parameter_names": (
+                self._lazy_optimizer_parameter_names()
+                if self.settings.save_optimizer
+                else []
+            ),
             "scheduler": scheduler_state,
             "data_pipeline": data_state,
             "save_options": {
@@ -772,6 +833,39 @@ class CheckpointManager:
             "exact_resume_capable": self.exact_resume_capable,
         }
         return common
+
+    def _optimizer_parameters_by_name(self) -> dict[str, nn.Parameter]:
+        result: dict[str, nn.Parameter] = {}
+        for group in self.optimizer.param_groups:
+            names = group.get("param_names")
+            parameters = group.get("params")
+            if not isinstance(names, list) or not isinstance(parameters, list):
+                raise CheckpointCompatibilityError(
+                    "Optimizer groups must retain param_names metadata."
+                )
+            if len(names) != len(parameters):
+                raise CheckpointCompatibilityError(
+                    "Optimizer param_names and params lengths differ."
+                )
+            for name, parameter in zip(names, parameters, strict=True):
+                if not isinstance(name, str) or not isinstance(parameter, nn.Parameter):
+                    raise CheckpointCompatibilityError(
+                        "Optimizer parameter metadata is malformed."
+                    )
+                if name in result and result[name] is not parameter:
+                    raise CheckpointCompatibilityError(
+                        f"Optimizer parameter name {name!r} is duplicated."
+                    )
+                result[name] = parameter
+        return result
+
+    def _lazy_optimizer_parameter_names(self) -> list[str]:
+        by_name = self._optimizer_parameters_by_name()
+        return sorted(
+            name
+            for name, parameter in by_name.items()
+            if not self.optimizer.state.get(parameter)
+        )
 
     def _write_sidecars(self, temporary_path: Path) -> dict[str, Any]:
         # Rank 0 creates timestamp/host metadata once, then every rank uses the
@@ -831,7 +925,7 @@ class CheckpointManager:
         self._write_sidecars(temporary_path)
 
         app_state = _ModelOptimizerState(
-            self.distributed_model.wrapped_model,
+            self._state_dict_model,
             self.optimizer if self.settings.save_optimizer else None,
         )
         state: dict[str, Any] = {"application": app_state}
@@ -1033,6 +1127,11 @@ class CheckpointManager:
             shutil.rmtree(path)
 
     def resolve_resume_path(self, value: str | os.PathLike[str] | None = None) -> Path:
+        if (
+            value is not None
+            and str(value).strip() == LATEST_CHECKPOINT_SENTINEL
+        ):
+            value = None
         return resolve_checkpoint_path(
             self.output_dir if value is None else value,
         )
@@ -1072,14 +1171,39 @@ class CheckpointManager:
                 f"optimizer={has_optimizer}, scheduler={has_scheduler}, rng={has_rng}."
             )
 
+        lazy_names_raw = common.get("lazy_optimizer_parameter_names")
+        if has_optimizer and not isinstance(lazy_names_raw, list):
+            raise CheckpointCompatibilityError(
+                "Checkpoint is missing lazy optimizer parameter metadata."
+            )
+        lazy_names = (
+            []
+            if not has_optimizer
+            else [str(item) for item in cast(list[Any], lazy_names_raw)]
+        )
+        if len(lazy_names) != len(set(lazy_names)) or any(
+            not item for item in lazy_names
+        ):
+            raise CheckpointCompatibilityError(
+                "Checkpoint lazy optimizer parameter metadata is malformed."
+            )
+        optimizer_parameters = self._optimizer_parameters_by_name()
+        unknown_lazy_names = sorted(set(lazy_names) - set(optimizer_parameters))
+        if unknown_lazy_names:
+            raise CheckpointCompatibilityError(
+                "Checkpoint names optimizer parameters absent from this run: "
+                f"{unknown_lazy_names[:20]}."
+            )
+
         app_state = _ModelOptimizerState(
-            self.distributed_model.wrapped_model,
+            self._state_dict_model,
             self.optimizer if has_optimizer else None,
         )
         try:
             dcp.load(
                 {"application": app_state},
                 checkpoint_id=path / _DCP_DIR,
+                planner=dcp.DefaultLoadPlanner(allow_partial_load=True),
             )
         except Exception as exc:
             raise CheckpointCompatibilityError(
@@ -1087,6 +1211,12 @@ class CheckpointManager:
             ) from exc
 
         if has_optimizer:
+            # PyTorch 2.6 initializes zero Adam states for every destination
+            # parameter before planning a load. Remove states that were still
+            # lazy when saved so their future first update retains step=1
+            # semantics instead of inheriting a fabricated zero step.
+            for name in lazy_names:
+                self.optimizer.state.pop(optimizer_parameters[name], None)
             restore_optimizer_group_metadata(self.optimizer)
             validate_optimizer_parameter_coverage(
                 self.optimizer,
@@ -1317,7 +1447,21 @@ def should_save_checkpoint(
 
 def _dcp_roundtrip_test(root: Path) -> bool:
     torch.manual_seed(17)
-    model = nn.Sequential(nn.Linear(4, 8), nn.GELU(), nn.Linear(8, 2))
+
+    class ConditionalModel(nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.active = nn.Sequential(
+                nn.Linear(4, 8),
+                nn.GELU(),
+                nn.Linear(8, 2),
+            )
+            self.lazy_branch = nn.Linear(4, 2)
+
+        def forward(self, value: Tensor) -> Tensor:
+            return self.active(value)
+
+    model = ConditionalModel()
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
     x = torch.randn(3, 4)
     model(x).sum().backward()

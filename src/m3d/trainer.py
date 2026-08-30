@@ -1054,9 +1054,9 @@ class M3DTrainer:
             final_committed_microbatches=self.data_pipeline.committed_step,
             elapsed_seconds=elapsed,
             final_checkpoint=(
-                None
-                if self._last_checkpoint_report is None
-                else self._last_checkpoint_report.checkpoint_path
+                self._last_checkpoint_report.checkpoint_path
+                if self._last_checkpoint_report is not None
+                else (None if resumed is None else resumed.checkpoint_path)
             ),
             resumed_from=(
                 None if resumed is None else resumed.checkpoint_path

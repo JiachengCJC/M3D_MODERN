@@ -1,0 +1,209 @@
+# Stage 2: joint multimodal LoRA fine-tuning on ASPIRE 2A.
+#
+# Trainability contract:
+#   Phi-3: LoRA adapters plus the M3D token embedding/lm-head modules
+#   other models: Main 3D ViT, mm_projector, SegVol image encoder,
+#                 segmentation projector, prompt encoder and mask decoder
+#
+# The projector checkpoint below is produced by the standard Stage 1 export
+# path documented in TWO_STAGE_ASPIRE2A.md.
+
+schema_version: 1
+experiment_name: m3d-stage2-joint-lora-a100
+
+model:
+  language_model_name_or_path: ../llm_models/phi-3-mini-128k-instruct
+  tokenizer_name_or_path: null
+  language_model_family: phi3
+  trust_remote_code: false
+  model_max_length: 512
+
+  image_token: <im_patch>
+  segmentation_token: "[SEG]"
+  box_start_token: <bx_start>
+  box_end_token: <bx_end>
+
+  main_vision:
+    enabled: true
+    architecture: vit3d
+    checkpoint_path: ../LaMed/pretrained_model/M3D-CLIP/pretrained_ViT.bin
+    image_channels: 1
+    image_size: [32, 256, 256]
+    patch_size: [4, 16, 16]
+    hidden_size: 768
+    depth: 12
+    num_heads: 12
+    mlp_dim: 3072
+    dropout: 0.0
+    qkv_bias: false
+    use_cls_token: true
+    attention_backend: sdpa
+    require_flash_sdpa: true
+    activation_checkpoint_every_n_layers: 1
+    freeze: false
+    unfreeze_last_n_layers: 0
+
+  seg_vision:
+    enabled: true
+    architecture: vit3d
+    checkpoint_path: null
+    image_channels: 1
+    image_size: [32, 256, 256]
+    patch_size: [4, 16, 16]
+    hidden_size: 768
+    depth: 12
+    num_heads: 12
+    mlp_dim: 3072
+    dropout: 0.0
+    qkv_bias: false
+    use_cls_token: false
+    attention_backend: sdpa
+    require_flash_sdpa: true
+    activation_checkpoint_every_n_layers: 1
+    freeze: false
+    unfreeze_last_n_layers: 0
+
+  projector:
+    projector_type: spatial_pooling
+    layer_type: mlp
+    num_layers: 2
+    pooling_type: spatial
+    pooling_size: 2
+    checkpoint_path: ../outputs/m3d-stage1-projector-export/components/multimodal_projector/multimodal_projector.safetensors
+    freeze: false
+
+  segmentation:
+    enabled: true
+    architecture: segvol
+    checkpoint_path: ../LaMed/pretrained_model/SegVol/pytorch_model.bin
+    prompt_embed_dim: 768
+    decoder_depth: 2
+    decoder_heads: 8
+    dice_loss_weight: 1.0
+    bce_loss_weight: 1.0
+    freeze_prompt_encoder: false
+    freeze_mask_decoder: false
+
+  lora:
+    enabled: true
+    rank: 16
+    alpha: 32
+    dropout: 0.05
+    bias: none
+    target_modules:
+      - qkv_proj
+      - o_proj
+      - gate_up_proj
+      - down_proj
+    adapter_checkpoint_path: null
+
+data:
+  paths:
+    data_root: ../Data/data
+    caption_json: M3D_Cap_npy/M3D_Cap.json
+    vqa_train_csv: M3D-VQA/M3D_VQA_train.csv
+    vqa_val_csv: M3D-VQA/M3D_VQA_val.csv
+    vqa_test_csv: M3D-VQA/M3D_VQA_test.csv
+    vqa_yes_no_train_csv: M3D-VQA/M3D_VQA_yn_train.csv
+    segmentation_root: M3D_Seg_npy
+    referring_segmentation_train_csv: M3D_RefSeg_npy/M3D_RefSeg.csv
+    referring_segmentation_test_csv: M3D_RefSeg_npy/M3D_RefSeg_test.csv
+
+  task_sampling:
+    enabled: true
+    homogeneous_batches: true
+    temperature_alpha: 0.5
+    steps_per_epoch: null
+    task_weights:
+      caption: 1.0
+      vqa_closed: 1.0
+      vqa_open: 1.0
+      vqa_yes_no: 0.5
+      positioning: 1.0
+      segmentation: 2.0
+
+  dynamic_padding: true
+  pad_to_multiple_of: 8
+  sequence_length_buckets: [128, 256, 384, 512]
+  pretokenize_text: true
+  num_workers: 16
+  persistent_workers: true
+  pin_memory: true
+  prefetch_factor: 4
+  non_blocking_transfer: true
+  local_cache_root: null
+  verify_files_at_startup: true
+
+optimization:
+  stage: joint_finetune
+  projector_pretrain_train_token_embeddings: false
+  epochs: 5.0
+  per_device_batch_size: 1
+  gradient_accumulation_steps: 4
+  precision: bf16
+  allow_tf32: true
+  matmul_precision: high
+  optimizer: adamw_fused
+  learning_rates:
+    language_model: 1.0e-5
+    main_vision: 5.0e-6
+    seg_vision: 5.0e-6
+    projector: 5.0e-5
+    segmentation_projector: 5.0e-5
+    segmentation_decoder: 1.0e-5
+    token_embeddings: 5.0e-5
+  betas: [0.9, 0.999]
+  epsilon: 1.0e-8
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  scheduler: cosine
+  warmup_ratio: 0.03
+  checkpoint_language_model: true
+  checkpoint_main_vision: true
+  checkpoint_seg_vision: true
+  checkpoint_segmentation_decoder: false
+  compile_model: false
+  compile_mode: default
+
+distributed:
+  strategy: ddp
+  backend: nccl
+  timeout_seconds: 1800
+  ddp:
+    find_unused_parameters: true
+    gradient_as_bucket_view: true
+    static_graph: false
+    bucket_cap_mb: 25
+  fsdp2:
+    reshard_after_forward: true
+    cpu_offload: false
+    mixed_precision: bf16
+    wrap_language_layers: true
+    wrap_main_vision_layers: true
+    wrap_seg_vision_layers: true
+    wrap_segmentation_decoder_layers: true
+
+checkpoint:
+  output_dir: ../outputs/m3d-stage2-joint-lora-a100
+  resume_from: null
+  save_every_steps: 1000
+  keep_last_n: 2
+  save_optimizer: true
+  save_scheduler: true
+  save_rng_state: true
+  asynchronous: true
+  format: distributed_checkpoint
+  export_safetensors_at_end: true
+
+logging:
+  log_every_steps: 10
+  report_to: [tensorboard]
+  tensorboard_dir: ../logs/tensorboard/m3d-stage2-joint-lora-a100
+  profile_steps: []
+  log_gpu_memory: true
+
+runtime:
+  seed: 42
+  deterministic: false
+  fail_on_nondeterministic_ops: false
+  detect_anomaly: false

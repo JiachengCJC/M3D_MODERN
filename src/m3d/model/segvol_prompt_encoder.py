@@ -642,7 +642,13 @@ class SegVolPromptEncoder(nn.Module):
                 batch_size,
                 self.embed_dim,
                 *self.image_embedding_size,
-            )
+            ).clone()
+            # This value crosses the PromptEncoder FSDP2 forward boundary.
+            # Returning the zero-stride expanded parameter view directly would
+            # leave MaskDecoder holding storage that FSDP frees when it
+            # reshards ``no_mask_embed.weight`` after this forward. ``clone``
+            # materializes an activation while preserving autograd to the
+            # embedding parameter.
 
         dense_pe = self.get_dense_pe()
         if return_structured:
@@ -781,11 +787,16 @@ def _self_test() -> dict[str, Any]:
     assert output.sparse_embeddings.shape == (2, 1, 32)
     assert output.dense_embeddings.shape == (2, 32, 2, 3, 4)
     assert output.dense_positional_encoding.shape == (1, 32, 2, 3, 4)
-    assert output.dense_embeddings.stride(0) == 0
+    assert output.dense_embeddings.stride(0) != 0
 
-    loss = output.sparse_embeddings.square().mean()
+    loss = (
+        output.sparse_embeddings.square().mean()
+        + output.dense_embeddings.square().mean()
+    )
     loss.backward()
     assert text.grad is not None and torch.isfinite(text.grad).all()
+    assert encoder.no_mask_embed.weight.grad is not None
+    assert torch.isfinite(encoder.no_mask_embed.weight.grad).all()
 
     reference = _legacy_dense_pe_reference(
         encoder.pe_layer,
@@ -851,7 +862,10 @@ def _self_test() -> dict[str, Any]:
         "dense_pe_shape": list(output.dense_positional_encoding.shape),
         "dense_pe_legacy_equivalence": True,
         "dense_pe_cache_reused": first_cache_ptr == second_cache_ptr,
-        "no_mask_expand_zero_batch_stride": output.dense_embeddings.stride(0) == 0,
+        "no_mask_dense_storage_materialized": (
+            output.dense_embeddings.stride(0) != 0
+        ),
+        "no_mask_dense_gradient_preserved": True,
         "point_prompt_shape": list(point_sparse.shape),
         "box_prompt_shape": list(box_sparse.shape),
         "checkpoint_key_count": len(expected_keys),

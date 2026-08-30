@@ -46,6 +46,7 @@ from .config import (
 
 LOGGER_NAME = "m3d"
 T = TypeVar("T")
+CPU_DISTRIBUTED_SMOKE_ENV = "M3D_CPU_DISTRIBUTED_SMOKE"
 
 
 class DistributedRuntimeError(RuntimeError):
@@ -114,7 +115,10 @@ class RuntimeContext:
         """Synchronize all ranks using the rank's already-bound CUDA device."""
 
         if self.process_group_initialized:
-            dist.barrier(device_ids=[self.local_rank])
+            if self.device.type == "cuda":
+                dist.barrier(device_ids=[self.local_rank])
+            else:
+                dist.barrier()
 
     def all_reduce_sum(self, value: Tensor) -> Tensor:
         """Return a sum-reduced clone without mutating the caller's tensor."""
@@ -245,7 +249,7 @@ class RuntimeContext:
         """Return the BF16 autocast context used for forward and loss."""
 
         return torch.autocast(
-            device_type="cuda",
+            device_type=self.device.type,
             dtype=torch.bfloat16,
             enabled=True,
             cache_enabled=True,
@@ -254,6 +258,13 @@ class RuntimeContext:
     def cuda_memory_snapshot(self) -> dict[str, float]:
         """Return process-local CUDA allocator counters in GiB."""
 
+        if self.device.type != "cuda" or not torch.cuda.is_available():
+            return {
+                "allocated_gib": 0.0,
+                "reserved_gib": 0.0,
+                "peak_allocated_gib": 0.0,
+                "peak_reserved_gib": 0.0,
+            }
         gib = float(1024**3)
         return {
             "allocated_gib": torch.cuda.memory_allocated(self.device) / gib,
@@ -267,7 +278,10 @@ class RuntimeContext:
 
         if dist.is_available() and dist.is_initialized():
             try:
-                dist.barrier(device_ids=[self.local_rank])
+                if self.device.type == "cuda":
+                    dist.barrier(device_ids=[self.local_rank])
+                else:
+                    dist.barrier()
             except Exception:  # Best effort during exception unwinding.
                 self.logger.exception("Final distributed barrier failed")
             finally:
@@ -369,6 +383,16 @@ def _configure_nccl_environment() -> None:
     os.environ.setdefault("TORCH_NCCL_ASYNC_ERROR_HANDLING", "1")
 
 
+def cpu_distributed_smoke_enabled() -> bool:
+    """Return whether the isolated local CPU integration mode is enabled.
+
+    Only the exact value ``1`` opts in.  This prevents a stale value such as
+    ``false`` from silently weakening the production CUDA/NCCL contract.
+    """
+
+    return os.environ.get(CPU_DISTRIBUTED_SMOKE_ENV) == "1"
+
+
 def _validate_cuda_environment(launcher: LauncherEnvironment) -> torch.device:
     if not torch.cuda.is_available():
         raise DistributedRuntimeError(
@@ -467,7 +491,7 @@ def _verify_identical_config(context: RuntimeContext) -> None:
 
 
 def _distributed_health_check(context: RuntimeContext) -> None:
-    """Run a tiny NCCL collective after process-group initialization."""
+    """Run a tiny collective after process-group initialization."""
 
     value = torch.tensor(
         float(context.rank + 1),
@@ -478,7 +502,7 @@ def _distributed_health_check(context: RuntimeContext) -> None:
     expected = context.world_size * (context.world_size + 1) / 2
     if float(value.item()) != float(expected):
         raise DistributedRuntimeError(
-            f"NCCL health check returned {value.item()}, expected {expected}"
+            f"Distributed health check returned {value.item()}, expected {expected}"
         )
 
 
@@ -496,7 +520,7 @@ def _build_device_mesh(context: RuntimeContext) -> Any | None:
         ) from exc
 
     return init_device_mesh(
-        "cuda",
+        context.device.type,
         mesh_shape=(context.world_size,),
         mesh_dim_names=("data_parallel",),
     )
@@ -522,8 +546,22 @@ def initialize_runtime(
             "--nproc_per_node=2."
         )
 
-    _configure_nccl_environment()
-    device = _validate_cuda_environment(launcher)
+    cpu_smoke = cpu_distributed_smoke_enabled()
+    if cpu_smoke:
+        if config.distributed.backend != "gloo":
+            raise DistributedRuntimeError(
+                f"{CPU_DISTRIBUTED_SMOKE_ENV}=1 requires distributed.backend='gloo', "
+                f"got {config.distributed.backend!r}."
+            )
+        device = torch.device("cpu")
+    else:
+        if config.distributed.backend != "nccl":
+            raise DistributedRuntimeError(
+                "Production M3D training requires distributed.backend='nccl'. "
+                f"The 'gloo' backend is reserved for {CPU_DISTRIBUTED_SMOKE_ENV}=1."
+            )
+        _configure_nccl_environment()
+        device = _validate_cuda_environment(launcher)
 
     # Apply numerical settings before any model parameters or CUDA kernels are
     # created. The seed has a rank offset so stochastic data augmentation differs
@@ -569,13 +607,17 @@ def initialize_runtime(
                     "m3d.runtime.initialize_runtime()"
                 )
 
+            process_group_kwargs: dict[str, Any] = {
+                "backend": config.distributed.backend,
+                "init_method": "env://",
+                "timeout": timedelta(seconds=config.distributed.timeout_seconds),
+                "world_size": launcher.world_size,
+                "rank": launcher.rank,
+            }
+            if device.type == "cuda":
+                process_group_kwargs["device_id"] = device
             dist.init_process_group(
-                backend=config.distributed.backend,
-                init_method="env://",
-                timeout=timedelta(seconds=config.distributed.timeout_seconds),
-                world_size=launcher.world_size,
-                rank=launcher.rank,
-                device_id=device,
+                **process_group_kwargs,
             )
             initialized = True
             context.process_group_initialized = True
@@ -595,20 +637,32 @@ def initialize_runtime(
             context.device_mesh = _build_device_mesh(context)
             context.barrier()
 
-        properties = torch.cuda.get_device_properties(device)
-        logger.info(
-            "Runtime initialized: host=%s strategy=%s world_size=%d device=%s "
-            "gpu=%s memory=%.2f GiB capability=%d.%d seed=%d",
-            socket.gethostname(),
-            config.distributed.strategy,
-            launcher.world_size,
-            device,
-            properties.name,
-            properties.total_memory / (1024**3),
-            properties.major,
-            properties.minor,
-            seed,
-        )
+        if device.type == "cuda":
+            properties = torch.cuda.get_device_properties(device)
+            logger.info(
+                "Runtime initialized: host=%s strategy=%s world_size=%d device=%s "
+                "gpu=%s memory=%.2f GiB capability=%d.%d seed=%d",
+                socket.gethostname(),
+                config.distributed.strategy,
+                launcher.world_size,
+                device,
+                properties.name,
+                properties.total_memory / (1024**3),
+                properties.major,
+                properties.minor,
+                seed,
+            )
+        else:
+            logger.info(
+                "Runtime initialized in isolated CPU smoke mode: host=%s "
+                "strategy=%s world_size=%d backend=%s device=%s seed=%d",
+                socket.gethostname(),
+                config.distributed.strategy,
+                launcher.world_size,
+                config.distributed.backend,
+                device,
+                seed,
+            )
         logger.info(
             "Numerics: precision=%s TF32=%s matmul_precision=%s deterministic=%s",
             config.optimization.precision,

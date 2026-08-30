@@ -971,9 +971,11 @@ def _apply_training_stage_policy(model: "M3DModel", config: ExperimentConfig) ->
 
     Component-level ``freeze`` fields remain authoritative for normal LoRA and
     joint fine-tuning.  Projector pretraining is stricter: the complete model is
-    frozen first, then only the multimodal projector and token embedding/output
-    tables are enabled.  This reproduces the original M3D stage-1 objective
-    without allocating gradients or Adam states for the full Phi-3 model.
+    frozen first and the multimodal projector is enabled.  The resized token
+    embedding/output tables are enabled only when the explicit compatibility
+    switch is true.  This allows both the original M3D recipe and a strict
+    projector-only stage without allocating gradients or Adam states for the
+    full Phi-3 model.
     """
 
     stage = str(config.optimization.stage)
@@ -982,10 +984,11 @@ def _apply_training_stage_policy(model: "M3DModel", config: ExperimentConfig) ->
 
     model.requires_grad_(False)
     model.mm_projector.requires_grad_(True)
-    input_embeddings = model.language_model.get_input_embeddings()
-    output_embeddings = model.language_model.get_output_embeddings()
-    input_embeddings.requires_grad_(True)
-    output_embeddings.requires_grad_(True)
+    if config.optimization.projector_pretrain_train_token_embeddings:
+        input_embeddings = model.language_model.get_input_embeddings()
+        output_embeddings = model.language_model.get_output_embeddings()
+        input_embeddings.requires_grad_(True)
+        output_embeddings.requires_grad_(True)
 
     if model.seg_enable:
         raise M3DConfigurationError(
@@ -1365,6 +1368,27 @@ def run_self_test() -> Mapping[str, Any]:
     if not malformed_routing_detected:
         raise AssertionError("Text task accepted a segmentation target.")
 
+    projector_stage_model, _ = _tiny_components()
+    projector_stage_model.seg_projector = None
+    projector_stage_model.seg_module = None
+    projector_stage_config = ExperimentConfig()
+    projector_stage_config.optimization.stage = "projector_pretrain"
+    projector_stage_config.optimization.projector_pretrain_train_token_embeddings = False
+    _apply_training_stage_policy(projector_stage_model, projector_stage_config)
+    projector_stage_trainable = tuple(
+        name
+        for name, parameter in projector_stage_model.named_parameters()
+        if parameter.requires_grad
+    )
+    if not projector_stage_trainable or any(
+        not name.startswith("mm_projector.")
+        for name in projector_stage_trainable
+    ):
+        raise AssertionError(
+            "Strict projector stage enabled parameters outside mm_projector: "
+            f"{projector_stage_trainable}"
+        )
+
     return {
         "status": "passed",
         "text_loss": float(text_output.loss.detach()),
@@ -1382,6 +1406,10 @@ def run_self_test() -> Mapping[str, Any]:
         "shared_image_encoder_parameters": summary.shared_image_encoder_parameters,
         "shared_image_encoder_storages": summary.shared_image_encoder_storages,
         "malformed_task_routing_detected": malformed_routing_detected,
+        "strict_projector_stage_only_trains_mm_projector": True,
+        "strict_projector_stage_trainable_parameter_count": len(
+            projector_stage_trainable
+        ),
         "legacy_component_names_present": all(
             hasattr(model, name)
             for name in ("vision_tower", "mm_projector", "seg_projector", "seg_module")

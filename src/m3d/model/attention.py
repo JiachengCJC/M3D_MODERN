@@ -694,12 +694,20 @@ class ProjectedSDPAAttention(nn.Module):
             raise AttentionExecutionError("k and v token counts must match.")
         if q.device != k.device or q.device != v.device:
             raise AttentionExecutionError("q, k and v must be on the same device.")
-        if q.dtype != k.dtype or q.dtype != v.dtype:
+        raw_dtypes_match = q.dtype == k.dtype and q.dtype == v.dtype
+        if not raw_dtypes_match and not torch.is_autocast_enabled(q.device.type):
             raise AttentionExecutionError("q, k and v must use the same dtype.")
 
         projected_q = self._separate_heads(self.q_proj(q))
         projected_k = self._separate_heads(self.k_proj(k))
         projected_v = self._separate_heads(self.v_proj(v))
+        # Residual connections and positional encodings in the SegVol
+        # two-way transformer can promote only one of q/k/v before entering
+        # this module. Under autocast, each Linear projection deliberately
+        # establishes the common compute dtype. Validate the projected tensors
+        # through scaled_dot_product_attention instead of rejecting the safe
+        # pre-projection mixture. Outside autocast the strict raw-dtype contract
+        # above remains unchanged.
 
         output = scaled_dot_product_attention(
             projected_q,
@@ -843,6 +851,25 @@ def run_cpu_self_test() -> dict[str, object]:
     for name, tensor in (("q", q), ("k", k), ("v", v)):
         if tensor.grad is None or not torch.isfinite(tensor.grad).all():
             raise AssertionError(f"{name} gradient is missing or non-finite.")
+
+    # SegVol residual/position additions can produce FP32 q/k alongside BF16 v
+    # inside a BF16 autocast region. The three projections must establish one
+    # common attention dtype without weakening the non-autocast input contract.
+    mixed_q = torch.randn(1, 3, 32, dtype=torch.float32, requires_grad=True)
+    mixed_k = torch.randn(1, 5, 32, dtype=torch.float32, requires_grad=True)
+    mixed_v = torch.randn(1, 5, 32, dtype=torch.bfloat16, requires_grad=True)
+    with torch.autocast(device_type="cpu", dtype=torch.bfloat16):
+        mixed_output = projected(mixed_q, mixed_k, mixed_v)
+    if mixed_output.dtype != torch.bfloat16:
+        raise AssertionError(
+            f"Autocast projected attention returned {mixed_output.dtype}."
+        )
+    mixed_output.float().sum().backward()
+    for name, tensor in (("mixed_q", mixed_q), ("mixed_k", mixed_k), ("mixed_v", mixed_v)):
+        if tensor.grad is None or not torch.isfinite(tensor.grad).all():
+            raise AssertionError(
+                f"{name} autocast gradient is missing or non-finite."
+            )
 
     # Low-level SDPA parity with explicit attention on a small tensor.
     raw_q = torch.randn(1, 2, 5, 8)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-#PBS -P 58001002
-#PBS -q glong
+#PBS -P personal-e1129906
+#PBS -q normal
 #PBS -N M3D_eval
 #PBS -l select=1:ncpus=64:mem=440gb:ngpus=2
 #PBS -l walltime=120:00:00
@@ -266,22 +266,21 @@ if [[ -e "${OUTPUT_DIR}" ]] && ! is_enabled "${M3D_OVERWRITE:-0}"; then
     fail "Evaluation output already exists: ${OUTPUT_DIR}. Set M3D_OVERWRITE=1 or choose a new M3D_OUTPUT_DIR."
 fi
 
-python - "${MASK_THRESHOLD}" "${TEMPERATURE}" "${TOP_P}" "${REPETITION_PENALTY}" <<'PY'
-from __future__ import annotations
-
-import math
-import sys
-
-mask, temperature, top_p, repetition = map(float, sys.argv[1:])
-if not 0.0 <= mask <= 1.0:
-    raise SystemExit("M3D_MASK_THRESHOLD must be in [0,1].")
-if not math.isfinite(temperature) or temperature <= 0.0:
-    raise SystemExit("M3D_TEMPERATURE must be finite and positive.")
-if not math.isfinite(top_p) or not 0.0 < top_p <= 1.0:
-    raise SystemExit("M3D_TOP_P must be finite and in (0,1].")
-if not math.isfinite(repetition) or repetition <= 0.0:
-    raise SystemExit("M3D_REPETITION_PENALTY must be finite and positive.")
-PY
+awk \
+    -v mask="${MASK_THRESHOLD}" \
+    -v temperature="${TEMPERATURE}" \
+    -v top_p="${TOP_P}" \
+    -v repetition="${REPETITION_PENALTY}" '
+    function number(value) {
+        return value ~ /^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?$/
+    }
+    BEGIN {
+        if (!number(mask) || mask < 0 || mask > 1) exit 1
+        if (!number(temperature) || temperature <= 0) exit 1
+        if (!number(top_p) || top_p <= 0 || top_p > 1) exit 1
+        if (!number(repetition) || repetition <= 0) exit 1
+    }
+' </dev/null || fail "Generation floats are invalid; check M3D_MASK_THRESHOLD, M3D_TEMPERATURE, M3D_TOP_P and M3D_REPETITION_PENALTY."
 
 if is_enabled "${M3D_DO_SAMPLE:-0}" && (( NUM_BEAMS > 1 )); then
     fail "This evaluation entrypoint does not combine sampling with beam search."
@@ -305,11 +304,22 @@ type module >/dev/null 2>&1 || \
 
 module reset >/dev/null 2>&1 || module purge
 module load PrgEnv-gnu/8.3.3
-module load gcc/11.4.0-nscc
 module load python/3.10.9
 module load cuda/11.8.0
 module load cmake/3.31.3
 module load ninja/1.11.1
+
+# Python may replace GCC as a module dependency, so resolve GCC last.
+LOADED_GCC="$(module -t list 2>&1 | sed -n '/^gcc\//{p;q;}')"
+if [[ -z "${LOADED_GCC}" ]]; then
+    module load gcc/11.4.0-nscc
+elif [[ "${LOADED_GCC}" != "gcc/11.4.0-nscc" ]]; then
+    module swap "${LOADED_GCC}" gcc/11.4.0-nscc
+fi
+hash -r
+FINAL_GCC_VERSION="$(gcc -dumpfullversion -dumpversion)"
+[[ "${FINAL_GCC_VERSION}" == 11.4.0* ]] || \
+    fail "Expected GCC 11.4.0, but gcc reports ${FINAL_GCC_VERSION}."
 
 module -t list 2> "${MODULE_FILE}"
 log "Loaded modules:"
@@ -360,7 +370,6 @@ if is_enabled "${M3D_LOCAL_FILES_ONLY:-0}"; then
 fi
 
 # Keep NCCL diagnostics useful without forcing expensive debug logging.
-export NCCL_ASYNC_ERROR_HANDLING="${NCCL_ASYNC_ERROR_HANDLING:-1}"
 export TORCH_NCCL_ASYNC_ERROR_HANDLING="${TORCH_NCCL_ASYNC_ERROR_HANDLING:-1}"
 export NCCL_DEBUG="${NCCL_DEBUG:-WARN}"
 export NCCL_SOCKET_IFNAME="${NCCL_SOCKET_IFNAME:-^lo,docker0}"
