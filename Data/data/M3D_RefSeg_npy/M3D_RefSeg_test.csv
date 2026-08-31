@@ -1,2 +1,10 @@
 Image,Mask,Mask_ID,Question,Answer
 M3D_RefSeg_npy/images/refseg_test.npy,M3D_RefSeg_npy/masks/refseg_test_1.npy,1,Segment the test foreground.,The test foreground region is segmented. [SEG]
+M3D_RefSeg_npy/images/cardiac_refseg_000_test.npy,M3D_RefSeg_npy/masks/cardiac_refseg_000_test_11.npy,11,Delineate the first diagonal branch (D1) of the LAD.,The first diagonal branch (D1) is segmented. [SEG]
+M3D_RefSeg_npy/images/cardiac_refseg_001_test.npy,M3D_RefSeg_npy/masks/cardiac_refseg_001_test_14.npy,14,Segment the first obtuse marginal branch (OM1) of the LCX.,The first obtuse marginal branch (OM1) is segmented. [SEG]
+M3D_RefSeg_npy/images/cardiac_refseg_002_test.npy,M3D_RefSeg_npy/masks/cardiac_refseg_002_test_4.npy,4,Delineate the right ventricle (RV) in this cardiac CT.,The right ventricle (RV) is segmented. [SEG]
+M3D_RefSeg_npy/images/cardiac_refseg_003_test.npy,M3D_RefSeg_npy/masks/cardiac_refseg_003_test_13.npy,13,Identify and segment the left circumflex artery (LCX).,The left circumflex artery (LCX) is segmented. [SEG]
+M3D_RefSeg_npy/images/cardiac_refseg_004_test.npy,M3D_RefSeg_npy/masks/cardiac_refseg_004_test_12.npy,12,Please segment the second diagonal branch (D2).,The second diagonal branch (D2) is segmented. [SEG]
+M3D_RefSeg_npy/images/cardiac_refseg_005_test.npy,M3D_RefSeg_npy/masks/cardiac_refseg_005_test_19.npy,19,Delineate the left posterolateral branch (LPLB) in this cardiac CT.,The left posterolateral branch (LPLB) is segmented. [SEG]
+M3D_RefSeg_npy/images/cardiac_refseg_006_test.npy,M3D_RefSeg_npy/masks/cardiac_refseg_006_test_18.npy,18,Please segment the ramus intermedius (RAMUS).,The ramus intermedius (RAMUS) is segmented. [SEG]
+M3D_RefSeg_npy/images/cardiac_refseg_007_test.npy,M3D_RefSeg_npy/masks/cardiac_refseg_007_test_1.npy,1,Please delineate the left atrium (LA) in this cardiac CT.,The left atrium (LA) is segmented. [SEG]

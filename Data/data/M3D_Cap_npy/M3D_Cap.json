@@ -7,18 +7,242 @@
     {
       "image": "M3D_Cap_npy/images/caption_01_train.npy",
       "text": "M3D_Cap_npy/texts/caption_01_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_000_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_000_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_001_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_001_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_002_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_002_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_003_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_003_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_004_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_004_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_005_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_005_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_006_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_006_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_007_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_007_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_008_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_008_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_009_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_009_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_010_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_010_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_011_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_011_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_012_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_012_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_013_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_013_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_014_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_014_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_015_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_015_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_016_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_016_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_017_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_017_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_018_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_018_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_019_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_019_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_020_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_020_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_021_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_021_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_022_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_022_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_023_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_023_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_024_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_024_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_025_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_025_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_026_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_026_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_027_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_027_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_028_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_028_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_029_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_029_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_030_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_030_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_031_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_031_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_032_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_032_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_033_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_033_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_034_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_034_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_035_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_035_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_036_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_036_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_037_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_037_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_038_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_038_train.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_039_train.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_039_train.txt"
     }
   ],
   "validation": [
     {
       "image": "M3D_Cap_npy/images/caption_validation.npy",
       "text": "M3D_Cap_npy/texts/caption_validation.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_000_validation.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_000_validation.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_001_validation.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_001_validation.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_002_validation.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_002_validation.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_003_validation.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_003_validation.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_004_validation.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_004_validation.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_005_validation.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_005_validation.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_006_validation.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_006_validation.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_007_validation.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_007_validation.txt"
     }
   ],
   "test": [
     {
       "image": "M3D_Cap_npy/images/caption_test.npy",
       "text": "M3D_Cap_npy/texts/caption_test.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_000_test.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_000_test.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_001_test.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_001_test.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_002_test.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_002_test.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_003_test.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_003_test.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_004_test.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_004_test.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_005_test.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_005_test.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_006_test.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_006_test.txt"
+    },
+    {
+      "image": "M3D_Cap_npy/images/cardiac_007_test.npy",
+      "text": "M3D_Cap_npy/texts/cardiac_007_test.txt"
     }
   ]
 }

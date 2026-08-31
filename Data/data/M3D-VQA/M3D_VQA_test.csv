@@ -1,2 +1,10 @@
 Image Path,Question,Answer,Choice A,Choice B,Choice C,Choice D,Answer Choice,Question Type
 M3D-VQA/images/vqa_test.npy,Is this the test dummy volume?,Yes,Yes,No,Unknown,Not applicable,A,identity
+M3D-VQA/images/cardiac_000_test.npy,Is the left ventricle (LV) visible in this cardiac CT?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_001_test.npy,Is the right ventricle (RV) present in this scan?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_002_test.npy,Can the ascending aorta (AO) be identified?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_003_test.npy,Is the left anterior descending artery (LAD) visualised?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_004_test.npy,Is the myocardium of the left ventricle (Myo) intact?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_005_test.npy,Is the pulmonary artery (PA) present in this cardiac CT?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_006_test.npy,Is the right coronary artery (RCA) visible?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_007_test.npy,Is the left circumflex artery (LCX) identifiable?,Yes,Yes,No,Partially,Cannot determine,A,presence

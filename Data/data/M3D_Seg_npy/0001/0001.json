@@ -3,12 +3,3852 @@
     {
       "image": "0001/imagesTr/seg_train.npy",
       "label": "0001/labelsTr/seg_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_000_train.npy",
+      "label": "0001/labelsTr/cardiac_000_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_001_train.npy",
+      "label": "0001/labelsTr/cardiac_001_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_002_train.npy",
+      "label": "0001/labelsTr/cardiac_002_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_003_train.npy",
+      "label": "0001/labelsTr/cardiac_003_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_004_train.npy",
+      "label": "0001/labelsTr/cardiac_004_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_005_train.npy",
+      "label": "0001/labelsTr/cardiac_005_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_006_train.npy",
+      "label": "0001/labelsTr/cardiac_006_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_007_train.npy",
+      "label": "0001/labelsTr/cardiac_007_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_008_train.npy",
+      "label": "0001/labelsTr/cardiac_008_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_009_train.npy",
+      "label": "0001/labelsTr/cardiac_009_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_010_train.npy",
+      "label": "0001/labelsTr/cardiac_010_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_011_train.npy",
+      "label": "0001/labelsTr/cardiac_011_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_012_train.npy",
+      "label": "0001/labelsTr/cardiac_012_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_013_train.npy",
+      "label": "0001/labelsTr/cardiac_013_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_014_train.npy",
+      "label": "0001/labelsTr/cardiac_014_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_015_train.npy",
+      "label": "0001/labelsTr/cardiac_015_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_016_train.npy",
+      "label": "0001/labelsTr/cardiac_016_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_017_train.npy",
+      "label": "0001/labelsTr/cardiac_017_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_018_train.npy",
+      "label": "0001/labelsTr/cardiac_018_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_019_train.npy",
+      "label": "0001/labelsTr/cardiac_019_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_020_train.npy",
+      "label": "0001/labelsTr/cardiac_020_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_021_train.npy",
+      "label": "0001/labelsTr/cardiac_021_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_022_train.npy",
+      "label": "0001/labelsTr/cardiac_022_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_023_train.npy",
+      "label": "0001/labelsTr/cardiac_023_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_024_train.npy",
+      "label": "0001/labelsTr/cardiac_024_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_025_train.npy",
+      "label": "0001/labelsTr/cardiac_025_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_026_train.npy",
+      "label": "0001/labelsTr/cardiac_026_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_027_train.npy",
+      "label": "0001/labelsTr/cardiac_027_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_028_train.npy",
+      "label": "0001/labelsTr/cardiac_028_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_029_train.npy",
+      "label": "0001/labelsTr/cardiac_029_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_030_train.npy",
+      "label": "0001/labelsTr/cardiac_030_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_031_train.npy",
+      "label": "0001/labelsTr/cardiac_031_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_032_train.npy",
+      "label": "0001/labelsTr/cardiac_032_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_033_train.npy",
+      "label": "0001/labelsTr/cardiac_033_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_034_train.npy",
+      "label": "0001/labelsTr/cardiac_034_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_035_train.npy",
+      "label": "0001/labelsTr/cardiac_035_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_036_train.npy",
+      "label": "0001/labelsTr/cardiac_036_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_037_train.npy",
+      "label": "0001/labelsTr/cardiac_037_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_038_train.npy",
+      "label": "0001/labelsTr/cardiac_038_train_19.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_0.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_1.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_2.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_3.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_4.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_5.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_6.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_7.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_8.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_9.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_10.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_11.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_12.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_13.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_14.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_15.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_16.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_17.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_18.npy"
+    },
+    {
+      "image": "0001/imagesTr/cardiac_039_train.npy",
+      "label": "0001/labelsTr/cardiac_039_train_19.npy"
     }
   ],
   "test": [
     {
       "image": "0001/imagesTs/seg_test.npy",
       "label": "0001/labelsTs/seg_test_1.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_0.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_1.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_2.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_3.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_4.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_5.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_6.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_7.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_8.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_9.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_10.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_11.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_12.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_13.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_14.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_15.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_16.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_17.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_18.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_000_test.npy",
+      "label": "0001/labelsTs/cardiac_000_test_19.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_0.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_1.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_2.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_3.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_4.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_5.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_6.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_7.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_8.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_9.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_10.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_11.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_12.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_13.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_14.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_15.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_16.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_17.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_18.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_001_test.npy",
+      "label": "0001/labelsTs/cardiac_001_test_19.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_0.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_1.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_2.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_3.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_4.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_5.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_6.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_7.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_8.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_9.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_10.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_11.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_12.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_13.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_14.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_15.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_16.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_17.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_18.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_002_test.npy",
+      "label": "0001/labelsTs/cardiac_002_test_19.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_0.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_1.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_2.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_3.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_4.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_5.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_6.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_7.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_8.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_9.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_10.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_11.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_12.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_13.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_14.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_15.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_16.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_17.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_18.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_003_test.npy",
+      "label": "0001/labelsTs/cardiac_003_test_19.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_0.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_1.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_2.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_3.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_4.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_5.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_6.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_7.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_8.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_9.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_10.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_11.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_12.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_13.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_14.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_15.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_16.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_17.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_18.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_004_test.npy",
+      "label": "0001/labelsTs/cardiac_004_test_19.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_0.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_1.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_2.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_3.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_4.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_5.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_6.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_7.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_8.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_9.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_10.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_11.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_12.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_13.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_14.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_15.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_16.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_17.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_18.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_005_test.npy",
+      "label": "0001/labelsTs/cardiac_005_test_19.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_0.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_1.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_2.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_3.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_4.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_5.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_6.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_7.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_8.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_9.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_10.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_11.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_12.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_13.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_14.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_15.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_16.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_17.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_18.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_006_test.npy",
+      "label": "0001/labelsTs/cardiac_006_test_19.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_0.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_1.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_2.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_3.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_4.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_5.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_6.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_7.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_8.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_9.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_10.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_11.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_12.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_13.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_14.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_15.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_16.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_17.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_18.npy"
+    },
+    {
+      "image": "0001/imagesTs/cardiac_007_test.npy",
+      "label": "0001/labelsTs/cardiac_007_test_19.npy"
     }
   ]
 }

@@ -1,4 +1,43 @@
-Image Path,Question,Answer,Answer Choice,Question Type
-M3D-VQA/images/vqa_yes_no_00_train.npy,Does the center contain a positive voxel?,Yes,A,presence
-M3D-VQA/images/vqa_yes_no_01_train.npy,Does the center contain a positive voxel?,Yes,A,presence
-
+Image Path,Question,Answer,Choice A,Choice B,Choice C,Choice D,Answer Choice,Question Type
+M3D-VQA/images/vqa_yes_no_00_train.npy,Does the center contain a positive voxel?,Yes,,,,,A,presence
+M3D-VQA/images/vqa_yes_no_01_train.npy,Does the center contain a positive voxel?,Yes,,,,,A,presence
+M3D-VQA/images/cardiac_000_train.npy,Is the left ventricle (LV) the most muscular cardiac chamber?,Yes,Yes,No,Maybe,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_001_train.npy,Does the pulmonary artery (PA) carry oxygenated blood?,No,No,Yes,Partially,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_002_train.npy,Is the ascending aorta (AO) connected to the left ventricle?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_003_train.npy,Is the right coronary artery (RCA) part of the left coronary system?,No,No,Yes,Partially,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_004_train.npy,Is the myocardium of the LV (Myo) responsible for cardiac output?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_005_train.npy,Does the left circumflex artery (LCX) arise from the right coronary ostium?,No,No,Yes,Sometimes,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_006_train.npy,Is the descending aorta (DO) located posterior to the heart?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_007_train.npy,Is the ramus intermedius (RAMUS) always present in every patient?,No,No,Yes,Sometimes,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_008_train.npy,Is the left ventricle (LV) the most muscular cardiac chamber?,Yes,Yes,No,Maybe,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_009_train.npy,Does the pulmonary artery (PA) carry oxygenated blood?,No,No,Yes,Partially,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_010_train.npy,Is the ascending aorta (AO) connected to the left ventricle?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_011_train.npy,Is the right coronary artery (RCA) part of the left coronary system?,No,No,Yes,Partially,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_012_train.npy,Is the myocardium of the LV (Myo) responsible for cardiac output?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_013_train.npy,Does the left circumflex artery (LCX) arise from the right coronary ostium?,No,No,Yes,Sometimes,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_014_train.npy,Is the descending aorta (DO) located posterior to the heart?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_015_train.npy,Is the ramus intermedius (RAMUS) always present in every patient?,No,No,Yes,Sometimes,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_016_train.npy,Is the left ventricle (LV) the most muscular cardiac chamber?,Yes,Yes,No,Maybe,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_017_train.npy,Does the pulmonary artery (PA) carry oxygenated blood?,No,No,Yes,Partially,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_018_train.npy,Is the ascending aorta (AO) connected to the left ventricle?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_019_train.npy,Is the right coronary artery (RCA) part of the left coronary system?,No,No,Yes,Partially,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_020_train.npy,Is the myocardium of the LV (Myo) responsible for cardiac output?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_021_train.npy,Does the left circumflex artery (LCX) arise from the right coronary ostium?,No,No,Yes,Sometimes,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_022_train.npy,Is the descending aorta (DO) located posterior to the heart?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_023_train.npy,Is the ramus intermedius (RAMUS) always present in every patient?,No,No,Yes,Sometimes,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_024_train.npy,Is the left ventricle (LV) the most muscular cardiac chamber?,Yes,Yes,No,Maybe,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_025_train.npy,Does the pulmonary artery (PA) carry oxygenated blood?,No,No,Yes,Partially,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_026_train.npy,Is the ascending aorta (AO) connected to the left ventricle?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_027_train.npy,Is the right coronary artery (RCA) part of the left coronary system?,No,No,Yes,Partially,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_028_train.npy,Is the myocardium of the LV (Myo) responsible for cardiac output?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_029_train.npy,Does the left circumflex artery (LCX) arise from the right coronary ostium?,No,No,Yes,Sometimes,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_030_train.npy,Is the descending aorta (DO) located posterior to the heart?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_031_train.npy,Is the ramus intermedius (RAMUS) always present in every patient?,No,No,Yes,Sometimes,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_032_train.npy,Is the left ventricle (LV) the most muscular cardiac chamber?,Yes,Yes,No,Maybe,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_033_train.npy,Does the pulmonary artery (PA) carry oxygenated blood?,No,No,Yes,Partially,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_034_train.npy,Is the ascending aorta (AO) connected to the left ventricle?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_035_train.npy,Is the right coronary artery (RCA) part of the left coronary system?,No,No,Yes,Partially,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_036_train.npy,Is the myocardium of the LV (Myo) responsible for cardiac output?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_037_train.npy,Does the left circumflex artery (LCX) arise from the right coronary ostium?,No,No,Yes,Sometimes,Cannot determine,B,yes_no
+M3D-VQA/images/cardiac_038_train.npy,Is the descending aorta (DO) located posterior to the heart?,Yes,Yes,No,Partially,Cannot determine,A,yes_no
+M3D-VQA/images/cardiac_039_train.npy,Is the ramus intermedius (RAMUS) always present in every patient?,No,No,Yes,Sometimes,Cannot determine,B,yes_no

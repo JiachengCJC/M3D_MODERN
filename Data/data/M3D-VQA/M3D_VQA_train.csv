@@ -1,4 +1,43 @@
 Image Path,Question,Answer,Choice A,Choice B,Choice C,Choice D,Answer Choice,Question Type
 M3D-VQA/images/vqa_00_train.npy,Is the synthetic finding present?,Yes,Yes,No,Unknown,Not applicable,A,presence
 M3D-VQA/images/vqa_01_train.npy,Is the synthetic finding present?,Yes,Yes,No,Unknown,Not applicable,A,presence
-
+M3D-VQA/images/cardiac_000_train.npy,Is the left ventricle (LV) visible in this cardiac CT?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_001_train.npy,Is the right ventricle (RV) present in this scan?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_002_train.npy,Can the ascending aorta (AO) be identified?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_003_train.npy,Is the left anterior descending artery (LAD) visualised?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_004_train.npy,Is the myocardium of the left ventricle (Myo) intact?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_005_train.npy,Is the pulmonary artery (PA) present in this cardiac CT?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_006_train.npy,Is the right coronary artery (RCA) visible?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_007_train.npy,Is the left circumflex artery (LCX) identifiable?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_008_train.npy,Which chamber pumps oxygenated blood to the systemic circulation?,Left ventricle (LV),Left ventricle (LV),Right ventricle (RV),Left atrium (LA),Right atrium (RA),A,attribute
+M3D-VQA/images/cardiac_009_train.npy,Which vessel carries deoxygenated blood from the right ventricle?,Pulmonary artery (PA),Pulmonary artery (PA),Ascending aorta (AO),Descending aorta (DO),Left coronary artery,A,attribute
+M3D-VQA/images/cardiac_010_train.npy,What is the abbreviation for the left anterior descending artery?,LAD,LAD,LCX,RCA,RPDA,A,attribute
+M3D-VQA/images/cardiac_011_train.npy,Which coronary artery is known as the widow-maker?,Left anterior descending artery (LAD),Left anterior descending artery (LAD),Right coronary artery (RCA),Left circumflex artery (LCX),Ramus intermedius (RAMUS),A,attribute
+M3D-VQA/images/cardiac_012_train.npy,What does the abbreviation Myo refer to?,Myocardium of LV (Myo),Myocardium of LV (Myo),Left ventricle (LV),Left atrium (LA),Right ventricle (RV),A,attribute
+M3D-VQA/images/cardiac_013_train.npy,Which artery supplies the posterior septum in right-dominant anatomy?,Right posterior descending artery (RPDA),Right posterior descending artery (RPDA),Left posterior descending artery (LPDA),Right coronary artery (RCA),Left circumflex artery (LCX),A,attribute
+M3D-VQA/images/cardiac_014_train.npy,What is the primary function of the left atrium (LA)?,Receive oxygenated blood from pulmonary veins,Receive oxygenated blood from pulmonary veins,Pump blood to the body,Pump blood to the lungs,Receive venous blood from the body,A,attribute
+M3D-VQA/images/cardiac_015_train.npy,Which structure gives rise to the first diagonal branch (D1)?,Left anterior descending artery (LAD),Left anterior descending artery (LAD),Left circumflex artery (LCX),Right coronary artery (RCA),Left main coronary artery,A,attribute
+M3D-VQA/images/cardiac_016_train.npy,How many cardiac chambers are typically present in a normal heart?,4,4,2,3,6,A,count
+M3D-VQA/images/cardiac_017_train.npy,How many major coronary vessels are labelled in this dataset?,"3 (LAD, LCX, RCA)","3 (LAD, LCX, RCA)",2,4,5,A,count
+M3D-VQA/images/cardiac_018_train.npy,How many obtuse marginal branches are annotated in this dataset?,2 (OM1 and OM2),2 (OM1 and OM2),1,3,4,A,count
+M3D-VQA/images/cardiac_019_train.npy,How many diagonal branches are annotated for the LAD?,2 (D1 and D2),2 (D1 and D2),1,3,4,A,count
+M3D-VQA/images/cardiac_020_train.npy,Is the left ventricle (LV) visible in this cardiac CT?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_021_train.npy,Is the right ventricle (RV) present in this scan?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_022_train.npy,Can the ascending aorta (AO) be identified?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_023_train.npy,Is the left anterior descending artery (LAD) visualised?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_024_train.npy,Is the myocardium of the left ventricle (Myo) intact?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_025_train.npy,Is the pulmonary artery (PA) present in this cardiac CT?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_026_train.npy,Is the right coronary artery (RCA) visible?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_027_train.npy,Is the left circumflex artery (LCX) identifiable?,Yes,Yes,No,Partially,Cannot determine,A,presence
+M3D-VQA/images/cardiac_028_train.npy,Which chamber pumps oxygenated blood to the systemic circulation?,Left ventricle (LV),Left ventricle (LV),Right ventricle (RV),Left atrium (LA),Right atrium (RA),A,attribute
+M3D-VQA/images/cardiac_029_train.npy,Which vessel carries deoxygenated blood from the right ventricle?,Pulmonary artery (PA),Pulmonary artery (PA),Ascending aorta (AO),Descending aorta (DO),Left coronary artery,A,attribute
+M3D-VQA/images/cardiac_030_train.npy,What is the abbreviation for the left anterior descending artery?,LAD,LAD,LCX,RCA,RPDA,A,attribute
+M3D-VQA/images/cardiac_031_train.npy,Which coronary artery is known as the widow-maker?,Left anterior descending artery (LAD),Left anterior descending artery (LAD),Right coronary artery (RCA),Left circumflex artery (LCX),Ramus intermedius (RAMUS),A,attribute
+M3D-VQA/images/cardiac_032_train.npy,What does the abbreviation Myo refer to?,Myocardium of LV (Myo),Myocardium of LV (Myo),Left ventricle (LV),Left atrium (LA),Right ventricle (RV),A,attribute
+M3D-VQA/images/cardiac_033_train.npy,Which artery supplies the posterior septum in right-dominant anatomy?,Right posterior descending artery (RPDA),Right posterior descending artery (RPDA),Left posterior descending artery (LPDA),Right coronary artery (RCA),Left circumflex artery (LCX),A,attribute
+M3D-VQA/images/cardiac_034_train.npy,What is the primary function of the left atrium (LA)?,Receive oxygenated blood from pulmonary veins,Receive oxygenated blood from pulmonary veins,Pump blood to the body,Pump blood to the lungs,Receive venous blood from the body,A,attribute
+M3D-VQA/images/cardiac_035_train.npy,Which structure gives rise to the first diagonal branch (D1)?,Left anterior descending artery (LAD),Left anterior descending artery (LAD),Left circumflex artery (LCX),Right coronary artery (RCA),Left main coronary artery,A,attribute
+M3D-VQA/images/cardiac_036_train.npy,How many cardiac chambers are typically present in a normal heart?,4,4,2,3,6,A,count
+M3D-VQA/images/cardiac_037_train.npy,How many major coronary vessels are labelled in this dataset?,"3 (LAD, LCX, RCA)","3 (LAD, LCX, RCA)",2,4,5,A,count
+M3D-VQA/images/cardiac_038_train.npy,How many obtuse marginal branches are annotated in this dataset?,2 (OM1 and OM2),2 (OM1 and OM2),1,3,4,A,count
+M3D-VQA/images/cardiac_039_train.npy,How many diagonal branches are annotated for the LAD?,2 (D1 and D2),2 (D1 and D2),1,3,4,A,count
